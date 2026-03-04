@@ -1,77 +1,107 @@
-<<<<<<< HEAD
-# Worklog
-=======
-# React + TypeScript + Vite
+# Daily Work Log
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React + TypeScript app scaffold for tracking daily work entries, viewing weekly summaries, and exporting logs.
 
-Currently, two official plugins are available:
+## Current Status
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+The project is in scaffold phase.
 
-## React Compiler
+- Vite + React + TypeScript setup is complete.
+- Folder structure for features/pages/components is created.
+- Most feature files are placeholders and still need implementation.
+- `App` and router are not wired to real pages yet.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
 
-## Expanding the ESLint configuration
+- React 19
+- TypeScript 5
+- Vite 7
+- React Router 7
+- TanStack Query 5
+- MUI 7
+- Firebase SDK 12
+- date-fns 4
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Getting Started
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+1. Install dependencies:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+2. Start development server:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev
 ```
->>>>>>> 0071c31 (chore: init vite react app)
+
+3. Build for production:
+
+```bash
+npm run build
+```
+
+4. Preview production build:
+
+```bash
+npm run preview
+```
+
+5. Run lint:
+
+```bash
+npm run lint
+```
+
+## Project Structure
+
+```text
+src/
+  app/
+    App.tsx
+    router.tsx
+  components/
+    common/
+      ConfirmDialog.tsx
+      StatCard.tsx
+    layout/
+      AppShell.tsx
+      TopNav.tsx
+  features/
+    entries/
+      entry.api.ts
+      entry.types.ts
+      entry.utils.ts
+    export/
+      csv.ts
+  firebase/
+    auth.ts
+    client.ts
+    db.ts
+    storage.ts
+  pages/
+    Calendar.tsx
+    LogToday.tsx
+    Login.tsx
+    WeeklyLog.tsx
+  styles/
+    theme.ts
+  main.tsx
+  index.css
+```
+
+## Implementation Checklist
+
+- Wire routes in `src/app/router.tsx`.
+- Add page content for `LogToday`, `WeeklyLog`, `Calendar`, and `Login`.
+- Set up Firebase initialization and auth/firestore/storage helpers.
+- Define entry types, API methods, and date/grouping utilities.
+- Build reusable layout and common UI components.
+- Add CSV export logic in `src/features/export/csv.ts`.
+- Replace Vite default styles with project design system/theme.
+
+## Notes
+
+- `dist/` currently exists from a local build.
+- This README reflects scaffold state and should be updated as features are implemented.
