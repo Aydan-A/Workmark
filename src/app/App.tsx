@@ -1,3 +1,10 @@
+import {Outlet} from "react-router-dom";
+import AppShell from  "../components/layout/AppShell";
+
 export default function App() {
-  return <main />
+  return (
+    <AppShell>
+      <Outlet />
+    </AppShell>
+  );
 }
