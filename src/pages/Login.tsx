@@ -44,9 +44,18 @@ export default function Login() {
     setError(null);
   };
 
+  const handleFillDemoClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    // Prevent this helper button from submitting the form.
+    e.preventDefault();
+    handleFillDemo();
+  };
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!canSubmit) return;
+    if (!canSubmit) {
+      setError("Please enter both email and password.");
+      return;
+    }
 
     const ok = signInWithDemo(email, password);
     if (!ok) {
@@ -159,7 +168,6 @@ export default function Login() {
             <Button
               type="submit"
               variant="contained"
-              disabled={!canSubmit}
               sx={{
                 mt: 0.5,
                 bgcolor: "#4f46e5",
@@ -184,7 +192,7 @@ export default function Login() {
             >
               <Typography variant="body2" sx={{ color: "#374151" }}>
                 Demo account: {demoEmail} / {demoPassword} —{" "}
-                <Link component="button" onClick={handleFillDemo} underline="hover">
+                <Link component="button" type="button" onClick={handleFillDemoClick} underline="hover">
                   fill in
                 </Link>
               </Typography>
