@@ -10,7 +10,9 @@ import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import TodayIcon from "@mui/icons-material/Today";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import ViewWeekIcon from "@mui/icons-material/ViewWeek";
-import { NavLink } from "react-router-dom";
+import LogoutIcon from "@mui/icons-material/Logout";
+import { NavLink, useNavigate } from "react-router-dom";
+import { signOut } from "../../features/auth/session";
 
 // Shared static styles for nav buttons.
 // This part does NOT depend on route state.
@@ -35,6 +37,13 @@ const getNavLinkStyle = ({ isActive }: { isActive: boolean }) => ({
 });
 
 export default function TopNav() {
+  const navigate = useNavigate();
+
+  const handleSignOut = () => {
+    signOut();
+    navigate("/login", { replace: true });
+  };
+
   return (
     <AppBar
       position="sticky"
@@ -86,6 +95,13 @@ export default function TopNav() {
           <Typography sx={{ color: "#111827", fontWeight: 600 }}>
             Alex Johnson
           </Typography>
+          <Button
+            startIcon={<LogoutIcon />}
+            onClick={handleSignOut}
+            sx={{ ...navButtonSx, ml: 1 }}
+          >
+            Sign Out
+          </Button>
         </Box>
       </Toolbar>
     </AppBar>
