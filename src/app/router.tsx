@@ -4,15 +4,25 @@ import Login from "../pages/Login";
 import LogToday from "../pages/LogToday";
 import WeeklyLog from "../pages/WeeklyLog";
 import Calendar from "../pages/Calendar";
+import { isAuthed } from "../features/auth/session";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
-  // TODO: connect Firebase auth state
-  const isAuthed = true;
-  return isAuthed ? <>{children}</> : <Navigate to="/login" replace />;
+  return isAuthed() ? <>{children}</> : <Navigate to="/login" replace />;
+}
+
+function RequireGuest({ children }: { children: React.ReactNode }) {
+  return isAuthed() ? <Navigate to="/today" replace /> : <>{children}</>;
 }
 
 export const router = createBrowserRouter([
-  { path: "/login", element: <Login /> },
+  {
+    path: "/login",
+    element: (
+      <RequireGuest>
+        <Login />
+      </RequireGuest>
+    ),
+  },
   {
     path: "/",
     element: (
