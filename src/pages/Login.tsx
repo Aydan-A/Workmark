@@ -15,7 +15,7 @@ import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { useNavigate } from "react-router-dom";
-import { signInWithDemo } from "../features/auth/session";
+import { signIn } from "../firebase/auth";
 
 // Login page UI (no Firebase yet).
 // Goal: match the Figma "Daily Work Log" sign-in card layout.
@@ -30,41 +30,24 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Demo credentials.
-  const demoEmail = "alex@example.com";
-  const demoPassword = "password123";
-
   // Disable Sign In until basic fields exist (UI-only validation).
   const canSubmit = useMemo(() => email.trim() !== "" && password !== "", [email, password]);
 
-  const handleFillDemo = () => {
-    // Fill the form with demo credentials for quick testing.
-    setEmail(demoEmail);
-    setPassword(demoPassword);
-    setError(null);
-  };
-
-  const handleFillDemoClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    // Prevent this helper button from submitting the form.
-    e.preventDefault();
-    handleFillDemo();
-  };
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!canSubmit) {
       setError("Please enter both email and password.");
       return;
     }
 
-    const ok = signInWithDemo(email, password);
-    if (!ok) {
-      setError("Invalid credentials. Use the demo account shown below.");
-      return;
+    try {
+      await signIn(email.trim(), password);
+      setError(null);
+      navigate("/today", { replace: true });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Sign in failed.";
+      setError(message);
     }
-
-    setError(null);
-    navigate("/today", { replace: true });
   };
 
   return (
@@ -179,24 +162,6 @@ export default function Login() {
             >
               Sign In
             </Button>
-
-            {/* Demo block */}
-            <Box
-              sx={{
-                mt: 0.5,
-                border: "1px solid #e5e7eb",
-                borderRadius: 3,
-                p: 1.5,
-                bgcolor: "#fafafa",
-              }}
-            >
-              <Typography variant="body2" sx={{ color: "#374151" }}>
-                Demo account: {demoEmail} / {demoPassword} —{" "}
-                <Link component="button" type="button" onClick={handleFillDemoClick} underline="hover">
-                  fill in
-                </Link>
-              </Typography>
-            </Box>
 
             <Divider sx={{ my: 0.5 }} />
 
