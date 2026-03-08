@@ -12,7 +12,7 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import ViewWeekIcon from "@mui/icons-material/ViewWeek";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { NavLink, useNavigate } from "react-router-dom";
-import { signOut } from "../../features/auth/session";
+import { logout } from "../../firebase/auth";
 
 // Shared static styles for nav buttons.
 // This part does NOT depend on route state.
@@ -39,8 +39,8 @@ const getNavLinkStyle = ({ isActive }: { isActive: boolean }) => ({
 export default function TopNav() {
   const navigate = useNavigate();
 
-  const handleSignOut = () => {
-    signOut();
+  const handleSignOut = async () => {
+    await logout();
     navigate("/login", { replace: true });
   };
 
