@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   AppBar,
   Toolbar,
@@ -38,10 +39,20 @@ const getNavLinkStyle = ({ isActive }: { isActive: boolean }) => ({
 
 export default function TopNav() {
   const navigate = useNavigate();
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const handleSignOut = async () => {
-    await logout();
-    navigate("/login", { replace: true });
+    if (isSigningOut) return;
+    setIsSigningOut(true);
+
+    try {
+      await logout();
+      navigate("/login", { replace: true });
+    } catch (error) {
+      console.error("Failed to sign out:", error);
+    } finally {
+      setIsSigningOut(false);
+    }
   };
 
   return (
@@ -98,9 +109,10 @@ export default function TopNav() {
           <Button
             startIcon={<LogoutIcon />}
             onClick={handleSignOut}
+            disabled={isSigningOut}
             sx={{ ...navButtonSx, ml: 1 }}
           >
-            Sign Out
+            {isSigningOut ? "Signing Out..." : "Sign Out"}
           </Button>
         </Box>
       </Toolbar>
