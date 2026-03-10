@@ -14,9 +14,8 @@ import {
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import { FirebaseError } from "firebase/app";
 import { useNavigate } from "react-router-dom";
-import { signIn } from "../firebase/auth";
+import { signIn, getAuthErrorMessage } from "../firebase/auth";
 
 // Login page UI (no Firebase yet).
 // Goal: match the Figma "Daily Work Log" sign-in card layout.
@@ -34,27 +33,6 @@ export default function Login() {
   // Disable Sign In until basic fields exist (UI-only validation).
   const canSubmit = useMemo(() => email.trim() !== "" && password !== "", [email, password]);
 
-  const getSignInErrorMessage = (error: unknown): string => {
-    if (!(error instanceof FirebaseError)) return "Sign in failed. Please try again.";
-
-    switch (error.code) {
-      case "auth/invalid-email":
-        return "Please enter a valid email address.";
-      case "auth/invalid-credential":
-      case "auth/user-not-found":
-      case "auth/wrong-password":
-        return "Incorrect email or password.";
-      case "auth/user-disabled":
-        return "This account has been disabled.";
-      case "auth/too-many-requests":
-        return "Too many attempts. Please wait and try again.";
-      case "auth/network-request-failed":
-        return "Network error. Check your connection and try again.";
-      default:
-        return "Sign in failed. Please try again.";
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!canSubmit) {
@@ -67,7 +45,7 @@ export default function Login() {
       setError(null);
       navigate("/today", { replace: true });
     } catch (err) {
-      setError(getSignInErrorMessage(err));
+      setError(getAuthErrorMessage(err));
     }
   };
 
