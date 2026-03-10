@@ -29,23 +29,29 @@ export default function Login() {
   // Small UX helpers.
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Disable Sign In until basic fields exist (UI-only validation).
   const canSubmit = useMemo(() => email.trim() !== "" && password !== "", [email, password]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
     if (!canSubmit) {
       setError("Please enter both email and password.");
       return;
     }
 
     try {
+      setIsSubmitting(true);
       await signIn(email.trim(), password);
       setError(null);
       navigate("/today", { replace: true });
     } catch (err) {
       setError(getAuthErrorMessage(err));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -150,6 +156,7 @@ export default function Login() {
             <Button
               type="submit"
               variant="contained"
+              disabled={isSubmitting}
               sx={{
                 mt: 0.5,
                 bgcolor: "#4f46e5",
@@ -159,7 +166,7 @@ export default function Login() {
                 fontWeight: 700,
               }}
             >
-              Sign In
+              {isSubmitting ? "Signing In..." : "Sign In"}
             </Button>
 
             <Divider sx={{ my: 0.5 }} />
