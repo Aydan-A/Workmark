@@ -12,10 +12,11 @@ import {
   Alert,
 } from "@mui/material";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
+import GoogleIcon from "@mui/icons-material/Google";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { useNavigate } from "react-router-dom";
-import { signIn, signUp, getAuthErrorMessage } from "../firebase/auth";
+import { signIn, signUp, signInWithGoogle, getAuthErrorMessage } from "../firebase/auth";
 
 // Auth page UI for sign-in/sign-up flows.
 // Goal: match the "Daily Work Log" card layout while keeping the form focused.
@@ -32,7 +33,8 @@ export default function Login() {
   // Small UX helpers.
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMethod, setSubmitMethod] = useState<"password" | "google" | null>(null);
+  const isSubmitting = submitMethod !== null;
 
   // Disable submit until basic fields exist.
   const canSubmit = useMemo(() => {
@@ -66,7 +68,7 @@ export default function Login() {
     }
 
     try {
-      setIsSubmitting(true);
+      setSubmitMethod("password");
       if (mode === "signUp") {
         await signUp(email.trim(), password, fullName.trim());
       } else {
@@ -77,7 +79,22 @@ export default function Login() {
     } catch (err) {
       setError(getAuthErrorMessage(err, mode));
     } finally {
-      setIsSubmitting(false);
+      setSubmitMethod(null);
+    }
+  };
+
+  const handleGoogleAuth = async () => {
+    if (isSubmitting) return;
+
+    try {
+      setSubmitMethod("google");
+      await signInWithGoogle();
+      setError(null);
+      navigate("/today", { replace: true });
+    } catch (err) {
+      setError(getAuthErrorMessage(err, "google"));
+    } finally {
+      setSubmitMethod(null);
     }
   };
 
@@ -232,13 +249,37 @@ export default function Login() {
                 fontWeight: 700,
               }}
             >
-              {isSubmitting
+              {submitMethod === "password"
                 ? mode === "signIn"
                   ? "Signing In..."
                   : "Creating Account..."
                 : mode === "signIn"
                   ? "Sign In"
                   : "Sign Up"}
+            </Button>
+
+            <Divider sx={{ my: 0.5 }}>or</Divider>
+
+            <Button
+              type="button"
+              variant="outlined"
+              startIcon={<GoogleIcon />}
+              onClick={handleGoogleAuth}
+              disabled={isSubmitting}
+              sx={{
+                py: 1.2,
+                borderRadius: 3,
+                fontWeight: 700,
+                textTransform: "none",
+                borderColor: "#d1d5db",
+                color: "#111827",
+              }}
+            >
+              {submitMethod === "google"
+                ? "Connecting Google..."
+                : mode === "signIn"
+                  ? "Continue with Google"
+                  : "Sign Up with Google"}
             </Button>
 
             <Divider sx={{ my: 0.5 }} />

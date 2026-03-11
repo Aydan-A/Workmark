@@ -4,6 +4,8 @@
 import { FirebaseError } from "firebase/app";
 import {
   createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
@@ -12,7 +14,7 @@ import {
 } from "firebase/auth";
 import { auth } from "./client";
 
-type AuthAction = "signIn" | "signUp";
+type AuthAction = "signIn" | "signUp" | "google";
 
 // Sign in with email/password
 export async function signIn(email: string, password: string) {
@@ -30,6 +32,13 @@ export async function signUp(email: string, password: string, fullName?: string)
   return userCredential;
 }
 
+// Sign in or create account with Google
+export async function signInWithGoogle() {
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: "select_account" });
+  return signInWithPopup(auth, provider);
+}
+
 // Sign out current user
 export async function logout() {
   return signOut(auth);
@@ -42,10 +51,15 @@ export function subscribeToAuthChanges(callback: (user: User | null) => void) {
 
 // Map Firebase auth errors to user-friendly messages.
 export function getAuthErrorMessage(error: unknown, action: AuthAction = "signIn"): string {
-  if (!(error instanceof FirebaseError)) {
-    return action === "signUp"
+  const fallbackMessage =
+    action === "signUp"
       ? "Sign up failed. Please try again."
-      : "Sign in failed. Please try again.";
+      : action === "google"
+        ? "Google sign-in failed. Please try again."
+        : "Sign in failed. Please try again.";
+
+  if (!(error instanceof FirebaseError)) {
+    return fallbackMessage;
   }
 
   switch (error.code) {
@@ -61,13 +75,19 @@ export function getAuthErrorMessage(error: unknown, action: AuthAction = "signIn
       return "Too many attempts. Please wait and try again.";
     case "auth/network-request-failed":
       return "Network error. Check your connection and try again.";
+    case "auth/popup-closed-by-user":
+      return "Google sign-in was cancelled.";
+    case "auth/cancelled-popup-request":
+      return "Another sign-in window is already open.";
+    case "auth/account-exists-with-different-credential":
+      return "This email is linked to another sign-in method.";
+    case "auth/operation-not-allowed":
+      return "Google sign-in is not enabled for this project.";
     case "auth/email-already-in-use":
       return "This email is already in use. Try signing in instead.";
     case "auth/weak-password":
       return "Password is too weak. Use at least 6 characters.";
     default:
-      return action === "signUp"
-        ? "Sign up failed. Please try again."
-        : "Sign in failed. Please try again.";
+      return fallbackMessage;
   }
 }
