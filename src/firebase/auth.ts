@@ -11,6 +11,8 @@ import {
 } from "firebase/auth";
 import { auth } from "./client";
 
+type AuthAction = "signIn" | "signUp";
+
 // Sign in with email/password
 export async function signIn(email: string, password: string) {
   return signInWithEmailAndPassword(auth, email, password);
@@ -32,8 +34,12 @@ export function subscribeToAuthChanges(callback: (user: User | null) => void) {
 }
 
 // Map Firebase auth errors to user-friendly messages.
-export function getAuthErrorMessage(error: unknown): string {
-  if (!(error instanceof FirebaseError)) return "Sign in failed. Please try again.";
+export function getAuthErrorMessage(error: unknown, action: AuthAction = "signIn"): string {
+  if (!(error instanceof FirebaseError)) {
+    return action === "signUp"
+      ? "Sign up failed. Please try again."
+      : "Sign in failed. Please try again.";
+  }
 
   switch (error.code) {
     case "auth/invalid-email":
@@ -48,7 +54,13 @@ export function getAuthErrorMessage(error: unknown): string {
       return "Too many attempts. Please wait and try again.";
     case "auth/network-request-failed":
       return "Network error. Check your connection and try again.";
+    case "auth/email-already-in-use":
+      return "This email is already in use. Try signing in instead.";
+    case "auth/weak-password":
+      return "Password is too weak. Use at least 6 characters.";
     default:
-      return "Sign in failed. Please try again.";
+      return action === "signUp"
+        ? "Sign up failed. Please try again."
+        : "Sign in failed. Please try again.";
   }
 }
