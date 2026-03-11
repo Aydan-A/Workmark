@@ -7,6 +7,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
+  updateProfile,
   type User,
 } from "firebase/auth";
 import { auth } from "./client";
@@ -19,8 +20,14 @@ export async function signIn(email: string, password: string) {
 }
 
 // Create account with email/password
-export async function signUp(email: string, password: string) {
-  return createUserWithEmailAndPassword(auth, email, password);
+export async function signUp(email: string, password: string, fullName?: string) {
+  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+
+  if (fullName && fullName.trim() !== "") {
+    await updateProfile(userCredential.user, { displayName: fullName.trim() });
+  }
+
+  return userCredential;
 }
 
 // Sign out current user

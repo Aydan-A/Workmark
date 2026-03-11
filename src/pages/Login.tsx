@@ -17,13 +17,14 @@ import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { useNavigate } from "react-router-dom";
 import { signIn, signUp, getAuthErrorMessage } from "../firebase/auth";
 
-// Login page UI (no Firebase yet).
-// Goal: match the Figma "Daily Work Log" sign-in card layout.
+// Auth page UI for sign-in/sign-up flows.
+// Goal: match the "Daily Work Log" card layout while keeping the form focused.
 export default function Login() {
   const navigate = useNavigate();
   const [mode, setMode] = useState<"signIn" | "signUp">("signIn");
 
   // Local form state for email and password fields.
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -36,10 +37,10 @@ export default function Login() {
   // Disable submit until basic fields exist.
   const canSubmit = useMemo(() => {
     if (mode === "signUp") {
-      return email.trim() !== "" && password !== "" && confirmPassword !== "";
+      return fullName.trim() !== "" && email.trim() !== "" && password !== "" && confirmPassword !== "";
     }
     return email.trim() !== "" && password !== "";
-  }, [mode, email, password, confirmPassword]);
+  }, [mode, fullName, email, password, confirmPassword]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -48,9 +49,14 @@ export default function Login() {
     if (!canSubmit) {
       setError(
         mode === "signUp"
-          ? "Please enter email, password, and confirm password."
+          ? "Please enter full name, email, password, and confirm password."
           : "Please enter both email and password.",
       );
+      return;
+    }
+
+    if (mode === "signUp" && fullName.trim().length < 2) {
+      setError("Please enter your full name.");
       return;
     }
 
@@ -62,7 +68,7 @@ export default function Login() {
     try {
       setIsSubmitting(true);
       if (mode === "signUp") {
-        await signUp(email.trim(), password);
+        await signUp(email.trim(), password, fullName.trim());
       } else {
         await signIn(email.trim(), password);
       }
@@ -78,6 +84,7 @@ export default function Login() {
   const handleToggleMode = () => {
     setMode((prev) => (prev === "signIn" ? "signUp" : "signIn"));
     setError(null);
+    setFullName("");
     setPassword("");
     setConfirmPassword("");
     setShowPassword(false);
@@ -139,6 +146,21 @@ export default function Login() {
           )}
 
           <Box component="form" onSubmit={handleSubmit} sx={{ display: "grid", gap: 2 }}>
+            {mode === "signUp" && (
+              <Box>
+                <Typography variant="subtitle2" sx={{ mb: 0.75 }}>
+                  Full Name
+                </Typography>
+                <TextField
+                  fullWidth
+                  placeholder="Alex Johnson"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  autoComplete="name"
+                />
+              </Box>
+            )}
+
             {/* Email */}
             <Box>
               <Typography variant="subtitle2" sx={{ mb: 0.75 }}>
@@ -150,6 +172,7 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
+                helperText={mode === "signUp" ? "Use your work email so your logs stay tied to your account." : undefined}
               />
             </Box>
 
