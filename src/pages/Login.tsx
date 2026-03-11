@@ -172,7 +172,10 @@ export default function Login() {
                   fullWidth
                   placeholder="Alex Johnson"
                   value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
+                  onChange={(e) => {
+                    setFullName(e.target.value);
+                    setError(null);
+                  }}
                   autoComplete="name"
                 />
               </Box>
@@ -187,7 +190,10 @@ export default function Login() {
                 fullWidth
                 placeholder="you@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setError(null);
+                }}
                 autoComplete="email"
                 helperText={mode === "signUp" ? "Use your work email so your logs stay tied to your account." : undefined}
               />
@@ -202,7 +208,10 @@ export default function Login() {
                 fullWidth
                 type={showPassword ? "text" : "password"}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError(null);
+                }}
                 autoComplete={mode === "signIn" ? "current-password" : "new-password"}
                 InputProps={{
                   endAdornment: (
@@ -229,7 +238,10 @@ export default function Login() {
                   fullWidth
                   type={showPassword ? "text" : "password"}
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    setError(null);
+                  }}
                   autoComplete="new-password"
                 />
               </Box>
@@ -281,6 +293,9 @@ export default function Login() {
                   ? "Continue with Google"
                   : "Sign Up with Google"}
             </Button>
+            <Typography variant="caption" align="center" sx={{ color: "#6b7280", mt: -1 }}>
+              If your account was created with Google, use this button to sign in.
+            </Typography>
 
             <Divider sx={{ my: 0.5 }} />
 

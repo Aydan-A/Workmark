@@ -68,7 +68,9 @@ export function getAuthErrorMessage(error: unknown, action: AuthAction = "signIn
     case "auth/invalid-credential":
     case "auth/user-not-found":
     case "auth/wrong-password":
-      return "Incorrect email or password.";
+      return action === "signIn"
+        ? "Incorrect email or password. If you used Google before, choose Continue with Google."
+        : "Incorrect email or password.";
     case "auth/user-disabled":
       return "This account has been disabled.";
     case "auth/too-many-requests":
@@ -82,7 +84,9 @@ export function getAuthErrorMessage(error: unknown, action: AuthAction = "signIn
     case "auth/account-exists-with-different-credential":
       return "This email is linked to another sign-in method.";
     case "auth/operation-not-allowed":
-      return "Google sign-in is not enabled for this project.";
+      return action === "google"
+        ? "Google sign-in is not enabled for this project."
+        : "Email/password auth is not enabled for this project.";
     case "auth/email-already-in-use":
       return "This email is already in use. Try signing in instead.";
     case "auth/weak-password":
