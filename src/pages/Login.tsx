@@ -7,13 +7,16 @@ import {
   Button,
   Link,
   Divider,
+  IconButton,
+  InputAdornment,
   Alert,
 } from "@mui/material";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import GoogleIcon from "@mui/icons-material/Google";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { useNavigate } from "react-router-dom";
 import { signIn, signUp, signInWithGoogle, getAuthErrorMessage } from "../firebase/auth";
-import PasswordField from "../components/common/PasswordField";
 
 // Auth page UI for sign-in/sign-up flows.
 // Goal: match the "Daily Work Log" card layout while keeping the form focused.
@@ -201,15 +204,28 @@ export default function Login() {
               <Typography variant="subtitle2" sx={{ mb: 0.75 }}>
                 Password
               </Typography>
-              <PasswordField
+              <TextField
+                fullWidth
+                type={showPassword ? "text" : "password"}
                 value={password}
-                onChange={(value) => {
-                  setPassword(value);
+                onChange={(e) => {
+                  setPassword(e.target.value);
                   setError(null);
                 }}
-                showPassword={showPassword}
-                onToggleVisibility={() => setShowPassword((v) => !v)}
                 autoComplete={mode === "signIn" ? "current-password" : "new-password"}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={() => setShowPassword((v) => !v)}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
               />
             </Box>
 
@@ -218,15 +234,28 @@ export default function Login() {
                 <Typography variant="subtitle2" sx={{ mb: 0.75 }}>
                   Confirm Password
                 </Typography>
-                <PasswordField
+                <TextField
+                  fullWidth
+                  type={showPassword ? "text" : "password"}
                   value={confirmPassword}
-                  onChange={(value) => {
-                    setConfirmPassword(value);
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
                     setError(null);
                   }}
-                  showPassword={showPassword}
-                  onToggleVisibility={() => setShowPassword((v) => !v)}
                   autoComplete="new-password"
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          aria-label="toggle password visibility"
+                          onClick={() => setShowPassword((v) => !v)}
+                          edge="end"
+                        >
+                          {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
                 />
               </Box>
             )}
