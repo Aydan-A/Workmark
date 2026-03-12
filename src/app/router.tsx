@@ -1,11 +1,11 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
-import { CircularProgress, Box } from "@mui/material";
 import App from "./App";
 import Login from "../pages/Login";
 import LogToday from "../pages/LogToday";
 import WeeklyLog from "../pages/WeeklyLog";
 import Calendar from "../pages/Calendar";
 import { useAuth } from "../hooks/useAuth";
+import FullScreenLoader from "../components/common/FullScreenLoader";
 
 // File purpose:
 // Central route map + auth guards.
@@ -20,13 +20,7 @@ import { useAuth } from "../hooks/useAuth";
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
 
-  if (loading) {
-    return (
-      <Box sx={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
+  if (loading) return <FullScreenLoader />;
 
   return user ? <>{children}</> : <Navigate to="/login" replace />;
 }
@@ -38,13 +32,7 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 function RequireGuest({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
 
-  if (loading) {
-    return (
-      <Box sx={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
+  if (loading) return <FullScreenLoader />;
 
   return user ? <Navigate to="/today" replace /> : <>{children}</>;
 }
