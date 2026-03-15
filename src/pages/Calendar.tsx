@@ -1,84 +1,86 @@
-import { useMemo, useState } from "react";
-import {
-  Box,
-  Button,
-  IconButton,
-  Paper,
-  Stack,
-  Typography,
-} from "@mui/material";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { useEffect, useMemo, useState } from "react";
+import { Alert, Box, Button, Paper, Stack, Typography } from "@mui/material";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
-import {
-  addDays,
-  addMonths,
-  endOfDay,
-  endOfMonth,
-  endOfWeek,
-  format,
-  isAfter,
-  isBefore,
-  isSameMonth,
-  isToday,
-  startOfDay,
-  startOfMonth,
-  startOfWeek,
-} from "date-fns";
-type Entry = {
-  date: string;
-  totalHours: number;
-  remoteHours: number;
-  label: string;
-  hasAttachment?: boolean;
-};
-
-const weekdayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
-const entries: Entry[] = [];
+import { useNavigate } from "react-router-dom";
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import interactionPlugin from "@fullcalendar/interaction";
+import type { DatesSetArg, EventClickArg, EventInput } from "@fullcalendar/core";
+import type { DateClickArg } from "@fullcalendar/interaction";
+import { endOfMonth, format, startOfMonth } from "date-fns";
+import { useAuth } from "../hooks/useAuth";
+import { getEntryErrorMessage, subscribeToMonthEntries } from "../features/entries/entry.api";
+import type { WorkEntry } from "../features/entries/entry.types";
 
 function formatHours(value: number): string {
-  return Number.isInteger(value) ? `${value}` : `${value.toFixed(1)}`;
+  return Number.isInteger(value) ? `${value}` : value.toFixed(1);
 }
 
 export default function Calendar() {
-  const initialMonth = useMemo(() => startOfMonth(new Date()), []);
-  const [visibleMonth, setVisibleMonth] = useState<Date>(initialMonth);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [visibleMonth, setVisibleMonth] = useState<Date>(startOfMonth(new Date()));
+  const [monthEntries, setMonthEntries] = useState<WorkEntry[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  const monthDays = useMemo(() => {
-    const gridStart = startOfWeek(startOfMonth(visibleMonth), { weekStartsOn: 1 });
-    const gridEnd = endOfWeek(endOfMonth(visibleMonth), { weekStartsOn: 1 });
-    const days: Date[] = [];
-
-    for (let cursor = gridStart; !isAfter(cursor, gridEnd); cursor = addDays(cursor, 1)) {
-      days.push(cursor);
+  useEffect(() => {
+    if (!user) {
+      setMonthEntries([]);
+      setLoadError(null);
+      return;
     }
 
-    return days;
-  }, [visibleMonth]);
+    const unsubscribe = subscribeToMonthEntries(
+      user.uid,
+      visibleMonth,
+      (entries) => {
+        setMonthEntries(entries);
+        setLoadError(null);
+      },
+      (error) => {
+        setLoadError(getEntryErrorMessage(error));
+      },
+    );
 
-  const entriesByDate = useMemo(() => {
-    const map = new Map<string, Entry>();
-    entries.forEach((entry) => map.set(entry.date, entry));
-    return map;
-  }, []);
+    return unsubscribe;
+  }, [user, visibleMonth]);
 
-  const monthStart = startOfMonth(visibleMonth);
-  const monthEnd = endOfMonth(visibleMonth);
-
-  const monthEntries = useMemo(
+  const calendarEvents = useMemo<EventInput[]>(
     () =>
-      entries.filter((entry) => {
-        const entryDate = new Date(entry.date);
-        return !isBefore(entryDate, startOfDay(monthStart)) && !isAfter(entryDate, endOfDay(monthEnd));
-      }),
-    [monthStart, monthEnd],
+      monthEntries.map((entry) => ({
+        id: entry.date,
+        title: `${formatHours(entry.totalHours)}h${entry.remoteHours > 0 ? ` · ${formatHours(entry.remoteHours)}r` : ""}`,
+        start: entry.date,
+        allDay: true,
+        backgroundColor: "#6366f1",
+        borderColor: "#6366f1",
+        textColor: "#ffffff",
+        extendedProps: {
+          label: entry.projects?.[0] || entry.project || entry.description || "Work log",
+          hasAttachment: (entry.receiptFileNames?.length ?? 0) > 0,
+        },
+      })),
+    [monthEntries],
   );
+
+  const monthEnd = endOfMonth(visibleMonth);
   const daysInMonth = format(monthEnd, "d");
   const daysLogged = monthEntries.length;
   const totalHours = monthEntries.reduce((sum, item) => sum + item.totalHours, 0);
   const remoteHours = monthEntries.reduce((sum, item) => sum + item.remoteHours, 0);
+
+  const handleDatesSet = (arg: DatesSetArg) => {
+    setVisibleMonth(startOfMonth(arg.view.currentStart));
+  };
+
+  const handleDateClick = (arg: DateClickArg) => {
+    navigate(`/today?date=${arg.dateStr}`);
+  };
+
+  const handleEventClick = (arg: EventClickArg) => {
+    const date = arg.event.startStr.slice(0, 10);
+    navigate(`/today?date=${date}`);
+  };
 
   return (
     <Box>
@@ -95,7 +97,7 @@ export default function Calendar() {
           </Typography>
         </Box>
 
-        <Button variant="contained" startIcon={<FileDownloadOutlinedIcon />} sx={{ minWidth: 144 }}>
+        <Button variant="contained" startIcon={<FileDownloadOutlinedIcon />} sx={{ minWidth: 144 }} disabled>
           Export CSV
         </Button>
       </Stack>
@@ -106,7 +108,10 @@ export default function Calendar() {
             Logged days
           </Typography>
           <Typography variant="h4" sx={{ mt: 0.25 }}>
-            {daysLogged} <Typography component="span" variant="body2" sx={{ color: "#6b7280" }}>/ {daysInMonth}</Typography>
+            {daysLogged}{" "}
+            <Typography component="span" variant="body2" sx={{ color: "#6b7280" }}>
+              / {daysInMonth}
+            </Typography>
           </Typography>
         </Paper>
         <Paper variant="outlined" sx={{ p: 2.25, borderRadius: 2.5, flex: 1 }}>
@@ -127,162 +132,61 @@ export default function Calendar() {
         </Paper>
       </Stack>
 
-      <Paper variant="outlined" sx={{ mt: 2, borderRadius: 3, overflow: "hidden" }}>
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-          sx={{ px: 2.5, py: 1.75, borderBottom: "1px solid #e5e7eb" }}
-        >
-          <IconButton size="small" onClick={() => setVisibleMonth((current) => addMonths(current, -1))}>
-            <ChevronLeftIcon />
-          </IconButton>
+      <Paper
+        variant="outlined"
+        sx={{
+          mt: 2,
+          borderRadius: 3,
+          p: 2,
+          "& .fc": { fontFamily: "inherit" },
+          "& .fc .fc-toolbar.fc-header-toolbar": { mb: 1.5 },
+          "& .fc .fc-toolbar-title": { fontSize: "1.4rem", fontWeight: 700, color: "#111827" },
+          "& .fc .fc-button": {
+            borderRadius: 2,
+            textTransform: "none",
+            borderColor: "#d1d5db",
+            backgroundColor: "white",
+            color: "#111827",
+            boxShadow: "none",
+          },
+          "& .fc .fc-button:hover": { backgroundColor: "#f3f4f6" },
+          "& .fc .fc-daygrid-day-number": { color: "#475569", fontWeight: 600 },
+          "& .fc .fc-col-header-cell-cushion": { color: "#94a3b8", fontWeight: 700, textDecoration: "none" },
+          "& .fc .fc-day-today": { backgroundColor: "rgba(79, 70, 229, 0.06)" },
+          "& .fc .fc-event": { borderRadius: 8, padding: "2px 6px" },
+        }}
+      >
+        {loadError && (
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            {loadError}
+          </Alert>
+        )}
 
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Typography variant="h3" sx={{ fontWeight: 700 }}>
-              {format(visibleMonth, "MMMM yyyy")}
-            </Typography>
-            <Button
-              size="small"
-              variant="outlined"
-              onClick={() => {
-                setVisibleMonth(startOfMonth(new Date()));
-                setSelectedDate(new Date());
-              }}
-              sx={{ px: 1.25, minWidth: 0, borderRadius: 999 }}
-            >
-              Today
-            </Button>
-          </Stack>
-
-          <IconButton size="small" onClick={() => setVisibleMonth((current) => addMonths(current, 1))}>
-            <ChevronRightIcon />
-          </IconButton>
-        </Stack>
-
-        <Box sx={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", borderBottom: "1px solid #eef2f7" }}>
-          {weekdayLabels.map((day) => (
-            <Typography
-              key={day}
-              variant="subtitle2"
-              align="center"
-              sx={{ py: 1.1, color: "#94a3b8", borderRight: "1px solid #f1f5f9", "&:last-of-type": { borderRight: 0 } }}
-            >
-              {day}
-            </Typography>
-          ))}
-        </Box>
-
-        <Box sx={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))" }}>
-          {monthDays.map((day) => {
-            const key = format(day, "yyyy-MM-dd");
-            const entry = entriesByDate.get(key);
-            const inCurrentMonth = isSameMonth(day, visibleMonth);
-            const isSelected = format(day, "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd");
-
-            return (
-              <Box
-                key={key}
-                onClick={() => setSelectedDate(day)}
-                sx={{
-                  minHeight: 90,
-                  p: 1,
-                  cursor: "pointer",
-                  borderRight: "1px solid #f1f5f9",
-                  borderBottom: "1px solid #f1f5f9",
-                  bgcolor: inCurrentMonth ? "white" : "#fafafa",
-                  "&:hover": { bgcolor: "#f8fafc" },
-                  "&:nth-of-type(7n)": { borderRight: 0 },
-                }}
+        <FullCalendar
+          plugins={[dayGridPlugin, interactionPlugin]}
+          initialView="dayGridMonth"
+          headerToolbar={{ left: "prev,next today", center: "title", right: "" }}
+          events={calendarEvents}
+          fixedWeekCount={false}
+          showNonCurrentDates
+          dayMaxEventRows={2}
+          dateClick={handleDateClick}
+          eventClick={handleEventClick}
+          datesSet={handleDatesSet}
+          eventContent={(eventInfo) => (
+            <Box>
+              <Typography variant="caption" sx={{ fontWeight: 700, lineHeight: 1.1, color: "inherit" }}>
+                {eventInfo.event.title}
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{ display: "block", lineHeight: 1.1, color: "rgba(255,255,255,0.9)" }}
               >
-                <Box
-                  sx={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: 999,
-                    display: "grid",
-                    placeItems: "center",
-                    fontSize: 14,
-                    fontWeight: 700,
-                    color: inCurrentMonth ? "#111827" : "#cbd5e1",
-                    bgcolor: isSelected ? "#4f46e5" : "transparent",
-                    border: isToday(day) ? "1px solid #4f46e5" : "1px solid transparent",
-                  }}
-                >
-                  <Typography variant="caption" sx={{ color: isSelected ? "white" : "inherit", fontWeight: 700 }}>
-                    {format(day, "d")}
-                  </Typography>
-                </Box>
-
-                {entry && (
-                  <Box sx={{ mt: 1 }}>
-                    <Box
-                      sx={{
-                        borderRadius: 999,
-                        px: 1,
-                        py: 0.25,
-                        bgcolor: "#6366f1",
-                        color: "white",
-                        fontSize: 13,
-                        fontWeight: 700,
-                        width: "fit-content",
-                      }}
-                    >
-                      {formatHours(entry.totalHours)}h{entry.remoteHours > 0 ? ` · ${formatHours(entry.remoteHours)}r` : ""}
-                    </Box>
-                    <Typography variant="caption" sx={{ color: "#94a3b8", mt: 0.4, display: "block" }}>
-                      {entry.label}
-                    </Typography>
-                    {entry.hasAttachment && (
-                      <Box sx={{ mt: 0.4, display: "flex", alignItems: "center", gap: 0.5 }}>
-                        <Box sx={{ width: 8, height: 8, borderRadius: 999, bgcolor: "#f59e0b" }} />
-                        <Typography variant="caption" sx={{ color: "#94a3b8" }}>
-                          Attachment
-                        </Typography>
-                      </Box>
-                    )}
-                  </Box>
-                )}
-              </Box>
-            );
-          })}
-        </Box>
-
-        <Stack direction="row" spacing={2} sx={{ px: 2.5, py: 1.5, borderTop: "1px solid #e5e7eb", flexWrap: "wrap", rowGap: 1 }}>
-          <Typography variant="subtitle2" sx={{ color: "#64748b" }}>
-            Hours logged:
-          </Typography>
-          <Stack direction="row" spacing={0.75} alignItems="center">
-            <Box sx={{ width: 12, height: 12, borderRadius: 999, bgcolor: "#e0e7ff" }} />
-            <Typography variant="body2" sx={{ color: "#64748b" }}>
-              1-3h
-            </Typography>
-          </Stack>
-          <Stack direction="row" spacing={0.75} alignItems="center">
-            <Box sx={{ width: 12, height: 12, borderRadius: 999, bgcolor: "#a5b4fc" }} />
-            <Typography variant="body2" sx={{ color: "#64748b" }}>
-              4-5h
-            </Typography>
-          </Stack>
-          <Stack direction="row" spacing={0.75} alignItems="center">
-            <Box sx={{ width: 12, height: 12, borderRadius: 999, bgcolor: "#6366f1" }} />
-            <Typography variant="body2" sx={{ color: "#64748b" }}>
-              6-7h
-            </Typography>
-          </Stack>
-          <Stack direction="row" spacing={0.75} alignItems="center">
-            <Box sx={{ width: 12, height: 12, borderRadius: 999, bgcolor: "#4f46e5" }} />
-            <Typography variant="body2" sx={{ color: "#64748b" }}>
-              8h+
-            </Typography>
-          </Stack>
-          <Stack direction="row" spacing={0.75} alignItems="center">
-            <Box sx={{ width: 12, height: 12, borderRadius: 999, bgcolor: "#f59e0b" }} />
-            <Typography variant="body2" sx={{ color: "#64748b" }}>
-              Has attachments
-            </Typography>
-          </Stack>
-        </Stack>
+                {String(eventInfo.event.extendedProps.label ?? "")}
+              </Typography>
+            </Box>
+          )}
+        />
       </Paper>
     </Box>
   );

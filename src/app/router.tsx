@@ -7,16 +7,7 @@ import Calendar from "../pages/Calendar";
 import { useAuth } from "../hooks/useAuth";
 import FullScreenLoader from "../components/common/FullScreenLoader";
 
-// File purpose:
-// Central route map + auth guards.
-// - RequireAuth protects app routes.
-// - RequireGuest protects login route.
-// - Both guards wait for Firebase auth bootstrap to avoid redirect flicker.
 
-// RequireAuth:
-// - While auth state is loading: show full-screen progress spinner.
-// - If user exists: render protected children.
-// - If no user: redirect to /login.
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
 
@@ -37,11 +28,7 @@ function RequireGuest({ children }: { children: React.ReactNode }) {
   return user ? <Navigate to="/today" replace /> : <>{children}</>;
 }
 
-// Route map:
-// - /login: guest-only login page.
-// - /: authenticated app shell.
-//   - index: redirects to /today.
-//   - /today, /weekly, /calendar: authenticated pages.
+
 export const router = createBrowserRouter([
   {
     path: "/login",

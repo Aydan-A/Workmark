@@ -11,9 +11,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <TopNav />
 
       {/* Main content area with controlled max width and padding */}
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        {/* This is where the current page gets rendered */}
-        {children}
+      <Container maxWidth={false} sx={{ py: 4, display: "flex", justifyContent: "center" }}>
+        <Box sx={{ width: "100%", maxWidth: 1100 }}>
+          {/* This is where the current page gets rendered */}
+          {children}
+        </Box>
       </Container>
     </Box>
   );

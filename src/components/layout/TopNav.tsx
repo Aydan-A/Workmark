@@ -66,15 +66,17 @@ export default function TopNav() {
     >
       <Toolbar sx={{ gap: 2 }}>
         {/* Brand area */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <WorkOutlineIcon sx={{ color: "#4f46e5" }} />
-          <Typography
-            variant="h6"
-            sx={{ color: "#111827", fontWeight: 800 }}
-          >
-            Daily Work Log
-          </Typography>
-        </Box>
+        <NavLink to="/today" style={{ textDecoration: "none" }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <WorkOutlineIcon sx={{ color: "#4f46e5" }} />
+            <Typography
+              variant="h6"
+              sx={{ color: "#111827", fontWeight: 800 }}
+            >
+              Work Log
+            </Typography>
+          </Box>
+        </NavLink>
 
         {/* Push navigation to the right */}
         <Box sx={{ flex: 1 }} />
