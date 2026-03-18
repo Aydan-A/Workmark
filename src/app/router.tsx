@@ -1,22 +1,13 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import App from "./App";
 import Login from "../pages/Login";
+import Home from "../pages/Home";
 import LogToday from "../pages/LogToday";
 import WeeklyLog from "../pages/WeeklyLog";
 import Calendar from "../pages/Calendar";
 import { useAuth } from "../hooks/useAuth";
 import FullScreenLoader from "../components/common/FullScreenLoader";
 
-// File purpose:
-// Central route map + auth guards.
-// - RequireAuth protects app routes.
-// - RequireGuest protects login route.
-// - Both guards wait for Firebase auth bootstrap to avoid redirect flicker.
-
-// RequireAuth:
-// - While auth state is loading: show full-screen progress spinner.
-// - If user exists: render protected children.
-// - If no user: redirect to /login.
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
 
@@ -25,23 +16,14 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   return user ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
-// RequireGuest:
-// - While auth state is loading: show full-screen progress spinner.
-// - If user exists: redirect to /today.
-// - If no user: render guest-only children (login page).
 function RequireGuest({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
 
   if (loading) return <FullScreenLoader />;
 
-  return user ? <Navigate to="/today" replace /> : <>{children}</>;
+  return user ? <Navigate to="/" replace /> : <>{children}</>;
 }
 
-// Route map:
-// - /login: guest-only login page.
-// - /: authenticated app shell.
-//   - index: redirects to /today.
-//   - /today, /weekly, /calendar: authenticated pages.
 export const router = createBrowserRouter([
   {
     path: "/login",
@@ -59,7 +41,7 @@ export const router = createBrowserRouter([
       </RequireAuth>
     ),
     children: [
-      { index: true, element: <Navigate to="/today" replace /> },
+      { index: true, element: <Home /> },
       { path: "today", element: <LogToday /> },
       { path: "weekly", element: <WeeklyLog /> },
       { path: "calendar", element: <Calendar /> },

@@ -1,4 +1,3 @@
-// src/firebase/auth.ts
 // Auth helper functions so pages/components don't call Firebase directly.
 
 import { FirebaseError } from "firebase/app";

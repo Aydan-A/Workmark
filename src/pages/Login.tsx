@@ -75,7 +75,7 @@ export default function Login() {
         await signIn(email.trim(), password);
       }
       setError(null);
-      navigate("/today", { replace: true });
+      navigate("/", { replace: true });
     } catch (err) {
       setError(getAuthErrorMessage(err, mode));
     } finally {
@@ -90,7 +90,7 @@ export default function Login() {
       setSubmitMethod("google");
       await signInWithGoogle();
       setError(null);
-      navigate("/today", { replace: true });
+      navigate("/", { replace: true });
     } catch (err) {
       setError(getAuthErrorMessage(err, "google"));
     } finally {
@@ -138,7 +138,7 @@ export default function Login() {
         </Box>
 
         {/* Title */}
-        <Typography variant="h3" align="center" sx={{ fontWeight: 800 }}>
+        <Typography variant="h3" align="center" sx={{ fontWeight: 600 }}>
           Daily Work Log
         </Typography>
         <Typography variant="body2" align="center" sx={{ color: "#6b7280", mt: 0.5, mb: 3 }}>
@@ -275,7 +275,7 @@ export default function Login() {
                 "&:hover": { bgcolor: "#4338ca" },
                 py: 1.2,
                 borderRadius: 3,
-                fontWeight: 700,
+                fontWeight: 500,
               }}
             >
               {submitMethod === "password"
@@ -298,7 +298,7 @@ export default function Login() {
               sx={{
                 py: 1.2,
                 borderRadius: 3,
-                fontWeight: 700,
+                fontWeight: 500,
                 textTransform: "none",
                 borderColor: "#d1d5db",
                 color: "#111827",
@@ -319,7 +319,7 @@ export default function Login() {
             {/* Footer link */}
             <Typography variant="body2" align="center" sx={{ color: "#6b7280" }}>
               {mode === "signIn" ? "Don't have an account?" : "Already have an account?"}{" "}
-              <Link component="button" type="button" onClick={handleToggleMode} underline="hover" sx={{ fontWeight: 700 }}>
+              <Link component="button" type="button" onClick={handleToggleMode} underline="hover" sx={{ fontWeight: 500 }}>
                 {mode === "signIn" ? "Sign up" : "Sign in"}
               </Link>
             </Typography>

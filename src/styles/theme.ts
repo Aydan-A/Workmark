@@ -1,126 +1,117 @@
 import { createTheme } from "@mui/material/styles";
 
-// Global MUI theme.
-// This is where we control typography, colors, spacing, and component defaults
-// for the whole app from one place.
 export const theme = createTheme({
+  palette: {
+    primary: {
+      main: "#7057f6",
+      dark: "#5b45e2",
+      light: "#8f7dff",
+      contrastText: "#ffffff",
+    },
+    background: {
+      default: "#f6f4fd",
+      paper: "#ffffff",
+    },
+    text: {
+      primary: "#1f2340",
+      secondary: "#6f768f",
+    },
+    divider: "#e9e4f7",
+  },
   typography: {
-    // Global font family used across Typography and most MUI components.
-    fontFamily: [
-      "Inter",
-      "SF Pro Text",
-      "SF Pro Display",
-      "Segoe UI",
-      "Roboto",
-      "Helvetica Neue",
-      "Arial",
-      "sans-serif",
-    ].join(","),
-
-    // Default body text
+    fontFamily: ["Segoe UI", "Helvetica Neue", "Arial", "sans-serif"].join(","),
     body1: {
       fontSize: "1rem",
       fontWeight: 400,
       lineHeight: 1.6,
       letterSpacing: "0",
     },
-
-    // Slightly smaller body text
     body2: {
       fontSize: "0.95rem",
       fontWeight: 400,
       lineHeight: 1.55,
       letterSpacing: "0",
     },
-
-    // Main page title style
     h1: {
-      fontSize: "2rem",
-      fontWeight: 800,
-      lineHeight: 1.2,
-      letterSpacing: "-0.03em",
-    },
-
-    h2: {
-      fontSize: "1.6rem",
-      fontWeight: 700,
-      lineHeight: 1.25,
+      fontSize: "1.95rem",
+      fontWeight: 600,
+      lineHeight: 1.15,
       letterSpacing: "-0.02em",
     },
-
-    h3: {
-      fontSize: "1.3rem",
-      fontWeight: 700,
-      lineHeight: 1.3,
+    h2: {
+      fontSize: "1.45rem",
+      fontWeight: 600,
+      lineHeight: 1.2,
       letterSpacing: "-0.01em",
     },
-
-    h4: {
-      fontSize: "1.1rem",
-      fontWeight: 700,
-      lineHeight: 1.35,
+    h3: {
+      fontSize: "1.15rem",
+      fontWeight: 600,
+      lineHeight: 1.25,
+      letterSpacing: "0",
     },
-
-    h5: {
-      fontSize: "1rem",
-      fontWeight: 700,
-      lineHeight: 1.4,
-    },
-
-    h6: {
-      fontSize: "0.95rem",
-      fontWeight: 700,
-      lineHeight: 1.4,
-    },
-
-    // Good for small labels / helper text / muted UI text
     subtitle1: {
       fontSize: "1rem",
-      fontWeight: 600,
+      fontWeight: 500,
       lineHeight: 1.5,
     },
-
     subtitle2: {
       fontSize: "0.875rem",
-      fontWeight: 600,
-      lineHeight: 1.45,
+      fontWeight: 500,
+      lineHeight: 1.4,
       letterSpacing: "0.01em",
     },
-
-    // Button typography defaults
     button: {
       fontSize: "0.95rem",
-      fontWeight: 600,
+      fontWeight: 500,
       textTransform: "none",
       letterSpacing: "0",
     },
-
-    // Captions / tiny text
     caption: {
       fontSize: "0.8rem",
       fontWeight: 400,
       lineHeight: 1.4,
-      color: "#6b7280",
+      color: "#8b92ab",
     },
   },
-
+  shape: {
+    borderRadius: 18,
+  },
   components: {
-    // Optional: make all buttons feel more polished by default.
-    MuiButton: {
+    MuiCssBaseline: {
       styleOverrides: {
-        root: {
-          borderRadius: 10,
-          paddingLeft: 14,
-          paddingRight: 14,
+        body: {
+          minWidth: 320,
+        },
+        "#root": {
+          minHeight: "100vh",
         },
       },
     },
-
-    // Optional: slightly nicer default text field shape.
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          boxShadow: "0 20px 50px rgba(67, 46, 140, 0.06)",
+        },
+      },
+    },
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 16,
+          paddingLeft: 16,
+          paddingRight: 16,
+        },
+        containedPrimary: {
+          boxShadow: "0 18px 34px rgba(112, 87, 246, 0.2)",
+        },
+      },
+    },
     MuiOutlinedInput: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
+          borderRadius: 14,
+          backgroundColor: "#ffffff",
         },
       },
     },
