@@ -1,11 +1,11 @@
 import { useState } from "react";
 import {
   AppBar,
-  Toolbar,
-  Typography,
+  Avatar,
   Box,
   Button,
-  Avatar,
+  Toolbar,
+  Typography,
 } from "@mui/material";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import TodayIcon from "@mui/icons-material/Today";
@@ -15,26 +15,18 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import { NavLink, useNavigate } from "react-router-dom";
 import { logout } from "../../firebase/auth";
 
-// Shared static styles for nav buttons.
-// This part does NOT depend on route state.
 const navButtonSx = {
   textTransform: "none",
-  fontWeight: 600,
-  borderRadius: 2,
-  color: "#111827",
+  fontWeight: 500,
+  borderRadius: 99,
+  color: "#1f2340",
+  px: 1.5,
 };
 
-// React Router style callback.
-// This DOES receive isActive, because it belongs to NavLink.
 const getNavLinkStyle = ({ isActive }: { isActive: boolean }) => ({
-  // Remove default link underline
   textDecoration: "none",
-
-  // Highlight the active route
-  backgroundColor: isActive ? "rgba(79, 70, 229, 0.12)" : "transparent",
-
-  // Make the wrapper match the button's rounded corners
-  borderRadius: "8px",
+  borderRadius: 999,
+  backgroundColor: isActive ? "rgba(112, 87, 246, 0.12)" : "transparent",
 });
 
 export default function TopNav() {
@@ -60,62 +52,88 @@ export default function TopNav() {
       position="sticky"
       elevation={0}
       sx={{
-        bgcolor: "white",
-        borderBottom: "1px solid #eee",
+        bgcolor: "rgba(255,255,255,0.88)",
+        backdropFilter: "blur(18px)",
+        borderBottom: "1px solid #ece7fb",
+        color: "text.primary",
       }}
     >
-      <Toolbar sx={{ gap: 2 }}>
-        {/* Brand area */}
-        <NavLink to="/today" style={{ textDecoration: "none" }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <WorkOutlineIcon sx={{ color: "#4f46e5" }} />
-            <Typography
-              variant="h6"
-              sx={{ color: "#111827", fontWeight: 800 }}
+      <Toolbar
+        sx={{
+          gap: 2,
+          flexWrap: "wrap",
+          justifyContent: "space-between",
+          py: 1.25,
+        }}
+      >
+        <NavLink to="/" style={{ textDecoration: "none" }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
+            <Box
+              sx={{
+                width: 42,
+                height: 42,
+                borderRadius: 2.5,
+                display: "grid",
+                placeItems: "center",
+                bgcolor: "rgba(112, 87, 246, 0.1)",
+                color: "primary.main",
+              }}
             >
-              Work Log
+              <WorkOutlineIcon />
+            </Box>
+            <Typography variant="h6" sx={{ color: "text.primary", fontWeight: 600 }}>
+              Daily Work Log
             </Typography>
           </Box>
         </NavLink>
 
-        {/* Push navigation to the right */}
-        <Box sx={{ flex: 1 }} />
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: { xs: "center", md: "flex-end" },
+            gap: 1,
+            flexWrap: "wrap",
+            flex: 1,
+            minWidth: { xs: "100%", md: 0 },
+          }}
+        >
+          <NavLink to="/today" style={getNavLinkStyle}>
+            <Button startIcon={<TodayIcon />} sx={navButtonSx}>
+              Log Today
+            </Button>
+          </NavLink>
 
-        {/* Each NavLink handles active route styling */}
-        <NavLink to="/today" style={getNavLinkStyle}>
-          <Button startIcon={<TodayIcon />} sx={navButtonSx}>
-            Log Today
-          </Button>
-        </NavLink>
+          <NavLink to="/weekly" style={getNavLinkStyle}>
+            <Button startIcon={<ViewWeekIcon />} sx={navButtonSx}>
+              Weekly Log
+            </Button>
+          </NavLink>
 
-        <NavLink to="/weekly" style={getNavLinkStyle}>
-          <Button startIcon={<ViewWeekIcon />} sx={navButtonSx}>
-            Weekly Log
-          </Button>
-        </NavLink>
+          <NavLink to="/calendar" style={getNavLinkStyle}>
+            <Button startIcon={<CalendarMonthIcon />} sx={navButtonSx}>
+              Calendar
+            </Button>
+          </NavLink>
 
-        <NavLink to="/calendar" style={getNavLinkStyle}>
-          <Button startIcon={<CalendarMonthIcon />} sx={navButtonSx}>
-            Calendar
-          </Button>
-        </NavLink>
-
-        {/* User info */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Avatar sx={{ width: 34, height: 34, bgcolor: "#4f46e5" }}>
-            AJ
-          </Avatar>
-          <Typography sx={{ color: "#111827", fontWeight: 600 }}>
-            Alex Johnson
-          </Typography>
-          <Button
-            startIcon={<LogoutIcon />}
-            onClick={handleSignOut}
-            disabled={isSigningOut}
-            sx={{ ...navButtonSx, ml: 1 }}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              pl: { xs: 0, md: 1 },
+              ml: { xs: 0, md: 1 },
+              borderLeft: { xs: "none", md: "1px solid #ece7fb" },
+            }}
           >
-            {isSigningOut ? "Signing Out..." : "Sign Out"}
-          </Button>
+            <Avatar sx={{ width: 38, height: 38, bgcolor: "primary.main", fontWeight: 600 }}>
+              AJ
+            </Avatar>
+            <Typography sx={{ color: "text.primary", fontWeight: 500 }}>Alex Johnson</Typography>
+            <Button onClick={handleSignOut} disabled={isSigningOut} sx={{ ...navButtonSx, minWidth: 0 }}>
+              <LogoutIcon fontSize="small" />
+            </Button>
+          </Box>
         </Box>
       </Toolbar>
     </AppBar>
