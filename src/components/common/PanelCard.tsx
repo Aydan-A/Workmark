@@ -26,11 +26,13 @@ export default function PanelCard({ title, subtitle, actionLabel, actionTo, chil
     >
       <Box
         sx={{
+          position: "relative",
           display: "flex",
-          alignItems: { xs: "flex-start", sm: "center" },
-          justifyContent: "space-between",
-          gap: 1.5,
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: 58,
           mb: 3,
+          textAlign: "center",
         }}
       >
         <Box>
@@ -49,7 +51,15 @@ export default function PanelCard({ title, subtitle, actionLabel, actionTo, chil
             component={RouterLink}
             to={actionTo}
             color="primary"
-            sx={{ px: 0, minWidth: 0, fontWeight: 500 }}
+            sx={{
+              px: 0,
+              minWidth: 0,
+              fontWeight: 500,
+              position: "absolute",
+              right: 0,
+              top: "50%",
+              transform: "translateY(-50%)",
+            }}
           >
             {actionLabel}
           </Button>
