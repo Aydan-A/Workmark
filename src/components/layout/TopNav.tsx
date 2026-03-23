@@ -7,6 +7,7 @@ import {
   Toolbar,
   Typography,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import TodayIcon from "@mui/icons-material/Today";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
@@ -19,15 +20,17 @@ import { useAuth } from "../../hooks/useAuth";
 const navButtonSx = {
   textTransform: "none",
   fontWeight: 500,
-  borderRadius: 99,
+  borderRadius: 999,
   color: "#1f2340",
-  px: 1.5,
+  px: 1.6,
+  py: 0.9,
 };
 
 const getNavLinkStyle = ({ isActive }: { isActive: boolean }) => ({
   textDecoration: "none",
   borderRadius: 999,
-  backgroundColor: isActive ? "rgba(112, 87, 246, 0.12)" : "transparent",
+  backgroundColor: isActive ? "rgba(112, 87, 246, 0.1)" : "transparent",
+  border: isActive ? "1px solid rgba(112, 87, 246, 0.12)" : "1px solid transparent",
 });
 
 function getInitials(name: string) {
@@ -66,104 +69,126 @@ export default function TopNav() {
       position="sticky"
       elevation={0}
       sx={{
-        bgcolor: "rgba(255,255,255,0.88)",
-        backdropFilter: "blur(18px)",
-        borderBottom: "1px solid #ece7fb",
+        bgcolor: "rgba(252,251,255,0.76)",
+        backdropFilter: "blur(20px)",
+        borderBottom: "1px solid rgba(124, 106, 214, 0.12)",
         color: "text.primary",
       }}
     >
-      <Toolbar
-        sx={{
-          gap: 2,
-          flexWrap: "wrap",
-          justifyContent: "space-between",
-          py: 1.25,
-        }}
-      >
-        <NavLink to="/" style={{ textDecoration: "none" }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
-            <Box
-              sx={{
-                width: 42,
-                height: 42,
-                borderRadius: 2.5,
-                display: "grid",
-                placeItems: "center",
-                bgcolor: "rgba(112, 87, 246, 0.1)",
-                color: "primary.main",
-              }}
-            >
-              <WorkOutlineIcon />
-            </Box>
-            <Typography variant="h6" sx={{ color: "text.primary", fontWeight: 600 }}>
-              Daily Work Log
-            </Typography>
-          </Box>
-        </NavLink>
-
+      <Toolbar sx={{ px: { xs: 2, md: 3 } }}>
         <Box
           sx={{
+            width: "100%",
+            maxWidth: 1240,
+            mx: "auto",
             display: "flex",
             alignItems: "center",
-            justifyContent: { xs: "center", md: "flex-end" },
-            gap: 1,
+            justifyContent: "space-between",
+            gap: 2,
             flexWrap: "wrap",
-            flex: 1,
-            minWidth: { xs: "100%", md: 0 },
+            py: 0.5,
           }}
         >
-          <NavLink to="/today" style={getNavLinkStyle}>
-            <Button startIcon={<TodayIcon />} sx={navButtonSx}>
-              Log Today
-            </Button>
-          </NavLink>
-
-          <NavLink to="/weekly" style={getNavLinkStyle}>
-            <Button startIcon={<ViewWeekIcon />} sx={navButtonSx}>
-              Weekly Log
-            </Button>
-          </NavLink>
-
-          <NavLink to="/calendar" style={getNavLinkStyle}>
-            <Button startIcon={<CalendarMonthIcon />} sx={navButtonSx}>
-              Calendar
-            </Button>
+          <NavLink to="/" style={{ textDecoration: "none" }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+              <Box
+                sx={{
+                  width: 46,
+                  height: 46,
+                  borderRadius: 3,
+                  display: "grid",
+                  placeItems: "center",
+                  bgcolor: alpha("#7057f6", 0.12),
+                  color: "primary.main",
+                  boxShadow: "inset 0 0 0 1px rgba(112, 87, 246, 0.08)",
+                }}
+              >
+                <WorkOutlineIcon />
+              </Box>
+              <Box>
+                <Typography variant="caption" sx={{ display: "block", color: "text.secondary", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                  Worklog
+                </Typography>
+                <Typography variant="h6" sx={{ color: "text.primary", fontWeight: 600, lineHeight: 1.1 }}>
+                  Daily Work Log
+                </Typography>
+              </Box>
+            </Box>
           </NavLink>
 
           <Box
             sx={{
               display: "flex",
               alignItems: "center",
+              justifyContent: { xs: "center", md: "flex-end" },
               gap: 1,
-              pl: { xs: 0, md: 1 },
-              ml: { xs: 0, md: 1 },
-              borderLeft: { xs: "none", md: "1px solid #ece7fb" },
+              flexWrap: "wrap",
+              flex: 1,
+              minWidth: { xs: "100%", md: 0 },
             }}
           >
-            <NavLink to="/profile" style={{ textDecoration: "none" }}>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1,
-                  px: 1,
-                  py: 0.5,
-                  borderRadius: 999,
-                  transition: "background-color 120ms ease",
-                  "&:hover": {
-                    bgcolor: "rgba(112, 87, 246, 0.08)",
-                  },
-                }}
-              >
-                <Avatar sx={{ width: 38, height: 38, bgcolor: "primary.main", fontWeight: 600 }}>
-                  {profileInitials}
-                </Avatar>
-                <Typography sx={{ color: "text.primary", fontWeight: 500 }}>{profileName}</Typography>
-              </Box>
+            <NavLink to="/today" style={getNavLinkStyle}>
+              <Button startIcon={<TodayIcon />} sx={navButtonSx}>
+                Log Today
+              </Button>
             </NavLink>
-            <Button onClick={handleSignOut} disabled={isSigningOut} sx={{ ...navButtonSx, minWidth: 0 }}>
-              <LogoutIcon fontSize="small" />
-            </Button>
+
+            <NavLink to="/weekly" style={getNavLinkStyle}>
+              <Button startIcon={<ViewWeekIcon />} sx={navButtonSx}>
+                Weekly Log
+              </Button>
+            </NavLink>
+
+            <NavLink to="/calendar" style={getNavLinkStyle}>
+              <Button startIcon={<CalendarMonthIcon />} sx={navButtonSx}>
+                Calendar
+              </Button>
+            </NavLink>
+
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                pl: { xs: 0, md: 1.25 },
+                ml: { xs: 0, md: 0.75 },
+                borderLeft: { xs: "none", md: "1px solid rgba(124, 106, 214, 0.12)" },
+              }}
+            >
+              <NavLink to="/profile" style={{ textDecoration: "none" }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1.1,
+                    px: 1.1,
+                    py: 0.65,
+                    borderRadius: 999,
+                    border: "1px solid rgba(124, 106, 214, 0.1)",
+                    bgcolor: "rgba(255,255,255,0.62)",
+                    transition: "background-color 120ms ease, border-color 120ms ease, transform 120ms ease",
+                    "&:hover": {
+                      bgcolor: "rgba(112, 87, 246, 0.08)",
+                      borderColor: "rgba(112, 87, 246, 0.18)",
+                      transform: "translateY(-1px)",
+                    },
+                  }}
+                >
+                  <Avatar sx={{ width: 38, height: 38, bgcolor: "primary.main", fontWeight: 600, boxShadow: "0 10px 20px rgba(112, 87, 246, 0.22)" }}>
+                    {profileInitials}
+                  </Avatar>
+                  <Box sx={{ display: { xs: "none", sm: "block" } }}>
+                    <Typography variant="caption" sx={{ display: "block", color: "text.secondary", lineHeight: 1.2 }}>
+                      Signed in as
+                    </Typography>
+                    <Typography sx={{ color: "text.primary", fontWeight: 500, lineHeight: 1.25 }}>{profileName}</Typography>
+                  </Box>
+                </Box>
+              </NavLink>
+              <Button onClick={handleSignOut} disabled={isSigningOut} sx={{ ...navButtonSx, minWidth: 0, px: 1.2 }}>
+                <LogoutIcon fontSize="small" />
+              </Button>
+            </Box>
           </Box>
         </Box>
       </Toolbar>

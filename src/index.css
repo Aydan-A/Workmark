@@ -18,8 +18,13 @@ body,
 body {
   margin: 0;
   font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  background: #f7f4ff;
 }
 
 a {
   color: inherit;
+}
+
+::selection {
+  background: rgba(112, 87, 246, 0.18);
 }

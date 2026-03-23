@@ -4,21 +4,24 @@ import { Link as RouterLink } from "react-router-dom";
 
 type PanelCardProps = {
   title: string;
+  subtitle?: string;
   actionLabel?: string;
   actionTo?: string;
   children: ReactNode;
 };
 
-export default function PanelCard({ title, actionLabel, actionTo, children }: PanelCardProps) {
+export default function PanelCard({ title, subtitle, actionLabel, actionTo, children }: PanelCardProps) {
   return (
     <Paper
       variant="outlined"
       sx={{
         p: { xs: 2.5, md: 3 },
-        borderRadius: 4,
+        borderRadius: 5,
         bgcolor: "background.paper",
         borderColor: "divider",
         height: "100%",
+        backgroundImage:
+          "linear-gradient(180deg, rgba(255,255,255,0.84) 0%, rgba(255,255,255,0.96) 100%)",
       }}
     >
       <Box
@@ -30,9 +33,16 @@ export default function PanelCard({ title, actionLabel, actionTo, children }: Pa
           mb: 3,
         }}
       >
-        <Typography variant="h2" sx={{ fontSize: { xs: "1.35rem", md: "1.55rem" } }}>
-          {title}
-        </Typography>
+        <Box>
+          <Typography variant="h2" sx={{ fontSize: { xs: "1.35rem", md: "1.6rem" } }}>
+            {title}
+          </Typography>
+          {subtitle ? (
+            <Typography variant="body2" sx={{ mt: 0.5, color: "text.secondary" }}>
+              {subtitle}
+            </Typography>
+          ) : null}
+        </Box>
 
         {actionLabel && actionTo ? (
           <Button

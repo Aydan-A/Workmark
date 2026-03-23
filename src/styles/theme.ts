@@ -4,19 +4,22 @@ export const theme = createTheme({
   palette: {
     primary: {
       main: "#7057f6",
-      dark: "#5b45e2",
-      light: "#8f7dff",
+      dark: "#5640dc",
+      light: "#9a8cff",
       contrastText: "#ffffff",
     },
+    secondary: {
+      main: "#1f2340",
+    },
     background: {
-      default: "#f6f4fd",
-      paper: "#ffffff",
+      default: "#f7f4ff",
+      paper: "rgba(255,255,255,0.88)",
     },
     text: {
       primary: "#1f2340",
       secondary: "#6f768f",
     },
-    divider: "#e9e4f7",
+    divider: "rgba(124, 106, 214, 0.16)",
   },
   typography: {
     fontFamily: ["Segoe UI", "Helvetica Neue", "Arial", "sans-serif"].join(","),
@@ -33,16 +36,16 @@ export const theme = createTheme({
       letterSpacing: "0",
     },
     h1: {
-      fontSize: "1.95rem",
+      fontSize: "2rem",
+      fontWeight: 600,
+      lineHeight: 1.1,
+      letterSpacing: "-0.03em",
+    },
+    h2: {
+      fontSize: "1.5rem",
       fontWeight: 600,
       lineHeight: 1.15,
       letterSpacing: "-0.02em",
-    },
-    h2: {
-      fontSize: "1.45rem",
-      fontWeight: 600,
-      lineHeight: 1.2,
-      letterSpacing: "-0.01em",
     },
     h3: {
       fontSize: "1.15rem",
@@ -75,7 +78,7 @@ export const theme = createTheme({
     },
   },
   shape: {
-    borderRadius: 18,
+    borderRadius: 20,
   },
   components: {
     MuiCssBaseline: {
@@ -91,7 +94,8 @@ export const theme = createTheme({
     MuiPaper: {
       styleOverrides: {
         root: {
-          boxShadow: "0 20px 50px rgba(67, 46, 140, 0.06)",
+          boxShadow: "0 24px 70px rgba(73, 52, 146, 0.08)",
+          backdropFilter: "blur(14px)",
         },
       },
     },
@@ -99,19 +103,26 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 16,
-          paddingLeft: 16,
-          paddingRight: 16,
+          paddingLeft: 18,
+          paddingRight: 18,
         },
         containedPrimary: {
           boxShadow: "0 18px 34px rgba(112, 87, 246, 0.2)",
         },
       },
     },
+    MuiChip: {
+      styleOverrides: {
+        root: {
+          borderRadius: 999,
+        },
+      },
+    },
     MuiOutlinedInput: {
       styleOverrides: {
         root: {
-          borderRadius: 14,
-          backgroundColor: "#ffffff",
+          borderRadius: 16,
+          backgroundColor: "rgba(255,255,255,0.96)",
         },
       },
     },
