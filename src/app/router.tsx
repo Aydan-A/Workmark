@@ -5,6 +5,7 @@ import Home from "../pages/Home";
 import LogToday from "../pages/LogToday";
 import WeeklyLog from "../pages/WeeklyLog";
 import Calendar from "../pages/Calendar";
+import Profile from "../pages/Profile";
 import { useAuth } from "../hooks/useAuth";
 import FullScreenLoader from "../components/common/FullScreenLoader";
 
@@ -45,6 +46,7 @@ export const router = createBrowserRouter([
       { path: "today", element: <LogToday /> },
       { path: "weekly", element: <WeeklyLog /> },
       { path: "calendar", element: <Calendar /> },
+      { path: "profile", element: <Profile /> },
     ],
   },
 ]);

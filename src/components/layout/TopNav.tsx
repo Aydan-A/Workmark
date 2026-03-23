@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   AppBar,
   Avatar,
@@ -14,6 +14,7 @@ import ViewWeekIcon from "@mui/icons-material/ViewWeek";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { NavLink, useNavigate } from "react-router-dom";
 import { logout } from "../../firebase/auth";
+import { useAuth } from "../../hooks/useAuth";
 
 const navButtonSx = {
   textTransform: "none",
@@ -29,9 +30,22 @@ const getNavLinkStyle = ({ isActive }: { isActive: boolean }) => ({
   backgroundColor: isActive ? "rgba(112, 87, 246, 0.12)" : "transparent",
 });
 
+function getInitials(name: string) {
+  const trimmed = name.trim();
+
+  if (!trimmed) return "AJ";
+
+  const parts = trimmed.split(/\s+/).slice(0, 2);
+  return parts.map((part) => part[0]?.toUpperCase() ?? "").join("") || "AJ";
+}
+
 export default function TopNav() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [isSigningOut, setIsSigningOut] = useState(false);
+
+  const profileName = user?.displayName?.trim() || "Alex Johnson";
+  const profileInitials = useMemo(() => getInitials(profileName), [profileName]);
 
   const handleSignOut = async () => {
     if (isSigningOut) return;
@@ -126,10 +140,27 @@ export default function TopNav() {
               borderLeft: { xs: "none", md: "1px solid #ece7fb" },
             }}
           >
-            <Avatar sx={{ width: 38, height: 38, bgcolor: "primary.main", fontWeight: 600 }}>
-              AJ
-            </Avatar>
-            <Typography sx={{ color: "text.primary", fontWeight: 500 }}>Alex Johnson</Typography>
+            <NavLink to="/profile" style={{ textDecoration: "none" }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  px: 1,
+                  py: 0.5,
+                  borderRadius: 999,
+                  transition: "background-color 120ms ease",
+                  "&:hover": {
+                    bgcolor: "rgba(112, 87, 246, 0.08)",
+                  },
+                }}
+              >
+                <Avatar sx={{ width: 38, height: 38, bgcolor: "primary.main", fontWeight: 600 }}>
+                  {profileInitials}
+                </Avatar>
+                <Typography sx={{ color: "text.primary", fontWeight: 500 }}>{profileName}</Typography>
+              </Box>
+            </NavLink>
             <Button onClick={handleSignOut} disabled={isSigningOut} sx={{ ...navButtonSx, minWidth: 0 }}>
               <LogoutIcon fontSize="small" />
             </Button>
