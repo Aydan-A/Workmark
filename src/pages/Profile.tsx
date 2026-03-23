@@ -47,7 +47,7 @@ export default function Profile() {
             <Box>
               <Chip
                 icon={<PersonOutlineRounded sx={{ fontSize: 16 }} />}
-                label="Profile overview"
+                label="Profile"
                 size="small"
                 sx={{
                   mb: 1.1,
@@ -58,12 +58,12 @@ export default function Profile() {
               />
               <Typography variant="h2">{profileName}</Typography>
               <Typography variant="body1" sx={{ color: "text.secondary", mt: 0.6 }}>
-                This is the placeholder page for your profile. Next we can turn this into editable account details.
+                Account details and personal information.
               </Typography>
             </Box>
           </Stack>
 
-          <Chip label="Profile setup coming next" variant="outlined" />
+          <Chip label="Account" variant="outlined" />
         </Stack>
       </Paper>
 
@@ -108,12 +108,12 @@ export default function Profile() {
           }}
         >
           <Typography variant="subtitle1" sx={{ color: "text.secondary", mb: 1.75 }}>
-            Next profile tasks
+            Preferences
           </Typography>
           <Stack spacing={1.25}>
-            <Chip label="Upload avatar" variant="outlined" sx={{ justifyContent: "flex-start" }} />
-            <Chip label="Edit personal details" variant="outlined" sx={{ justifyContent: "flex-start" }} />
-            <Chip label="Set work preferences" variant="outlined" sx={{ justifyContent: "flex-start" }} />
+            <Chip label="Avatar" variant="outlined" sx={{ justifyContent: "flex-start" }} />
+            <Chip label="Personal details" variant="outlined" sx={{ justifyContent: "flex-start" }} />
+            <Chip label="Work preferences" variant="outlined" sx={{ justifyContent: "flex-start" }} />
           </Stack>
         </Paper>
       </Box>
