@@ -9,8 +9,9 @@ import type { DatesSetArg, EventClickArg, EventInput } from "@fullcalendar/core"
 import type { DateClickArg } from "@fullcalendar/interaction";
 import { endOfMonth, format, startOfMonth } from "date-fns";
 import { useAuth } from "../hooks/useAuth";
-import { getEntryErrorMessage, subscribeToMonthEntries } from "../features/entries/entry.api";
+import { getEntryLoadErrorMessage, subscribeToMonthEntries } from "../features/entries/entry.api";
 import type { WorkEntry } from "../features/entries/entry.types";
+import { getEntryPrimaryLabel } from "../features/entries/entry.utils";
 
 function formatHours(value: number): string {
   return Number.isInteger(value) ? `${value}` : value.toFixed(1);
@@ -38,7 +39,7 @@ export default function Calendar() {
         setLoadError(null);
       },
       (error) => {
-        setLoadError(getEntryErrorMessage(error));
+        setLoadError(getEntryLoadErrorMessage(error));
       },
     );
 
@@ -56,7 +57,7 @@ export default function Calendar() {
         borderColor: "#6366f1",
         textColor: "#ffffff",
         extendedProps: {
-          label: entry.projects?.[0] || entry.project || entry.description || "Work log",
+          label: getEntryPrimaryLabel(entry),
           hasAttachment: (entry.receiptFileNames?.length ?? 0) > 0,
         },
       })),

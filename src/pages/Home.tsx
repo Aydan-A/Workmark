@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from "react";
 import {
   AccessTimeRounded,
   CalendarMonthRounded,
@@ -5,6 +6,7 @@ import {
   TrendingUpRounded,
 } from "@mui/icons-material";
 import {
+  Alert,
   Box,
   Button,
   Chip,
@@ -13,11 +15,20 @@ import {
   Typography,
 } from "@mui/material";
 import { alpha, useTheme } from "@mui/material/styles";
-import { format } from "date-fns";
+import { endOfWeek, format, startOfWeek } from "date-fns";
 import { Link as RouterLink } from "react-router-dom";
 import PanelCard from "../components/common/PanelCard";
 import StatCard from "../components/common/StatCard";
-import { dashboardMockData } from "../features/dashboard/mockData";
+import {
+  getEntryLoadErrorMessage,
+  subscribeToEntries,
+} from "../features/entries/entry.api";
+import type { WorkEntry } from "../features/entries/entry.types";
+import {
+  buildRecentDashboardLogs,
+  buildWeeklyOverview,
+  getHoursForDate,
+} from "../features/entries/entry.utils";
 import { useAuth } from "../hooks/useAuth";
 
 function formatHours(value: number) {
@@ -34,38 +45,140 @@ function getFirstName(name: string) {
 
 export default function Home() {
   const theme = useTheme();
-  const { user } = useAuth();
-  const todayLabel = format(new Date(), "EEEE, MMMM d");
-  const weeklyTotal = dashboardMockData.weeklyOverview.reduce((sum, day) => sum + day.hours, 0);
-  const averagePerDay = weeklyTotal / dashboardMockData.weeklyOverview.length;
-  const activeDays = dashboardMockData.weeklyOverview.filter((day) => day.hours > 0).length;
-  const highestPoint = dashboardMockData.weeklyOverview.reduce(
-    (best, item) => (item.hours > best.hours ? item : best),
-    dashboardMockData.weeklyOverview[0],
+  const { user, loading: authLoading } = useAuth();
+  const [recentEntries, setRecentEntries] = useState<WorkEntry[]>([]);
+  const [weeklyEntries, setWeeklyEntries] = useState<WorkEntry[]>([]);
+  const [recentLoadError, setRecentLoadError] = useState<string | null>(null);
+  const [weeklyLoadError, setWeeklyLoadError] = useState<string | null>(null);
+  const [isRecentLoading, setIsRecentLoading] = useState(false);
+  const [isWeeklyLoading, setIsWeeklyLoading] = useState(false);
+
+  const now = new Date();
+  const todayLabel = format(now, "EEEE, MMMM d");
+  const todayKey = format(now, "yyyy-MM-dd");
+  const referenceDate = useMemo(() => new Date(`${todayKey}T00:00:00`), [todayKey]);
+  const weekStartKey = format(startOfWeek(referenceDate, { weekStartsOn: 1 }), "yyyy-MM-dd");
+  const weekEndKey = format(endOfWeek(referenceDate, { weekStartsOn: 1 }), "yyyy-MM-dd");
+
+  useEffect(() => {
+    if (!user) {
+      setRecentEntries([]);
+      setRecentLoadError(null);
+      setIsRecentLoading(false);
+      return;
+    }
+
+    setIsRecentLoading(true);
+
+    const unsubscribe = subscribeToEntries(
+      user.uid,
+      (entries) => {
+        setRecentEntries(entries);
+        setRecentLoadError(null);
+        setIsRecentLoading(false);
+      },
+      (error) => {
+        setRecentLoadError(getEntryLoadErrorMessage(error));
+        setIsRecentLoading(false);
+      },
+      { orderDirection: "desc", limitCount: 4 },
+    );
+
+    return unsubscribe;
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) {
+      setWeeklyEntries([]);
+      setWeeklyLoadError(null);
+      setIsWeeklyLoading(false);
+      return;
+    }
+
+    setIsWeeklyLoading(true);
+
+    const unsubscribe = subscribeToEntries(
+      user.uid,
+      (entries) => {
+        setWeeklyEntries(entries);
+        setWeeklyLoadError(null);
+        setIsWeeklyLoading(false);
+      },
+      (error) => {
+        setWeeklyLoadError(getEntryLoadErrorMessage(error));
+        setIsWeeklyLoading(false);
+      },
+      {
+        startDate: weekStartKey,
+        endDate: weekEndKey,
+        orderDirection: "asc",
+      },
+    );
+
+    return unsubscribe;
+  }, [user, weekEndKey, weekStartKey]);
+
+  const recentLogs = useMemo(
+    () => buildRecentDashboardLogs(recentEntries, referenceDate),
+    [recentEntries, referenceDate],
   );
-  const highestDay = Math.max(...dashboardMockData.weeklyOverview.map((day) => day.hours), 1);
+  const weeklyOverview = useMemo(
+    () => buildWeeklyOverview(weeklyEntries, referenceDate),
+    [referenceDate, weeklyEntries],
+  );
+
+  const weeklyTotal = weeklyOverview.reduce((sum, day) => sum + day.hours, 0);
+  const averagePerDay = weeklyTotal / weeklyOverview.length;
+  const activeDays = weeklyOverview.filter((day) => day.hours > 0).length;
+  const highestPoint = weeklyOverview.reduce(
+    (best, item) => (item.hours > best.hours ? item : best),
+    weeklyOverview[0],
+  );
+  const highestDay = Math.max(...weeklyOverview.map((day) => day.hours), 1);
   const displayName = user?.displayName?.trim() || "Aydan Abbasli";
   const firstName = getFirstName(displayName);
+  const todayHours = getHoursForDate(weeklyEntries, todayKey);
+  const dashboardErrors = [...new Set([recentLoadError, weeklyLoadError].filter((error): error is string => Boolean(error)))];
+  const isDashboardLoading = authLoading || isRecentLoading || isWeeklyLoading;
+  const recentEntriesLabel = recentLogs.length === 1 ? "recent log" : "recent logs";
+  const activeDaysLabel = activeDays === 1 ? "active day" : "active days";
+  const recentHelperText = !user
+    ? "Sign in to view activity"
+    : isDashboardLoading
+      ? "Loading your latest entries"
+      : recentLogs.length > 0
+        ? "Latest saved work logs"
+        : "No recent activity yet";
 
   const statCards = [
     {
       label: "Today's Hours",
-      value: "0",
+      value: formatHours(todayHours),
       suffix: "hrs",
-      helperText: "No entry logged yet",
+      helperText: !user
+        ? "Sign in to start logging"
+        : isDashboardLoading
+          ? "Loading today's entry"
+          : todayHours > 0
+            ? "Entry logged for today"
+            : "No entry logged yet",
       icon: <AccessTimeRounded fontSize="small" />,
     },
     {
       label: "This Week",
       value: formatHours(weeklyTotal),
       suffix: "hrs",
-      helperText: `${activeDays} active days this week`,
+      helperText: !user
+        ? "Sign in to view this week"
+        : isDashboardLoading
+          ? "Loading this week's hours"
+          : `${activeDays} ${activeDaysLabel} this week`,
       icon: <CalendarMonthRounded fontSize="small" />,
     },
     {
-      label: "Total Entries",
-      value: String(dashboardMockData.recentLogs.length),
-      helperText: "Recent activity snapshot",
+      label: "Recent Entries",
+      value: String(recentLogs.length),
+      helperText: recentHelperText,
       icon: <NotesRounded fontSize="small" />,
     },
   ];
@@ -121,7 +234,7 @@ export default function Home() {
               justifyContent="center"
               sx={{ mt: 2 }}
             >
-              <Chip label={`${dashboardMockData.recentLogs.length} recent logs`} size="small" variant="outlined" />
+              <Chip label={`${recentLogs.length} ${recentEntriesLabel}`} size="small" variant="outlined" />
               <Chip label={`${formatHours(averagePerDay)} hrs avg / day`} size="small" variant="outlined" />
               <Chip label={`Peak day: ${highestPoint.day}`} size="small" variant="outlined" />
             </Stack>
@@ -162,6 +275,12 @@ export default function Home() {
         ))}
       </Box>
 
+      {dashboardErrors.map((error) => (
+        <Alert key={error} severity="warning" sx={{ mb: 2.5 }}>
+          {error}
+        </Alert>
+      ))}
+
       <Box
         sx={{
           display: "grid",
@@ -171,71 +290,92 @@ export default function Home() {
         }}
       >
         <PanelCard title="Recent Logs" subtitle="Your latest submitted work entries." actionLabel="View all" actionTo="/weekly">
-          <Stack spacing={1.5}>
-            {dashboardMockData.recentLogs.map((log) => (
-              <Box
-                key={log.id}
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: { xs: "1fr", sm: "96px minmax(0, 1fr)" },
-                  gap: 2,
-                  p: 1.5,
-                  borderRadius: 4,
-                  border: "1px solid",
-                  borderColor: alpha(theme.palette.primary.main, 0.08),
-                  bgcolor: alpha("#ffffff", 0.55),
-                }}
-              >
+          {recentLogs.length > 0 ? (
+            <Stack spacing={1.5}>
+              {recentLogs.map((log) => (
                 <Box
+                  key={log.id}
                   sx={{
-                    borderRadius: 3.5,
+                    display: "grid",
+                    gridTemplateColumns: { xs: "1fr", sm: "96px minmax(0, 1fr)" },
+                    gap: 2,
+                    p: 1.5,
+                    borderRadius: 4,
                     border: "1px solid",
-                    borderColor: alpha(theme.palette.primary.main, 0.12),
-                    bgcolor: alpha(theme.palette.primary.main, 0.08),
-                    px: 2,
-                    py: 1.75,
-                    textAlign: { xs: "left", sm: "center" },
+                    borderColor: alpha(theme.palette.primary.main, 0.08),
+                    bgcolor: alpha("#ffffff", 0.55),
                   }}
                 >
-                  <Typography variant="h3" sx={{ fontSize: "1.9rem", letterSpacing: "-0.04em" }}>
-                    {formatHours(log.hours)}
-                  </Typography>
-                  <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
-                    hrs
-                  </Typography>
-                </Box>
-
-                <Box sx={{ minWidth: 0 }}>
-                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center">
-                    <Typography variant="h3" sx={{ fontSize: "1.2rem" }}>
-                      {log.title}
+                  <Box
+                    sx={{
+                      borderRadius: 3.5,
+                      border: "1px solid",
+                      borderColor: alpha(theme.palette.primary.main, 0.12),
+                      bgcolor: alpha(theme.palette.primary.main, 0.08),
+                      px: 2,
+                      py: 1.75,
+                      textAlign: { xs: "left", sm: "center" },
+                    }}
+                  >
+                    <Typography variant="h3" sx={{ fontSize: "1.9rem", letterSpacing: "-0.04em" }}>
+                      {formatHours(log.hours)}
                     </Typography>
-                    <Chip
-                      label={log.location}
-                      size="small"
-                      sx={{
-                        bgcolor: alpha(theme.palette.primary.main, 0.08),
-                        color: "text.secondary",
-                        fontWeight: 500,
-                      }}
-                    />
-                  </Stack>
-                  <Typography variant="body1" sx={{ mt: 0.8, color: "text.secondary", maxWidth: "56ch" }}>
-                    {log.summary}
-                  </Typography>
-                  <Typography variant="subtitle2" sx={{ mt: 1.1, color: "#9aa0b5" }}>
-                    {log.dateLabel}
-                  </Typography>
+                    <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
+                      hrs
+                    </Typography>
+                  </Box>
+
+                  <Box sx={{ minWidth: 0 }}>
+                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center">
+                      <Typography variant="h3" sx={{ fontSize: "1.2rem" }}>
+                        {log.title}
+                      </Typography>
+                      <Chip
+                        label={log.location}
+                        size="small"
+                        sx={{
+                          bgcolor: alpha(theme.palette.primary.main, 0.08),
+                          color: "text.secondary",
+                          fontWeight: 500,
+                        }}
+                      />
+                    </Stack>
+                    <Typography variant="body1" sx={{ mt: 0.8, color: "text.secondary", maxWidth: "56ch" }}>
+                      {log.summary}
+                    </Typography>
+                    <Typography variant="subtitle2" sx={{ mt: 1.1, color: "#9aa0b5" }}>
+                      {log.dateLabel}
+                    </Typography>
+                  </Box>
                 </Box>
-              </Box>
-            ))}
-          </Stack>
+              ))}
+            </Stack>
+          ) : (
+            <Box
+              sx={{
+                borderRadius: 4,
+                border: "1px dashed",
+                borderColor: alpha(theme.palette.primary.main, 0.14),
+                px: 2.5,
+                py: 4,
+                textAlign: "center",
+                color: "text.secondary",
+              }}
+            >
+              <Typography variant="subtitle1">
+                {isDashboardLoading ? "Loading your recent logs..." : "No work entries logged yet."}
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 0.75 }}>
+                {user ? "Start with today's entry to populate this feed." : "Sign in to view your saved entries."}
+              </Typography>
+            </Box>
+          )}
         </PanelCard>
 
         <PanelCard title="Weekly Overview" subtitle="Your hours across the current week." actionLabel="Calendar" actionTo="/calendar">
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mb: 2.5 }}>
             <Chip label={`${formatHours(weeklyTotal)} hrs total`} variant="outlined" />
-            <Chip label={`${activeDays} active days`} variant="outlined" />
+            <Chip label={`${activeDays} ${activeDaysLabel}`} variant="outlined" />
             <Chip label={`${highestPoint.day} peak`} variant="outlined" />
           </Stack>
 
@@ -252,7 +392,7 @@ export default function Home() {
               border: "1px solid rgba(112, 87, 246, 0.08)",
             }}
           >
-            {dashboardMockData.weeklyOverview.map((item) => {
+            {weeklyOverview.map((item) => {
               const ratio = item.hours / highestDay;
               const barHeight = item.hours === 0 ? "12%" : `${Math.max(ratio * 100, 28)}%`;
 
@@ -315,7 +455,7 @@ export default function Home() {
                 Average per day
               </Typography>
               <Typography variant="body2" sx={{ mt: 0.35, color: "text.secondary" }}>
-                Based on the current visible week.
+                Based on your saved entries this week.
               </Typography>
             </Box>
             <Typography variant="h3" sx={{ fontSize: "1.85rem", letterSpacing: "-0.04em" }}>
