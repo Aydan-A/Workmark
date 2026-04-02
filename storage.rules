@@ -1,0 +1,33 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidReceiptUpload() {
+      return request.resource != null &&
+             request.resource.size < 5 * 1024 * 1024 &&
+             request.resource.contentType.matches('image/(jpeg|png)');
+    }
+
+    // Store user receipts under users/{uid}/receipts/{yyyy-mm-dd}/{fileName}
+    // so rules can enforce ownership at the path level.
+    match /users/{userId}/receipts/{entryDate}/{fileName} {
+      allow read, delete: if isOwner(userId);
+      allow write: if isOwner(userId) &&
+                   entryDate.matches('^\\d{4}-\\d{2}-\\d{2}$') &&
+                   fileName.size() > 0 &&
+                   fileName.size() <= 120 &&
+                   isValidReceiptUpload();
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

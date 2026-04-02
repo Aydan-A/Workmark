@@ -191,7 +191,6 @@ export default function LogToday() {
 
     try {
       await saveWorkEntry({
-        uid: user.uid,
         date: entryDate,
         totalHours: parsedTotal,
         remoteHours: parsedRemote,

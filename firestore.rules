@@ -1,0 +1,63 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidEntry(entryId) {
+      return request.resource.data.keys().hasOnly([
+               'date',
+               'totalHours',
+               'remoteHours',
+               'projects',
+               'description',
+               'receiptFileNames',
+               'updatedAt'
+             ]) &&
+             request.resource.data.keys().hasAll([
+               'date',
+               'totalHours',
+               'remoteHours',
+               'projects',
+               'description',
+               'receiptFileNames',
+               'updatedAt'
+             ]) &&
+             request.resource.data.date is string &&
+             request.resource.data.date == entryId &&
+             request.resource.data.date.matches('^\\d{4}-\\d{2}-\\d{2}$') &&
+             request.resource.data.totalHours is number &&
+             request.resource.data.totalHours >= 0 &&
+             request.resource.data.totalHours <= 24 &&
+             request.resource.data.remoteHours is number &&
+             request.resource.data.remoteHours >= 0 &&
+             request.resource.data.remoteHours <= request.resource.data.totalHours &&
+             request.resource.data.projects is list &&
+             request.resource.data.projects.size() <= 10 &&
+             request.resource.data.description is string &&
+             request.resource.data.description.size() <= 2000 &&
+             request.resource.data.receiptFileNames is list &&
+             request.resource.data.receiptFileNames.size() <= 3 &&
+             request.resource.data.updatedAt is string;
+    }
+
+    match /users/{userId} {
+      // Never trust route guards or client-side uid checks for ownership.
+      allow read, write: if isOwner(userId);
+
+      match /entries/{entryId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidEntry(entryId);
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

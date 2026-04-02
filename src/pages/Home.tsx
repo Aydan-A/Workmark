@@ -71,7 +71,6 @@ export default function Home() {
     setIsRecentLoading(true);
 
     const unsubscribe = subscribeToEntries(
-      user.uid,
       (entries) => {
         setRecentEntries(entries);
         setRecentLoadError(null);
@@ -98,7 +97,6 @@ export default function Home() {
     setIsWeeklyLoading(true);
 
     const unsubscribe = subscribeToEntries(
-      user.uid,
       (entries) => {
         setWeeklyEntries(entries);
         setWeeklyLoadError(null);
@@ -287,6 +285,7 @@ export default function Home() {
           gridTemplateColumns: { xs: "1fr", lg: "1.08fr 0.92fr" },
           gap: 2,
           alignItems: "start",
+          "& > *": { minWidth: 0 },
         }}
       >
         <PanelCard title="Recent Logs" subtitle="Your latest submitted work entries." actionLabel="View all" actionTo="/weekly">
@@ -373,7 +372,7 @@ export default function Home() {
         </PanelCard>
 
         <PanelCard title="Weekly Overview" subtitle="Your hours across the current week." actionLabel="Calendar" actionTo="/calendar">
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mb: 2.5 }}>
+          <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap sx={{ mb: 2 }}>
             <Chip label={`${formatHours(weeklyTotal)} hrs total`} variant="outlined" />
             <Chip label={`${activeDays} ${activeDaysLabel}`} variant="outlined" />
             <Chip label={`${highestPoint.day} peak`} variant="outlined" />
@@ -383,13 +382,14 @@ export default function Home() {
             sx={{
               display: "grid",
               gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
-              gap: { xs: 1, md: 1.5 },
+              gap: { xs: 0.5, sm: 0.75, md: 1 },
               alignItems: "end",
-              minHeight: 296,
-              p: 2,
+              minHeight: { xs: 228, sm: 280 },
+              p: { xs: 1, sm: 1.5 },
               borderRadius: 4,
               bgcolor: alpha(theme.palette.primary.main, 0.035),
               border: "1px solid rgba(112, 87, 246, 0.08)",
+              overflow: "hidden",
             }}
           >
             {weeklyOverview.map((item) => {
@@ -397,8 +397,26 @@ export default function Home() {
               const barHeight = item.hours === 0 ? "12%" : `${Math.max(ratio * 100, 28)}%`;
 
               return (
-                <Box key={item.day} sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1.1 }}>
-                  <Typography variant="caption" sx={{ color: item.hours > 0 ? "text.secondary" : "#b0b5c7" }}>
+                <Box
+                  key={item.day}
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: { xs: 0.5, sm: 0.75 },
+                    minWidth: 0,
+                  }}
+                >
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: item.hours > 0 ? "text.secondary" : "#b0b5c7",
+                      fontSize: { xs: "0.65rem", sm: "0.75rem" },
+                      textAlign: "center",
+                      lineHeight: 1.1,
+                      minHeight: { xs: 14, sm: 16 },
+                    }}
+                  >
                     {item.hours > 0 ? `${formatHours(item.hours)}h` : "-"}
                   </Typography>
                   <Box
@@ -406,7 +424,7 @@ export default function Home() {
                       display: "flex",
                       alignItems: "flex-end",
                       width: "100%",
-                      height: 200,
+                      height: { xs: 144, sm: 184 },
                       borderRadius: 999,
                     }}
                   >
@@ -430,7 +448,14 @@ export default function Home() {
                       }}
                     />
                   </Box>
-                  <Typography variant="subtitle2" sx={{ color: "#8f96ad" }}>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{
+                      color: "#8f96ad",
+                      fontSize: { xs: "0.7rem", sm: "0.8125rem" },
+                      lineHeight: 1.1,
+                    }}
+                  >
                     {item.day}
                   </Typography>
                 </Box>
@@ -440,25 +465,50 @@ export default function Home() {
 
           <Box
             sx={{
-              mt: 2.5,
-              pt: 2.25,
+              mt: 1.75,
+              pt: 1.5,
+              px: { xs: 0.5, sm: 0.75 },
+              pb: 0.25,
               borderTop: "1px solid",
               borderColor: "divider",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: 2,
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", sm: "minmax(0, 1fr) auto" },
+              alignItems: { xs: "start", sm: "end" },
+              gap: { xs: 0.75, sm: 1.25 },
             }}
           >
-            <Box>
+            <Box
+              sx={{
+                minWidth: 0,
+                maxWidth: { xs: "100%", sm: "28rem" },
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                textAlign: "left",
+              }}
+            >
               <Typography variant="subtitle1" sx={{ color: "text.secondary" }}>
                 Average per day
               </Typography>
-              <Typography variant="body2" sx={{ mt: 0.35, color: "text.secondary" }}>
+              <Typography
+                component="p"
+                variant="body2"
+                sx={{ display: "block", mt: 0.15, color: "text.secondary", maxWidth: { sm: "28rem" } }}
+              >
                 Based on your saved entries this week.
               </Typography>
             </Box>
-            <Typography variant="h3" sx={{ fontSize: "1.85rem", letterSpacing: "-0.04em" }}>
+            <Typography
+              variant="h3"
+              sx={{
+                fontSize: { xs: "1.4rem", sm: "1.6rem", lg: "1.75rem" },
+                letterSpacing: "-0.04em",
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+                maxWidth: "100%",
+                justifySelf: { sm: "end" },
+              }}
+            >
               {formatHours(averagePerDay)} hrs
             </Typography>
           </Box>

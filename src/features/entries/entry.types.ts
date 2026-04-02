@@ -10,7 +10,6 @@ export type WorkEntry = {
 };
 
 export type SaveWorkEntryInput = {
-  uid: string;
   date: string;
   totalHours: number;
   remoteHours: number;

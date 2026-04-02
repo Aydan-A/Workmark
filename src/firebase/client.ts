@@ -3,6 +3,7 @@
 // Keep this file tiny: only setup + exports.
 
 import { initializeApp } from "firebase/app";
+import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
@@ -20,6 +21,32 @@ const firebaseConfig = {
 
 // Initialize Firebase App (singleton in your frontend)
 export const firebaseApp = initializeApp(firebaseConfig);
+
+let appCheckInitialized = false;
+
+async function initializeOptionalAppCheck() {
+  const appCheckSiteKey = import.meta.env.VITE_FIREBASE_APPCHECK_SITE_KEY as string | undefined;
+
+  // The reCAPTCHA site key is safe client config. The corresponding secret key must stay in the server-side
+  // Firebase/App Check setup only and must never be exposed through Vite env vars or committed files.
+  if (!appCheckSiteKey || appCheckInitialized || typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    initializeAppCheck(firebaseApp, {
+      provider: new ReCaptchaV3Provider(appCheckSiteKey),
+      isTokenAutoRefreshEnabled: true,
+    });
+    appCheckInitialized = true;
+  } catch (error) {
+    // App Check should not prevent local development or break older browsers.
+    console.warn("App Check initialization was skipped:", error);
+  }
+}
+
+// App Check is defense-in-depth against automated abuse; rules are still the primary access control.
+void initializeOptionalAppCheck();
 
 // Firebase services used across the app
 export const auth = getAuth(firebaseApp);

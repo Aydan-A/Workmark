@@ -32,7 +32,6 @@ export default function Calendar() {
     }
 
     const unsubscribe = subscribeToMonthEntries(
-      user.uid,
       visibleMonth,
       (entries) => {
         setMonthEntries(entries);
