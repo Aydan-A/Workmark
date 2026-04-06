@@ -195,12 +195,13 @@ export default function Home() {
         }}
       >
         <Stack
-          direction={{ xs: "column", md: "row" }}
+          direction="column"
           alignItems="center"
-          justifyContent="space-between"
-          spacing={3}
+          justifyContent="center"
+          spacing={{ xs: 2.5, md: 3 }}
+          sx={{ textAlign: "center" }}
         >
-          <Box sx={{ flex: 1, textAlign: "center" }}>
+          <Box sx={{ width: "100%", maxWidth: 720, mx: "auto" }}>
             <Chip
               label="Personal dashboard"
               size="small"
@@ -238,14 +239,25 @@ export default function Home() {
             </Stack>
           </Box>
 
-          <Box sx={{ width: { xs: "100%", md: "auto" } }}>
+          <Box
+            sx={{
+              width: { xs: "100%", sm: "auto" },
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
             <Button
               component={RouterLink}
               to="/today"
               variant="contained"
               size="large"
               startIcon={<TrendingUpRounded />}
-              sx={{ minWidth: { xs: "100%", sm: 190 }, px: 3, py: 1.45 }}
+              sx={{
+                minWidth: { xs: "100%", sm: 190 },
+                maxWidth: { xs: 320, sm: "none" },
+                px: 3,
+                py: 1.45,
+              }}
             >
               Log Today
             </Button>

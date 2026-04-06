@@ -21,7 +21,12 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { format } from "date-fns";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { getEntryErrorMessage, saveWorkEntry } from "../features/entries/entry.api";
+import {
+  getEntryErrorMessage,
+  getEntryLoadErrorMessage,
+  saveWorkEntry,
+  subscribeToEntry,
+} from "../features/entries/entry.api";
 
 const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -52,14 +57,15 @@ export default function LogToday() {
   const initialDate = queryDate && DATE_KEY_PATTERN.test(queryDate) ? queryDate : todayKey;
 
   const [entryDate, setEntryDate] = useState(initialDate);
-  const [totalHours, setTotalHours] = useState("");
   const [remoteHours, setRemoteHours] = useState("");
   const [availableProjects, setAvailableProjects] = useState<string[]>(DEFAULT_PROJECT_OPTIONS);
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const [customProjectName, setCustomProjectName] = useState("");
   const [description, setDescription] = useState("");
   const [receipts, setReceipts] = useState<File[]>([]);
+  const [savedReceiptFileNames, setSavedReceiptFileNames] = useState<string[]>([]);
   const [fileError, setFileError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveWarning, setSaveWarning] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
@@ -67,10 +73,10 @@ export default function LogToday() {
   const slowSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const canSave = useMemo(() => {
-    if (totalHours.trim() === "") return false;
-    const parsed = Number(totalHours);
+    if (remoteHours.trim() === "") return false;
+    const parsed = Number(remoteHours);
     return Number.isFinite(parsed) && parsed >= 0 && parsed <= 24;
-  }, [totalHours]);
+  }, [remoteHours]);
 
   const selectedDateLabel = useMemo(() => {
     if (!DATE_KEY_PATTERN.test(entryDate)) return todayLabel;
@@ -84,11 +90,75 @@ export default function LogToday() {
   useEffect(() => {
     if (queryDate && DATE_KEY_PATTERN.test(queryDate)) {
       setEntryDate(queryDate);
+      setLoadError(null);
       setSaveError(null);
       setSaveWarning(null);
       setSaveSuccess(null);
     }
   }, [queryDate]);
+
+  useEffect(() => {
+    if (!user || !DATE_KEY_PATTERN.test(entryDate)) {
+      setLoadError(null);
+      setRemoteHours("");
+      setSelectedProjects([]);
+      setCustomProjectName("");
+      setDescription("");
+      setReceipts([]);
+      setSavedReceiptFileNames([]);
+      setFileError(null);
+      return;
+    }
+
+    const unsubscribe = subscribeToEntry(
+      entryDate,
+      (entry) => {
+        setLoadError(null);
+
+        if (!entry) {
+          setRemoteHours("");
+          setSelectedProjects([]);
+          setCustomProjectName("");
+          setDescription("");
+          setReceipts([]);
+          setSavedReceiptFileNames([]);
+          setFileError(null);
+          setAvailableProjects((current) => {
+            const merged = [...DEFAULT_PROJECT_OPTIONS];
+            for (const option of current) {
+              if (!merged.includes(option)) merged.push(option);
+            }
+            return merged;
+          });
+          return;
+        }
+
+        const nextProjects = entry.projects ?? [];
+        const nextRemoteHours =
+          entry.remoteHours > 0 ? String(entry.remoteHours) : entry.totalHours > 0 ? String(entry.totalHours) : "";
+
+        setRemoteHours(nextRemoteHours);
+        setSelectedProjects(nextProjects);
+        setCustomProjectName("");
+        setDescription(entry.description ?? "");
+        setReceipts([]);
+        setSavedReceiptFileNames(entry.receiptFileNames ?? []);
+        setFileError(null);
+        setAvailableProjects((current) => {
+          const merged = [...DEFAULT_PROJECT_OPTIONS];
+          for (const option of [...current, ...nextProjects]) {
+            if (!merged.includes(option)) merged.push(option);
+          }
+          return merged;
+        });
+      },
+      (error) => {
+        setLoadError(getEntryLoadErrorMessage(error));
+      },
+    );
+
+    return unsubscribe;
+  }, [entryDate, user]);
 
   useEffect(() => {
     return () => {
@@ -123,6 +193,7 @@ export default function LogToday() {
     clearSaveMessages();
     setFileError(null);
     setReceipts(selected);
+    setSavedReceiptFileNames([]);
   };
 
   const handleAddCustomProject = () => {
@@ -166,18 +237,11 @@ export default function LogToday() {
       return;
     }
 
-    const parsedTotal = Number(totalHours);
-    const parsedRemote = remoteHours.trim() === "" ? 0 : Number(remoteHours);
+    const parsedRemote = Number(remoteHours);
 
     if (!Number.isFinite(parsedRemote) || parsedRemote < 0 || parsedRemote > 24) {
       setSaveSuccess(null);
       setSaveError("Remote hours must be between 0 and 24.");
-      return;
-    }
-
-    if (parsedRemote > parsedTotal) {
-      setSaveSuccess(null);
-      setSaveError("Remote hours cannot be greater than total hours.");
       return;
     }
 
@@ -192,7 +256,9 @@ export default function LogToday() {
     try {
       await saveWorkEntry({
         date: entryDate,
-        totalHours: parsedTotal,
+        // The app only collects remote hours, so keep the existing entry shape by
+        // storing totalHours equal to the remote-hours value.
+        totalHours: parsedRemote,
         remoteHours: parsedRemote,
         projects: selectedProjects,
         description: description.trim(),
@@ -227,6 +293,7 @@ export default function LogToday() {
 
         <Box sx={{ borderTop: "1px solid #e5e7eb", p: 3 }}>
           <Stack spacing={2.5}>
+            {loadError && <Alert severity="warning">{loadError}</Alert>}
             {saveError && <Alert severity="error">{saveError}</Alert>}
             {saveWarning && <Alert severity="warning">{saveWarning}</Alert>}
             {saveSuccess && <Alert severity="success">{saveSuccess}</Alert>}
@@ -250,10 +317,10 @@ export default function LogToday() {
               />
             </Box>
 
-            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
+            <Box>
               <Box>
                 <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                  Total Hours{" "}
+                  Remote Hours{" "}
                   <Typography component="span" variant="caption" sx={{ color: "#dc2626" }}>
                     *
                   </Typography>
@@ -261,10 +328,10 @@ export default function LogToday() {
                 <TextField
                   fullWidth
                   type="number"
-                  placeholder="e.g. 8"
-                  value={totalHours}
+                  placeholder="e.g. 6"
+                  value={remoteHours}
                   onChange={(event) => {
-                    setTotalHours(event.target.value);
+                    setRemoteHours(event.target.value);
                     clearSaveMessages();
                   }}
                   sx={{ mt: 1 }}
@@ -275,32 +342,15 @@ export default function LogToday() {
                       key={hours}
                       label={`${hours}h`}
                       clickable
-                      variant={totalHours === hours ? "filled" : "outlined"}
-                      color={totalHours === hours ? "primary" : "default"}
+                      variant={remoteHours === hours ? "filled" : "outlined"}
+                      color={remoteHours === hours ? "primary" : "default"}
                       onClick={() => {
-                        setTotalHours(hours);
+                        setRemoteHours(hours);
                         clearSaveMessages();
                       }}
                     />
                   ))}
                 </Stack>
-              </Box>
-
-              <Box>
-                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                  Remote Hours <Typography component="span" variant="caption">optional</Typography>
-                </Typography>
-                <TextField
-                  fullWidth
-                  type="number"
-                  placeholder="e.g. 4"
-                  value={remoteHours}
-                  onChange={(event) => {
-                    setRemoteHours(event.target.value);
-                    clearSaveMessages();
-                  }}
-                  sx={{ mt: 1 }}
-                />
               </Box>
             </Box>
 
@@ -398,17 +448,27 @@ export default function LogToday() {
                   Accepted: JPG/PNG, max 5MB each
                 </Typography>
 
-                {receipts.length > 0 && (
+                {(receipts.length > 0 || savedReceiptFileNames.length > 0) && (
                   <Stack
                     direction="row"
                     spacing={1}
                     justifyContent="center"
                     sx={{ mt: 1.25, flexWrap: "wrap", rowGap: 1 }}
                   >
-                    {receipts.map((file) => (
-                      <Chip key={file.name} label={file.name} />
-                    ))}
+                    {receipts.length > 0
+                      ? receipts.map((file) => (
+                          <Chip key={file.name} label={file.name} />
+                        ))
+                      : savedReceiptFileNames.map((fileName) => (
+                          <Chip key={fileName} label={fileName} variant="outlined" />
+                        ))}
                   </Stack>
+                )}
+
+                {savedReceiptFileNames.length > 0 && receipts.length === 0 && (
+                  <Typography variant="caption" sx={{ display: "block", mt: 0.75, color: "text.secondary" }}>
+                    Saved receipt names from this entry.
+                  </Typography>
                 )}
               </Box>
 

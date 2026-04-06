@@ -164,6 +164,33 @@ export function subscribeToEntries(
   );
 }
 
+export function subscribeToEntry(
+  date: string,
+  onData: (entry: WorkEntry | null) => void,
+  onError?: (error: unknown) => void,
+): Unsubscribe {
+  let uid: string;
+  try {
+    uid = assertAuthenticatedUserId();
+  } catch (error) {
+    onError?.(error);
+    return () => undefined;
+  }
+
+  const dateKey = assertValidDateKey(date);
+  const entryRef = doc(db, "users", uid, "entries", dateKey);
+
+  return onSnapshot(
+    entryRef,
+    (snapshot) => {
+      onData(snapshot.exists() ? (snapshot.data() as WorkEntry) : null);
+    },
+    (error) => {
+      onError?.(error);
+    },
+  );
+}
+
 export function subscribeToMonthEntries(
   visibleMonth: Date,
   onData: (entries: WorkEntry[]) => void,
