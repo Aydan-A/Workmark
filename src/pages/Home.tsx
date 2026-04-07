@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AccessTimeRounded,
   CalendarMonthRounded,
@@ -31,6 +31,10 @@ import {
 } from "../features/entries/entry.utils";
 import { useAuth } from "../hooks/useAuth";
 
+type VantaInstance = {
+  destroy: () => void;
+};
+
 function formatHours(value: number) {
   return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
@@ -46,6 +50,8 @@ function getFirstName(name: string) {
 export default function Home() {
   const theme = useTheme();
   const { user, loading: authLoading } = useAuth();
+  const heroRef = useRef<HTMLDivElement | null>(null);
+  const heroVantaRef = useRef<VantaInstance | null>(null);
   const [recentEntries, setRecentEntries] = useState<WorkEntry[]>([]);
   const [weeklyEntries, setWeeklyEntries] = useState<WorkEntry[]>([]);
   const [recentLoadError, setRecentLoadError] = useState<string | null>(null);
@@ -59,6 +65,42 @@ export default function Home() {
   const referenceDate = useMemo(() => new Date(`${todayKey}T00:00:00`), [todayKey]);
   const weekStartKey = format(startOfWeek(referenceDate, { weekStartsOn: 1 }), "yyyy-MM-dd");
   const weekEndKey = format(endOfWeek(referenceDate, { weekStartsOn: 1 }), "yyyy-MM-dd");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function initializeHeroBackground() {
+      if (!heroRef.current || heroVantaRef.current) return;
+
+      const p5Module = await import("p5");
+      (window as Window & { p5?: unknown }).p5 = p5Module.default;
+
+      const vantaModule = await import("vanta/dist/vanta.trunk.min");
+      const createTrunkEffect = vantaModule.default as (options: Record<string, unknown>) => VantaInstance;
+
+      if (cancelled || !heroRef.current) return;
+
+      heroVantaRef.current = createTrunkEffect({
+        el: heroRef.current,
+        mouseControls: true,
+        touchControls: true,
+        gyroControls: false,
+        minHeight: 200,
+        minWidth: 200,
+        scale: 1,
+        scaleMobile: 1,
+        color: 0x4e4598,
+      });
+    }
+
+    void initializeHeroBackground();
+
+    return () => {
+      cancelled = true;
+      heroVantaRef.current?.destroy();
+      heroVantaRef.current = null;
+    };
+  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -184,85 +226,128 @@ export default function Home() {
   return (
     <Box>
       <Paper
+        ref={heroRef}
         variant="outlined"
         sx={{
           p: { xs: 2.5, md: 3.5 },
           borderRadius: 5,
           borderColor: "divider",
-          backgroundImage:
-            "radial-gradient(circle at top right, rgba(112,87,246,0.14), transparent 26%), linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.98) 100%)",
+          position: "relative",
+          overflow: "hidden",
+          bgcolor: "transparent",
+          "& .vanta-canvas": {
+            borderRadius: "inherit",
+          },
           mb: 3,
         }}
       >
-        <Stack
-          direction="column"
-          alignItems="center"
-          justifyContent="center"
-          spacing={{ xs: 2.5, md: 3 }}
-          sx={{ textAlign: "center" }}
+        <Box
+          sx={{
+            position: "relative",
+            zIndex: 1,
+            px: { xs: 0.5, sm: 1 },
+            py: { xs: 0.5, sm: 0.75 },
+          }}
         >
-          <Box sx={{ width: "100%", maxWidth: 720, mx: "auto" }}>
-            <Chip
-              label="Personal dashboard"
-              size="small"
-              sx={{
-                mb: 1.25,
-                bgcolor: alpha(theme.palette.primary.main, 0.1),
-                color: "primary.main",
-                border: "1px solid rgba(112,87,246,0.1)",
-              }}
-            />
-            <Typography
-              variant="h1"
-              sx={{
-                fontSize: { xs: "2.1rem", md: "2.7rem" },
-                letterSpacing: "-0.04em",
-              }}
-            >
-              Welcome back, {firstName}
-            </Typography>
-            <Typography variant="subtitle1" sx={{ mt: 1, color: "text.secondary" }}>
-              {todayLabel}
-            </Typography>
-
-            <Stack
-              direction="row"
-              spacing={1}
-              flexWrap="wrap"
-              useFlexGap
-              justifyContent="center"
-              sx={{ mt: 2 }}
-            >
-              <Chip label={`${recentLogs.length} ${recentEntriesLabel}`} size="small" variant="outlined" />
-              <Chip label={`${formatHours(averagePerDay)} hrs avg / day`} size="small" variant="outlined" />
-              <Chip label={`Peak day: ${highestPoint.day}`} size="small" variant="outlined" />
-            </Stack>
-          </Box>
-
-          <Box
-            sx={{
-              width: { xs: "100%", sm: "auto" },
-              display: "flex",
-              justifyContent: "center",
-            }}
+          <Stack
+            direction="column"
+            alignItems="center"
+            justifyContent="center"
+            spacing={{ xs: 2.5, md: 3 }}
+            sx={{ textAlign: "center" }}
           >
-            <Button
-              component={RouterLink}
-              to="/today"
-              variant="contained"
-              size="large"
-              startIcon={<TrendingUpRounded />}
+            <Box sx={{ width: "100%", maxWidth: 720, mx: "auto" }}>
+              <Chip
+                label="Personal dashboard"
+                size="small"
+                sx={{
+                  mb: 1.25,
+                  bgcolor: "rgba(140, 123, 255, 0.18)",
+                  color: "#d8d0ff",
+                  border: "1px solid rgba(170, 157, 255, 0.24)",
+                }}
+              />
+              <Typography
+                variant="h1"
+                sx={{
+                  fontSize: { xs: "2.1rem", md: "2.7rem" },
+                  letterSpacing: "-0.04em",
+                  color: "#f7f5ff",
+                  textShadow: "0 10px 30px rgba(0, 0, 0, 0.28)",
+                }}
+              >
+                Welcome back, {firstName}
+              </Typography>
+              <Typography variant="subtitle1" sx={{ mt: 1, color: "rgba(234, 230, 255, 0.84)" }}>
+                {todayLabel}
+              </Typography>
+
+              <Stack
+                direction="row"
+                spacing={1}
+                flexWrap="wrap"
+                useFlexGap
+                justifyContent="center"
+                sx={{ mt: 2 }}
+              >
+                <Chip
+                  label={`${recentLogs.length} ${recentEntriesLabel}`}
+                  size="small"
+                  variant="outlined"
+                  sx={{
+                    color: "#f3efff",
+                    borderColor: "rgba(220, 212, 255, 0.42)",
+                    bgcolor: "rgba(20, 24, 42, 0.18)",
+                  }}
+                />
+                <Chip
+                  label={`${formatHours(averagePerDay)} hrs avg / day`}
+                  size="small"
+                  variant="outlined"
+                  sx={{
+                    color: "#f3efff",
+                    borderColor: "rgba(220, 212, 255, 0.42)",
+                    bgcolor: "rgba(20, 24, 42, 0.18)",
+                  }}
+                />
+                <Chip
+                  label={`Peak day: ${highestPoint.day}`}
+                  size="small"
+                  variant="outlined"
+                  sx={{
+                    color: "#f3efff",
+                    borderColor: "rgba(220, 212, 255, 0.42)",
+                    bgcolor: "rgba(20, 24, 42, 0.18)",
+                  }}
+                />
+              </Stack>
+            </Box>
+
+            <Box
               sx={{
-                minWidth: { xs: "100%", sm: 190 },
-                maxWidth: { xs: 320, sm: "none" },
-                px: 3,
-                py: 1.45,
+                width: { xs: "100%", sm: "auto" },
+                display: "flex",
+                justifyContent: "center",
               }}
             >
-              Log Today
-            </Button>
-          </Box>
-        </Stack>
+              <Button
+                component={RouterLink}
+                to="/today"
+                variant="contained"
+                size="large"
+                startIcon={<TrendingUpRounded />}
+                sx={{
+                  minWidth: { xs: "100%", sm: 190 },
+                  maxWidth: { xs: 320, sm: "none" },
+                  px: 3,
+                  py: 1.45,
+                }}
+              >
+                Log Today
+              </Button>
+            </Box>
+          </Stack>
+        </Box>
       </Paper>
 
       <Box
@@ -273,7 +358,7 @@ export default function Home() {
           mb: 2.5,
         }}
       >
-        {statCards.map((card) => (
+        {statCards.map((card, index) => (
           <StatCard
             key={card.label}
             icon={card.icon}
@@ -281,6 +366,7 @@ export default function Home() {
             suffix={card.suffix}
             value={card.value}
             helperText={card.helperText}
+            animationIndex={index}
           />
         ))}
       </Box>

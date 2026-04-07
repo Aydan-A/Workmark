@@ -19,11 +19,13 @@ import { useAuth } from "../../hooks/useAuth";
 
 const navButtonSx = {
   textTransform: "none",
-  fontWeight: 500,
+  fontWeight: 600,
   borderRadius: 999,
   color: "#1f2340",
   px: 1.6,
   py: 0.9,
+  fontFamily: "'Plus Jakarta Sans', sans-serif",
+  letterSpacing: "-0.01em",
 };
 
 const getNavLinkStyle = ({ isActive }: { isActive: boolean }) => ({
@@ -106,10 +108,29 @@ export default function TopNav() {
                 <WorkOutlineIcon />
               </Box>
               <Box>
-                <Typography variant="caption" sx={{ display: "block", color: "text.secondary", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    display: "block",
+                    color: "text.secondary",
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    fontWeight: 500,
+                  }}
+                >
                   Worklog
                 </Typography>
-                <Typography variant="h6" sx={{ color: "text.primary", fontWeight: 600, lineHeight: 1.1 }}>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    color: "text.primary",
+                    fontWeight: 700,
+                    lineHeight: 1.1,
+                    letterSpacing: "-0.025em",
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  }}
+                >
                   Daily Work Log
                 </Typography>
               </Box>
@@ -178,10 +199,28 @@ export default function TopNav() {
                     {profileInitials}
                   </Avatar>
                   <Box sx={{ display: { xs: "none", sm: "block" } }}>
-                    <Typography variant="caption" sx={{ display: "block", color: "text.secondary", lineHeight: 1.2 }}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        display: "block",
+                        color: "text.secondary",
+                        lineHeight: 1.2,
+                        fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      }}
+                    >
                       Signed in as
                     </Typography>
-                    <Typography sx={{ color: "text.primary", fontWeight: 500, lineHeight: 1.25 }}>{profileName}</Typography>
+                    <Typography
+                      sx={{
+                        color: "text.primary",
+                        fontWeight: 600,
+                        lineHeight: 1.25,
+                        letterSpacing: "-0.015em",
+                        fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      }}
+                    >
+                      {profileName}
+                    </Typography>
                   </Box>
                 </Box>
               </NavLink>

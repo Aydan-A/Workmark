@@ -1,5 +1,7 @@
 import { createTheme } from "@mui/material/styles";
 
+const appFontFamily = ["Plus Jakarta Sans", "Segoe UI", "Helvetica Neue", "Arial", "sans-serif"].join(",");
+
 export const theme = createTheme({
   palette: {
     primary: {
@@ -22,7 +24,7 @@ export const theme = createTheme({
     divider: "rgba(124, 106, 214, 0.16)",
   },
   typography: {
-    fontFamily: ["Segoe UI", "Helvetica Neue", "Arial", "sans-serif"].join(","),
+    fontFamily: appFontFamily,
     body1: {
       fontSize: "1rem",
       fontWeight: 400,
@@ -38,20 +40,20 @@ export const theme = createTheme({
     h1: {
       fontSize: "2rem",
       fontWeight: 600,
-      lineHeight: 1.1,
-      letterSpacing: "-0.03em",
+      lineHeight: 1.02,
+      letterSpacing: "-0.025em",
     },
     h2: {
       fontSize: "1.5rem",
       fontWeight: 600,
-      lineHeight: 1.15,
+      lineHeight: 1.08,
       letterSpacing: "-0.02em",
     },
     h3: {
       fontSize: "1.15rem",
       fontWeight: 600,
-      lineHeight: 1.25,
-      letterSpacing: "0",
+      lineHeight: 1.15,
+      letterSpacing: "-0.01em",
     },
     subtitle1: {
       fontSize: "1rem",
