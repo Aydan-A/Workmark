@@ -9,9 +9,9 @@ import {
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
-import TodayIcon from "@mui/icons-material/Today";
-import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import ViewWeekIcon from "@mui/icons-material/ViewWeek";
+import EditCalendarRoundedIcon from "@mui/icons-material/EditCalendarRounded";
+import DateRangeRoundedIcon from "@mui/icons-material/DateRangeRounded";
+import TimelineRoundedIcon from "@mui/icons-material/TimelineRounded";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { NavLink, useNavigate } from "react-router-dom";
 import { logout } from "../../firebase/auth";
@@ -149,19 +149,19 @@ export default function TopNav() {
             }}
           >
             <NavLink to="/today" style={getNavLinkStyle}>
-              <Button startIcon={<TodayIcon />} sx={navButtonSx}>
+              <Button startIcon={<EditCalendarRoundedIcon />} sx={navButtonSx}>
                 Log Today
               </Button>
             </NavLink>
 
             <NavLink to="/weekly" style={getNavLinkStyle}>
-              <Button startIcon={<ViewWeekIcon />} sx={navButtonSx}>
+              <Button startIcon={<TimelineRoundedIcon />} sx={navButtonSx}>
                 Weekly Log
               </Button>
             </NavLink>
 
             <NavLink to="/calendar" style={getNavLinkStyle}>
-              <Button startIcon={<CalendarMonthIcon />} sx={navButtonSx}>
+              <Button startIcon={<DateRangeRoundedIcon />} sx={navButtonSx}>
                 Calendar
               </Button>
             </NavLink>
