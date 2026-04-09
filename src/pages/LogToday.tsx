@@ -399,7 +399,7 @@ export default function LogToday() {
                   disabled={customProjectName.trim() === ""}
                   sx={{ minWidth: 150 }}
                 >
-                  Add Custom
+                  Add
                 </Button>
               </Stack>
             </Box>
