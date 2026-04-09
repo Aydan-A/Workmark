@@ -5,21 +5,14 @@ import {
   startOfDay,
   startOfWeek,
 } from "date-fns";
-import type { WorkEntry } from "./entry.types";
-
-export type DashboardLog = {
-  id: string;
-  title: string;
-  location: string;
-  summary: string;
-  hours: number;
-  dateLabel: string;
-};
-
-export type WeeklyPoint = {
-  day: string;
-  hours: number;
-};
+import type {
+  CompactDailyBreakdownRow,
+  DashboardLog,
+  WeeklyBusiestDay,
+  WeeklyPoint,
+  WeeklyTopProject,
+  WorkEntry,
+} from "./entry.types";
 
 function parseDateKey(dateKey: string): Date {
   return new Date(`${dateKey}T00:00:00`);
@@ -95,4 +88,119 @@ export function getHoursForDate(entries: WorkEntry[], dateKey: string): number {
     (total, entry) => (entry.date === dateKey ? total + entry.totalHours : total),
     0,
   );
+}
+
+export function getTotalRemoteHours(entries: WorkEntry[]): number {
+  return entries.reduce((total, entry) => total + Math.max(entry.remoteHours, 0), 0);
+}
+
+export function countLoggedDays(entries: WorkEntry[]): number {
+  return new Set(
+    entries
+      .filter((entry) => entry.remoteHours > 0)
+      .map((entry) => entry.date),
+  ).size;
+}
+
+export function calculateAverageHours(entries: WorkEntry[]): number {
+  const loggedDays = countLoggedDays(entries);
+  if (loggedDays === 0) return 0;
+  return getTotalRemoteHours(entries) / loggedDays;
+}
+
+export function findBusiestDay(entries: WorkEntry[]): WeeklyBusiestDay | null {
+  const hoursByDate = new Map<string, number>();
+
+  for (const entry of entries) {
+    hoursByDate.set(entry.date, (hoursByDate.get(entry.date) ?? 0) + Math.max(entry.remoteHours, 0));
+  }
+
+  let busiest: WeeklyBusiestDay | null = null;
+
+  for (const [date, hours] of hoursByDate.entries()) {
+    if (hours <= 0) continue;
+
+    if (!busiest || hours > busiest.hours || (hours === busiest.hours && date < busiest.date)) {
+      busiest = {
+        date,
+        day: format(parseDateKey(date), "EEE"),
+        hours,
+      };
+    }
+  }
+
+  return busiest;
+}
+
+export function findTopProject(entries: WorkEntry[]): WeeklyTopProject | null {
+  const projectTotals = new Map<string, { hours: number; dates: Set<string> }>();
+
+  for (const entry of entries) {
+    const projectName = getEntryPrimaryLabel(entry);
+    const current = projectTotals.get(projectName) ?? { hours: 0, dates: new Set<string>() };
+
+    current.hours += Math.max(entry.remoteHours, 0);
+    current.dates.add(entry.date);
+    projectTotals.set(projectName, current);
+  }
+
+  let topProject: WeeklyTopProject | null = null;
+
+  for (const [name, data] of projectTotals.entries()) {
+    if (data.hours <= 0) continue;
+
+    if (
+      !topProject ||
+      data.hours > topProject.hours ||
+      (data.hours === topProject.hours && data.dates.size > topProject.days) ||
+      (data.hours === topProject.hours && data.dates.size === topProject.days && name < topProject.name)
+    ) {
+      topProject = {
+        name,
+        hours: data.hours,
+        days: data.dates.size,
+      };
+    }
+  }
+
+  return topProject;
+}
+
+export function getSafeReceiptCountTotal(entries: WorkEntry[]): number {
+  return entries.reduce((total, entry) => {
+    const receiptCount = Array.isArray(entry.receiptFileNames) ? entry.receiptFileNames.length : 0;
+    return total + receiptCount;
+  }, 0);
+}
+
+export function buildCompactDailyBreakdownRows(entries: WorkEntry[]): CompactDailyBreakdownRow[] {
+  const entriesByDate = new Map<string, WorkEntry[]>();
+
+  for (const entry of entries) {
+    const currentEntries = entriesByDate.get(entry.date) ?? [];
+    currentEntries.push(entry);
+    entriesByDate.set(entry.date, currentEntries);
+  }
+
+  return Array.from(entriesByDate.entries())
+    .sort(([leftDate], [rightDate]) => leftDate.localeCompare(rightDate))
+    .map(([date, dateEntries]) => {
+      const dateObject = parseDateKey(date);
+      const uniqueProjects = Array.from(
+        new Set(dateEntries.map((entry) => getEntryPrimaryLabel(entry))),
+      );
+      const projectLabel =
+        uniqueProjects.length <= 1
+          ? (uniqueProjects[0] ?? "No project")
+          : `${uniqueProjects.length} projects`;
+
+      return {
+        date,
+        day: format(dateObject, "EEE"),
+        dateLabel: format(dateObject, "MMM d"),
+        hours: getTotalRemoteHours(dateEntries),
+        projectLabel,
+        receiptCount: getSafeReceiptCountTotal(dateEntries),
+      };
+    });
 }
