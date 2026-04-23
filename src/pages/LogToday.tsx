@@ -1,8 +1,10 @@
-import { Alert, Box, Button, IconButton, Typography } from "@mui/material";
+import { Alert, Box, Button, IconButton, Stack, Typography } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import AddIcon from "@mui/icons-material/Add";
 import { useLogToday } from "../features/entries/hooks/useLogToday";
+import { DaySummaryRow } from "../features/entries/components/DaySummaryRow";
+import { EntryCard } from "../features/entries/components/EntryCard";
 
 export default function LogToday() {
   const {
@@ -10,9 +12,14 @@ export default function LogToday() {
     isToday,
     entries,
     loadError,
+    totalHours,
+    remoteHours,
+    officeHours,
     goToPrevDay,
     goToNextDay,
     openAddModal,
+    openEditModal,
+    openDeleteDialog,
   } = useLogToday();
 
   return (
@@ -68,9 +75,22 @@ export default function LogToday() {
         </Box>
       ) : (
         <Box>
-          {/* DaySummaryRow — wired in Commit 2 */}
-          {/* EntryCard list — wired in Commit 2 */}
-          <Box sx={{ mt: 2, display: "flex", justifyContent: "center" }}>
+          <DaySummaryRow
+            totalHours={totalHours}
+            remoteHours={remoteHours}
+            officeHours={officeHours}
+          />
+          <Stack spacing={1.5} sx={{ mb: 2 }}>
+            {entries.map((entry) => (
+              <EntryCard
+                key={entry.id}
+                entry={entry}
+                onEdit={openEditModal}
+                onDelete={openDeleteDialog}
+              />
+            ))}
+          </Stack>
+          <Box sx={{ display: "flex", justifyContent: "center" }}>
             <Button variant="outlined" startIcon={<AddIcon />} onClick={openAddModal}>
               Add entry
             </Button>
