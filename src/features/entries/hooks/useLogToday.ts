@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { addDays, format, parse, subDays } from "date-fns";
+import { addDays, format, subDays } from "date-fns";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../../../hooks/useAuth";
 import { getEntryLoadErrorMessage, subscribeToEntriesForDate } from "../entry.api";
 import { subscribeToProjects } from "../project.api";
+import { getTotalRemoteHours, parseDateKey } from "../entry.utils";
 import type { Project, WorkEntry } from "../entry.types";
 
 const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -19,10 +20,6 @@ export type EntryFormData = {
   note: string;
   isRemote: boolean;
 };
-
-function parseDateKey(dateKey: string): Date {
-  return parse(dateKey, "yyyy-MM-dd", new Date());
-}
 
 export function useLogToday() {
   const { user } = useAuth();
@@ -91,25 +88,19 @@ export function useLogToday() {
     [entries],
   );
 
-  const remoteHours = useMemo(
-    () =>
-      entries.filter((e) => e.isRemote).reduce((sum, e) => sum + e.hours, 0),
-    [entries],
-  );
+  const remoteHours = useMemo(() => getTotalRemoteHours(entries), [entries]);
 
   const officeHours = useMemo(
     () => totalHours - remoteHours,
     [totalHours, remoteHours],
   );
 
-  const defaultStartTime = useMemo(() => {
-    if (entries.length === 0) return "09:00";
-    return entries[entries.length - 1].endTime;
-  }, [entries]);
-
-  const defaultIsRemote = useMemo(() => {
-    if (entries.length === 0) return false;
-    return entries[entries.length - 1].isRemote;
+  const { defaultStartTime, defaultIsRemote } = useMemo(() => {
+    const last = entries[entries.length - 1];
+    return {
+      defaultStartTime: last?.endTime ?? "09:00",
+      defaultIsRemote: last?.isRemote ?? false,
+    };
   }, [entries]);
 
   const selectedDateLabel = useMemo(
@@ -141,12 +132,9 @@ export function useLogToday() {
 
   const closeDeleteDialog = () => setPendingDelete(null);
 
-  const saveEntry = async (_data: EntryFormData): Promise<void> => {
-    // Implemented in Commit 3
-  };
+  const saveEntry = async (_data: EntryFormData): Promise<void> => {};
 
   const confirmDelete = async (): Promise<void> => {
-    // Implemented in Commit 4
     setPendingDelete(null);
   };
 

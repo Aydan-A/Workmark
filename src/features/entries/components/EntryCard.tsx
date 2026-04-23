@@ -2,6 +2,7 @@ import { Box, Chip, IconButton, Paper, Typography } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import type { WorkEntry } from "../entry.types";
+import { formatHours } from "../entry.utils";
 
 type Props = {
   entry: WorkEntry;
@@ -22,15 +23,6 @@ function projectColor(projectId: string): string {
   return COLOR_PALETTE[Math.abs(h) % COLOR_PALETTE.length];
 }
 
-function fmtDuration(hours: number): string {
-  const totalMins = Math.round(hours * 60);
-  const h = Math.floor(totalMins / 60);
-  const m = totalMins % 60;
-  if (h === 0) return `${m}m`;
-  if (m === 0) return `${h}h`;
-  return `${h}h ${m}m`;
-}
-
 export function EntryCard({ entry, onEdit, onDelete }: Props) {
   const color = projectColor(entry.projectId);
 
@@ -46,7 +38,7 @@ export function EntryCard({ entry, onEdit, onDelete }: Props) {
             {entry.startTime} – {entry.endTime}
           </Typography>
           <Typography variant="caption" sx={{ color: "text.secondary", display: "block" }}>
-            {fmtDuration(entry.hours)}
+            {formatHours(entry.hours)}
           </Typography>
         </Box>
 

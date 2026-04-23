@@ -1,19 +1,11 @@
 import { Box, Paper, Typography } from "@mui/material";
+import { formatHours } from "../entry.utils";
 
 type Props = {
   totalHours: number;
   remoteHours: number;
   officeHours: number;
 };
-
-function fmtH(hours: number): string {
-  const totalMins = Math.round(hours * 60);
-  const h = Math.floor(totalMins / 60);
-  const m = totalMins % 60;
-  if (h === 0) return `${m}m`;
-  if (m === 0) return `${h}h`;
-  return `${h}h ${m}m`;
-}
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
@@ -44,9 +36,9 @@ export function DaySummaryRow({ totalHours, remoteHours, officeHours }: Props) {
         gap: 4,
       }}
     >
-      <Stat label="Total" value={fmtH(totalHours)} />
-      <Stat label="Remote" value={fmtH(remoteHours)} />
-      <Stat label="Office" value={fmtH(officeHours)} />
+      <Stat label="Total" value={formatHours(totalHours)} />
+      <Stat label="Remote" value={formatHours(remoteHours)} />
+      <Stat label="Office" value={formatHours(officeHours)} />
     </Paper>
   );
 }
