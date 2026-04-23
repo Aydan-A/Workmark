@@ -1,91 +1,82 @@
-import { Box, Button, Paper, Typography } from "@mui/material";
+import { Alert, Box, Button, IconButton, Typography } from "@mui/material";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import AddIcon from "@mui/icons-material/Add";
 import { useLogToday } from "../features/entries/hooks/useLogToday";
-import { EntryForm } from "../features/entries/components/EntryForm";
 
 export default function LogToday() {
   const {
-    user,
-    todayKey,
-    entryDate,
-    headerTitle,
     selectedDateLabel,
-    remoteHours,
-    availableProjects,
-    selectedProjects,
-    customProjectName,
-    description,
-    receipts,
-    savedReceiptFileNames,
-    fileError,
+    isToday,
+    entries,
     loadError,
-    saveError,
-    saveWarning,
-    saveSuccess,
-    isSaving,
-    canSave,
-    handleDateChange,
-    handleRemoteHoursChange,
-    handleProjectsChange,
-    handleCustomProjectNameChange,
-    handleDescriptionChange,
-    handleReceiptUpload,
-    handleAddCustomProject,
-    handleSave,
+    goToPrevDay,
+    goToNextDay,
+    openAddModal,
   } = useLogToday();
 
   return (
     <Box sx={{ maxWidth: 860, mx: "auto" }}>
-      <Paper variant="outlined" sx={{ borderRadius: "24px", borderColor: "rgba(255,255,255,0.8)", overflow: "hidden" }}>
-        <Box sx={{ p: 3 }}>
-          <Typography variant="h2">{headerTitle}</Typography>
-          <Typography variant="body2" sx={{ color: "#94a3b8", mt: 0.5 }}>
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h2" sx={{ mb: 1 }}>
+          Log today
+        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+          <IconButton size="small" onClick={goToPrevDay} aria-label="Previous day">
+            <ChevronLeftIcon />
+          </IconButton>
+          <Typography
+            variant="body2"
+            sx={{
+              color: isToday ? "primary.main" : "text.secondary",
+              fontWeight: isToday ? 600 : 400,
+              minWidth: 220,
+              textAlign: "center",
+            }}
+          >
             {selectedDateLabel}
           </Typography>
+          <IconButton size="small" onClick={goToNextDay} aria-label="Next day">
+            <ChevronRightIcon />
+          </IconButton>
         </Box>
+      </Box>
 
-        <EntryForm
-          todayKey={todayKey}
-          entryDate={entryDate}
-          remoteHours={remoteHours}
-          availableProjects={availableProjects}
-          selectedProjects={selectedProjects}
-          customProjectName={customProjectName}
-          description={description}
-          receipts={receipts}
-          savedReceiptFileNames={savedReceiptFileNames}
-          fileError={fileError}
-          loadError={loadError}
-          saveError={saveError}
-          saveWarning={saveWarning}
-          saveSuccess={saveSuccess}
-          onDateChange={handleDateChange}
-          onRemoteHoursChange={handleRemoteHoursChange}
-          onProjectsChange={handleProjectsChange}
-          onCustomProjectNameChange={handleCustomProjectNameChange}
-          onDescriptionChange={handleDescriptionChange}
-          onAddCustomProject={handleAddCustomProject}
-          onReceiptUpload={handleReceiptUpload}
-        />
+      {loadError && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          {loadError}
+        </Alert>
+      )}
 
+      {entries.length === 0 ? (
         <Box
           sx={{
-            borderTop: "1px solid #e5e7eb",
-            p: 2.5,
+            textAlign: "center",
+            py: 10,
             display: "flex",
-            justifyContent: "flex-end",
-            bgcolor: "#f8fafc",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 2,
           }}
         >
-          <Button
-            variant="contained"
-            disabled={!canSave || isSaving || !user}
-            onClick={handleSave}
-            sx={{ minWidth: 132, py: 1.1, fontWeight: 700 }}
-          >
-            {isSaving ? "Saving..." : "Save Entry"}
+          <Typography variant="body1" sx={{ color: "text.secondary" }}>
+            No entries yet today
+          </Typography>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={openAddModal}>
+            Add entry
           </Button>
         </Box>
-      </Paper>
+      ) : (
+        <Box>
+          {/* DaySummaryRow — wired in Commit 2 */}
+          {/* EntryCard list — wired in Commit 2 */}
+          <Box sx={{ mt: 2, display: "flex", justifyContent: "center" }}>
+            <Button variant="outlined" startIcon={<AddIcon />} onClick={openAddModal}>
+              Add entry
+            </Button>
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 }

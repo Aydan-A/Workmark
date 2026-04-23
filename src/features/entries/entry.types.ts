@@ -1,3 +1,12 @@
+export type Receipt = {
+  id: string;
+  storagePath: string;
+  fileName: string;
+  contentType: string;
+  sizeBytes: number;
+  uploadedAt: string;
+};
+
 export type WorkEntry = {
   id: string;
   date: string;
@@ -8,6 +17,7 @@ export type WorkEntry = {
   projectName: string;
   isRemote: boolean;
   note?: string;
+  receipts?: Receipt[];
   createdAt: string;
   updatedAt: string;
 };

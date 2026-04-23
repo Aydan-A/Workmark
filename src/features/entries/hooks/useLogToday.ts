@@ -1,323 +1,179 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { format } from "date-fns";
+import { useEffect, useMemo, useState } from "react";
+import { addDays, format, parse, subDays } from "date-fns";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../../../hooks/useAuth";
-import {
-  getEntryErrorMessage,
-  getEntryLoadErrorMessage,
-  saveWorkEntry,
-  subscribeToEntry,
-} from "../entry.api";
-import { buildProjectId, buildTimeRangeFromHours } from "../entry.utils";
+import { getEntryLoadErrorMessage, subscribeToEntriesForDate } from "../entry.api";
+import { subscribeToProjects } from "../project.api";
+import type { Project, WorkEntry } from "../entry.types";
 
 const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
-export const DEFAULT_PROJECT_OPTIONS = [
-  "Customer Service",
-  "Repair and Diagnostics",
-  "Installation/Setup",
-  "Warranty and Returns",
-  "Sales Support",
-  "Supplier/Brand Communication",
-  "Parts and Inventory",
-  "Product Testing/Quality Assurance",
-  "Training and Documentation",
-  "Website/Shopify/E-commerce",
-  "Marketing/Content",
-  "Internal Operations",
-];
+export type ModalState =
+  | { mode: "add"; entry?: undefined }
+  | { mode: "edit"; entry: WorkEntry };
+
+export type EntryFormData = {
+  startTime: string;
+  endTime: string;
+  project: { id: string; name: string; color?: string };
+  note: string;
+  isRemote: boolean;
+};
+
+function parseDateKey(dateKey: string): Date {
+  return parse(dateKey, "yyyy-MM-dd", new Date());
+}
 
 export function useLogToday() {
   const { user } = useAuth();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const today = new Date();
-  const todayKey = format(today, "yyyy-MM-dd");
-  const todayLabel = format(today, "EEEE, MMMM d, yyyy");
-
+  const todayKey = format(new Date(), "yyyy-MM-dd");
   const queryDate = searchParams.get("date");
-  const initialDate = queryDate && DATE_KEY_PATTERN.test(queryDate) ? queryDate : todayKey;
+  const initialDate =
+    queryDate && DATE_KEY_PATTERN.test(queryDate) ? queryDate : todayKey;
 
-  const [entryDate, setEntryDate] = useState(initialDate);
-  const [remoteHours, setRemoteHours] = useState("");
-  const [availableProjects, setAvailableProjects] = useState<string[]>(DEFAULT_PROJECT_OPTIONS);
-  const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
-  const [customProjectName, setCustomProjectName] = useState("");
-  const [description, setDescription] = useState("");
-  const [receipts, setReceipts] = useState<File[]>([]);
-  const [savedReceiptFileNames, setSavedReceiptFileNames] = useState<string[]>([]);
-  const [fileError, setFileError] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState(initialDate);
+  const [entries, setEntries] = useState<WorkEntry[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [modal, setModal] = useState<ModalState | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<WorkEntry | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [saveWarning, setSaveWarning] = useState<string | null>(null);
-  const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const slowSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const canSave = useMemo(() => {
-    if (remoteHours.trim() === "") return false;
-    const parsed = Number(remoteHours);
-    return Number.isFinite(parsed) && parsed >= 0 && parsed <= 24;
-  }, [remoteHours]);
-
-  const selectedDateLabel = useMemo(() => {
-    if (!DATE_KEY_PATTERN.test(entryDate)) return todayLabel;
-    const parsed = new Date(`${entryDate}T00:00:00`);
-    if (Number.isNaN(parsed.getTime())) return todayLabel;
-    return format(parsed, "EEEE, MMMM d, yyyy");
-  }, [entryDate, todayLabel]);
-
-  const headerTitle = entryDate === todayKey ? "Log Today" : "Log Entry";
-
-  useEffect(() => {
-    if (queryDate && DATE_KEY_PATTERN.test(queryDate)) {
-      setEntryDate(queryDate);
-      setLoadError(null);
-      setSaveError(null);
-      setSaveWarning(null);
-      setSaveSuccess(null);
+  const goToDate = (date: string) => {
+    setSelectedDate(date);
+    if (date === todayKey) {
+      setSearchParams({}, { replace: true });
+    } else {
+      setSearchParams({ date }, { replace: true });
     }
-  }, [queryDate]);
+  };
 
   useEffect(() => {
-    if (!user || !DATE_KEY_PATTERN.test(entryDate)) {
-      setLoadError(null);
-      setRemoteHours("");
-      setSelectedProjects([]);
-      setCustomProjectName("");
-      setDescription("");
-      setReceipts([]);
-      setSavedReceiptFileNames([]);
-      setFileError(null);
+    if (!user) {
+      setEntries([]);
+      setIsLoading(false);
       return;
     }
-
-    const unsubscribe = subscribeToEntry(
-      entryDate,
-      (entry) => {
+    setIsLoading(true);
+    setEntries([]);
+    setLoadError(null);
+    return subscribeToEntriesForDate(
+      user.uid,
+      selectedDate,
+      (nextEntries) => {
+        setEntries(nextEntries);
+        setIsLoading(false);
         setLoadError(null);
-
-        if (!entry) {
-          setRemoteHours("");
-          setSelectedProjects([]);
-          setCustomProjectName("");
-          setDescription("");
-          setReceipts([]);
-          setSavedReceiptFileNames([]);
-          setFileError(null);
-          setAvailableProjects((current) => {
-            const merged = [...DEFAULT_PROJECT_OPTIONS];
-            for (const option of current) {
-              if (!merged.includes(option)) merged.push(option);
-            }
-            return merged;
-          });
-          return;
-        }
-
-        const nextProjects = entry.projectName?.trim() ? [entry.projectName.trim()] : [];
-        const nextRemoteHours = entry.hours > 0 ? String(entry.hours) : "";
-
-        setRemoteHours(nextRemoteHours);
-        setSelectedProjects(nextProjects);
-        setCustomProjectName("");
-        setDescription(entry.note ?? "");
-        setReceipts([]);
-        setSavedReceiptFileNames([]);
-        setFileError(null);
-        setAvailableProjects((current) => {
-          const merged = [...DEFAULT_PROJECT_OPTIONS];
-          for (const option of [...current, ...nextProjects]) {
-            if (!merged.includes(option)) merged.push(option);
-          }
-          return merged;
-        });
       },
       (error) => {
         setLoadError(getEntryLoadErrorMessage(error));
+        setIsLoading(false);
       },
     );
-
-    return unsubscribe;
-  }, [entryDate, user]);
+  }, [user, selectedDate]);
 
   useEffect(() => {
-    return () => {
-      if (slowSaveTimeoutRef.current) clearTimeout(slowSaveTimeoutRef.current);
-    };
-  }, []);
-
-  const clearSaveMessages = () => {
-    setSaveError(null);
-    setSaveWarning(null);
-    setSaveSuccess(null);
-  };
-
-  const handleDateChange = (value: string) => {
-    setEntryDate(value);
-    clearSaveMessages();
-  };
-
-  const handleRemoteHoursChange = (value: string) => {
-    setRemoteHours(value);
-    clearSaveMessages();
-  };
-
-  const handleProjectsChange = (nextValue: string[]) => {
-    setSelectedProjects(nextValue);
-    clearSaveMessages();
-  };
-
-  const handleCustomProjectNameChange = (value: string) => {
-    setCustomProjectName(value);
-    clearSaveMessages();
-  };
-
-  const handleDescriptionChange = (value: string) => {
-    setDescription(value);
-    clearSaveMessages();
-  };
-
-  const handleReceiptUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const fileList = event.target.files;
-    if (!fileList) return;
-
-    const selected = Array.from(fileList);
-    if (selected.length > 3) {
-      setSaveSuccess(null);
-      setFileError("You can upload up to 3 receipts.");
-      return;
-    }
-
-    const invalid = selected.find((file) => file.size > 5 * 1024 * 1024);
-    if (invalid) {
-      setSaveSuccess(null);
-      setFileError(`"${invalid.name}" is larger than 5MB.`);
-      return;
-    }
-
-    clearSaveMessages();
-    setFileError(null);
-    setReceipts(selected);
-    setSavedReceiptFileNames([]);
-  };
-
-  const handleAddCustomProject = () => {
-    const normalized = customProjectName.trim();
-    if (!normalized) return;
-
-    const existing = availableProjects.find(
-      (option) => option.toLowerCase() === normalized.toLowerCase(),
-    );
-    const projectToUse = existing ?? normalized;
-
-    if (!existing) {
-      setAvailableProjects((current) => [...current, projectToUse]);
-    }
-
-    setSelectedProjects((current) =>
-      current.includes(projectToUse) ? current : [...current, projectToUse],
-    );
-    setCustomProjectName("");
-    clearSaveMessages();
-  };
-
-  const handleSave = async () => {
-    if (!canSave || isSaving) return;
-
     if (!user) {
-      setSaveSuccess(null);
-      setSaveError("You must be signed in to save an entry.");
+      setProjects([]);
       return;
     }
+    return subscribeToProjects(
+      (nextProjects) => setProjects(nextProjects),
+      () => setProjects([]),
+    );
+  }, [user]);
 
-    if (!DATE_KEY_PATTERN.test(entryDate)) {
-      setSaveSuccess(null);
-      setSaveError("Please select a valid date.");
-      return;
-    }
+  const totalHours = useMemo(
+    () => entries.reduce((sum, e) => sum + e.hours, 0),
+    [entries],
+  );
 
-    if (fileError) {
-      setSaveSuccess(null);
-      setSaveError("Please resolve receipt upload issues before saving.");
-      return;
-    }
+  const remoteHours = useMemo(
+    () =>
+      entries.filter((e) => e.isRemote).reduce((sum, e) => sum + e.hours, 0),
+    [entries],
+  );
 
-    const parsedRemote = Number(remoteHours);
+  const officeHours = useMemo(
+    () => totalHours - remoteHours,
+    [totalHours, remoteHours],
+  );
 
-    if (!Number.isFinite(parsedRemote) || parsedRemote <= 0 || parsedRemote >= 24) {
-      setSaveSuccess(null);
-      setSaveError("Remote hours must be greater than 0 and less than 24.");
-      return;
-    }
+  const defaultStartTime = useMemo(() => {
+    if (entries.length === 0) return "09:00";
+    return entries[entries.length - 1].endTime;
+  }, [entries]);
 
-    setIsSaving(true);
-    setSaveWarning(null);
-    if (slowSaveTimeoutRef.current) clearTimeout(slowSaveTimeoutRef.current);
-    slowSaveTimeoutRef.current = setTimeout(() => {
-      setIsSaving(false);
-      setSaveWarning("Sync is taking longer than expected. Data may still be saved shortly.");
-    }, 12000);
+  const defaultIsRemote = useMemo(() => {
+    if (entries.length === 0) return false;
+    return entries[entries.length - 1].isRemote;
+  }, [entries]);
 
-    try {
-      const primaryProject = selectedProjects[0] ?? customProjectName.trim() ?? "";
-      const projectName = primaryProject || "General";
-      const { startTime, endTime } = buildTimeRangeFromHours(parsedRemote);
+  const selectedDateLabel = useMemo(
+    () => format(parseDateKey(selectedDate), "EEEE, MMMM d, yyyy"),
+    [selectedDate],
+  );
 
-      await saveWorkEntry({
-        date: entryDate,
-        startTime,
-        endTime,
-        hours: parsedRemote,
-        projectId: buildProjectId(projectName),
-        projectName,
-        isRemote: true,
-        note: description.trim() || undefined,
-      });
+  const isToday = selectedDate === todayKey;
 
-      setSaveError(null);
-      setSaveWarning(null);
-      setSaveSuccess("Entry saved successfully.");
-    } catch (error) {
-      setSaveSuccess(null);
-      setSaveWarning(null);
-      setSaveError(getEntryErrorMessage(error));
-    } finally {
-      if (slowSaveTimeoutRef.current) {
-        clearTimeout(slowSaveTimeoutRef.current);
-        slowSaveTimeoutRef.current = null;
-      }
-      setIsSaving(false);
-    }
+  const goToPrevDay = () =>
+    goToDate(format(subDays(parseDateKey(selectedDate), 1), "yyyy-MM-dd"));
+
+  const goToNextDay = () =>
+    goToDate(format(addDays(parseDateKey(selectedDate), 1), "yyyy-MM-dd"));
+
+  const openAddModal = () => {
+    setSaveError(null);
+    setModal({ mode: "add" });
+  };
+
+  const openEditModal = (entry: WorkEntry) => {
+    setSaveError(null);
+    setModal({ mode: "edit", entry });
+  };
+
+  const closeModal = () => setModal(null);
+
+  const openDeleteDialog = (entry: WorkEntry) => setPendingDelete(entry);
+
+  const closeDeleteDialog = () => setPendingDelete(null);
+
+  const saveEntry = async (_data: EntryFormData): Promise<void> => {
+    // Implemented in Commit 3
+  };
+
+  const confirmDelete = async (): Promise<void> => {
+    // Implemented in Commit 4
+    setPendingDelete(null);
   };
 
   return {
-    user,
-    todayKey,
-    entryDate,
-    headerTitle,
+    selectedDate,
     selectedDateLabel,
-    remoteHours,
-    availableProjects,
-    selectedProjects,
-    customProjectName,
-    description,
-    receipts,
-    savedReceiptFileNames,
-    fileError,
+    isToday,
+    entries,
+    projects,
+    isLoading,
     loadError,
+    modal,
+    pendingDelete,
+    totalHours,
+    remoteHours,
+    officeHours,
+    defaultStartTime,
+    defaultIsRemote,
+    goToPrevDay,
+    goToNextDay,
+    openAddModal,
+    openEditModal,
+    closeModal,
+    openDeleteDialog,
+    closeDeleteDialog,
+    saveEntry,
+    confirmDelete,
     saveError,
-    saveWarning,
-    saveSuccess,
-    isSaving,
-    canSave,
-    handleDateChange,
-    handleRemoteHoursChange,
-    handleProjectsChange,
-    handleCustomProjectNameChange,
-    handleDescriptionChange,
-    handleReceiptUpload,
-    handleAddCustomProject,
-    handleSave,
   };
 }
