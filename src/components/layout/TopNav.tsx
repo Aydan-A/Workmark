@@ -1,12 +1,5 @@
 import { useMemo, useState } from "react";
-import {
-  AppBar,
-  Avatar,
-  Box,
-  Button,
-  Toolbar,
-  Typography,
-} from "@mui/material";
+import { Avatar, Box, Button, Typography } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import EditCalendarRoundedIcon from "@mui/icons-material/EditCalendarRounded";
@@ -21,19 +14,19 @@ const navButtonSx = {
   textTransform: "none",
   fontWeight: 600,
   borderRadius: 999,
-  color: "#1f2340",
-  px: 1.6,
-  py: 0.9,
+  px: 2,
+  py: 0.75,
   fontFamily: "'Plus Jakarta Sans', sans-serif",
   letterSpacing: "-0.01em",
+  minWidth: 0,
+  transition: "background-color 140ms ease, color 140ms ease",
 };
 
-const getNavLinkStyle = ({ isActive }: { isActive: boolean }) => ({
-  textDecoration: "none",
-  borderRadius: 999,
-  backgroundColor: isActive ? "rgba(112, 87, 246, 0.1)" : "transparent",
-  border: isActive ? "1px solid rgba(112, 87, 246, 0.12)" : "1px solid transparent",
-});
+const navItems = [
+  { to: "/today", label: "Log Today", icon: <EditCalendarRoundedIcon /> },
+  { to: "/weekly", label: "Weekly Log", icon: <TimelineRoundedIcon /> },
+  { to: "/calendar", label: "Calendar", icon: <DateRangeRoundedIcon /> },
+];
 
 function getInitials(name: string) {
   const trimmed = name.trim();
@@ -48,7 +41,6 @@ export default function TopNav() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isSigningOut, setIsSigningOut] = useState(false);
-
   const profileName = user?.displayName?.trim() || "Alex Johnson";
   const profileInitials = useMemo(() => getInitials(profileName), [profileName]);
 
@@ -67,170 +59,137 @@ export default function TopNav() {
   };
 
   return (
-    <AppBar
-      position="sticky"
-      elevation={0}
+    <Box
       sx={{
-        bgcolor: "rgba(252,251,255,0.76)",
-        backdropFilter: "blur(20px)",
-        borderBottom: "1px solid rgba(124, 106, 214, 0.12)",
-        color: "text.primary",
+        position: "fixed",
+        top: 16,
+        left: 16,
+        right: 16,
+        zIndex: 1200,
+        display: "flex",
+        justifyContent: "center",
+        pointerEvents: "none",
       }}
     >
-      <Toolbar sx={{ px: { xs: 2, md: 3 } }}>
-        <Box
-          sx={{
-            width: "100%",
-            maxWidth: 1240,
-            mx: "auto",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 2,
-            flexWrap: "wrap",
-            py: 0.5,
-          }}
-        >
-          <NavLink to="/" style={{ textDecoration: "none" }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-              <Box
-                sx={{
-                  width: 46,
-                  height: 46,
-                  borderRadius: 3,
-                  display: "grid",
-                  placeItems: "center",
-                  bgcolor: alpha("#7057f6", 0.12),
-                  color: "primary.main",
-                  boxShadow: "inset 0 0 0 1px rgba(112, 87, 246, 0.08)",
-                }}
-              >
-                <WorkOutlineIcon />
-              </Box>
-              <Box>
-                <Typography
-                  variant="caption"
-                  sx={{
-                    display: "block",
-                    color: "text.secondary",
-                    letterSpacing: "0.06em",
-                    textTransform: "uppercase",
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
-                    fontWeight: 500,
-                  }}
-                >
-                  Worklog
-                </Typography>
-                <Typography
-                  variant="h6"
-                  sx={{
-                    color: "text.primary",
-                    fontWeight: 700,
-                    lineHeight: 1.1,
-                    letterSpacing: "-0.025em",
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  }}
-                >
-                  Daily Work Log
-                </Typography>
-              </Box>
-            </Box>
-          </NavLink>
-
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: { xs: "center", md: "flex-end" },
-              gap: 1,
-              flexWrap: "wrap",
-              flex: 1,
-              minWidth: { xs: "100%", md: 0 },
-            }}
-          >
-            <NavLink to="/today" style={getNavLinkStyle}>
-              <Button startIcon={<EditCalendarRoundedIcon />} sx={navButtonSx}>
-                Log Today
-              </Button>
-            </NavLink>
-
-            <NavLink to="/weekly" style={getNavLinkStyle}>
-              <Button startIcon={<TimelineRoundedIcon />} sx={navButtonSx}>
-                Weekly Log
-              </Button>
-            </NavLink>
-
-            <NavLink to="/calendar" style={getNavLinkStyle}>
-              <Button startIcon={<DateRangeRoundedIcon />} sx={navButtonSx}>
-                Calendar
-              </Button>
-            </NavLink>
-
+      <Box
+        sx={{
+          width: "100%",
+          maxWidth: 780,
+          pointerEvents: "auto",
+          px: { xs: 1.25, sm: 1.5 },
+          py: { xs: 1, sm: 1.15 },
+          display: "grid",
+          gridTemplateColumns: { xs: "auto 1fr auto", md: "auto 1fr auto" },
+          alignItems: "center",
+          gap: { xs: 1, sm: 1.5 },
+          bgcolor: "rgba(255,255,255,0.7)",
+          backdropFilter: "blur(16px)",
+          border: "1px solid rgba(255,255,255,0.9)",
+          borderRadius: "999px",
+          boxShadow: "0 4px 24px rgba(108,99,255,0.10)",
+        }}
+      >
+        <NavLink to="/" style={{ textDecoration: "none", minWidth: 0 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.1, minWidth: 0 }}>
             <Box
               sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-                pl: { xs: 0, md: 1.25 },
-                ml: { xs: 0, md: 0.75 },
-                borderLeft: { xs: "none", md: "1px solid rgba(124, 106, 214, 0.12)" },
+                width: 38,
+                height: 38,
+                borderRadius: "999px",
+                display: "grid",
+                placeItems: "center",
+                bgcolor: alpha("#6C63FF", 0.14),
+                color: "#6C63FF",
               }}
             >
-              <NavLink to="/profile" style={{ textDecoration: "none" }}>
-                <Box
+              <WorkOutlineIcon fontSize="small" />
+            </Box>
+            <Typography
+              sx={{
+                display: { xs: "none", sm: "block" },
+                color: "#1F2340",
+                fontWeight: 700,
+                letterSpacing: "-0.02em",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Worklog
+            </Typography>
+          </Box>
+        </NavLink>
+
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: { xs: 0.25, sm: 0.5 },
+            minWidth: 0,
+            overflowX: "auto",
+            scrollbarWidth: "none",
+            "&::-webkit-scrollbar": {
+              display: "none",
+            },
+          }}
+        >
+          {navItems.map((item) => (
+            <NavLink key={item.to} to={item.to} style={{ textDecoration: "none" }}>
+              {({ isActive }) => (
+                <Button
                   sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1.1,
-                    px: 1.1,
-                    py: 0.65,
-                    borderRadius: 999,
-                    border: "1px solid rgba(124, 106, 214, 0.1)",
-                    bgcolor: "rgba(255,255,255,0.62)",
-                    transition: "background-color 120ms ease, border-color 120ms ease, transform 120ms ease",
+                    ...navButtonSx,
+                    color: isActive ? "#FFFFFF" : "#8B8B9E",
+                    bgcolor: isActive ? "#6C63FF" : "transparent",
                     "&:hover": {
-                      bgcolor: "rgba(112, 87, 246, 0.08)",
-                      borderColor: "rgba(112, 87, 246, 0.18)",
-                      transform: "translateY(-1px)",
+                      bgcolor: isActive ? "#6C63FF" : "transparent",
                     },
                   }}
                 >
-                  <Avatar sx={{ width: 38, height: 38, bgcolor: "primary.main", fontWeight: 600, boxShadow: "0 10px 20px rgba(112, 87, 246, 0.22)" }}>
-                    {profileInitials}
-                  </Avatar>
-                  <Box sx={{ display: { xs: "none", sm: "block" } }}>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        display: "block",
-                        color: "text.secondary",
-                        lineHeight: 1.2,
-                        fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      }}
-                    >
-                      Signed in as
-                    </Typography>
-                    <Typography
-                      sx={{
-                        color: "text.primary",
-                        fontWeight: 600,
-                        lineHeight: 1.25,
-                        letterSpacing: "-0.015em",
-                        fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      }}
-                    >
-                      {profileName}
-                    </Typography>
-                  </Box>
-                </Box>
-              </NavLink>
-              <Button onClick={handleSignOut} disabled={isSigningOut} sx={{ ...navButtonSx, minWidth: 0, px: 1.2 }}>
-                <LogoutIcon fontSize="small" />
-              </Button>
-            </Box>
-          </Box>
+                  {item.label}
+                </Button>
+              )}
+            </NavLink>
+          ))}
         </Box>
-      </Toolbar>
-    </AppBar>
+
+        <Box sx={{ display: "flex", alignItems: "center", justifySelf: "end", gap: 0.75 }}>
+          <NavLink to="/profile" style={{ textDecoration: "none", justifySelf: "end" }}>
+            <Avatar
+              sx={{
+                width: 38,
+                height: 38,
+                bgcolor: "#6C63FF",
+                color: "#FFFFFF",
+                fontWeight: 700,
+                fontSize: "0.9rem",
+                boxShadow: "0 4px 14px rgba(108,99,255,0.18)",
+              }}
+            >
+              {profileInitials}
+            </Avatar>
+          </NavLink>
+
+          <Button
+            onClick={handleSignOut}
+            disabled={isSigningOut}
+            startIcon={<LogoutIcon fontSize="small" />}
+            sx={{
+              minWidth: 0,
+              px: { xs: 1.1, sm: 1.35 },
+              py: 0.75,
+              borderRadius: 999,
+              color: "#8B8B9E",
+              bgcolor: "transparent",
+              whiteSpace: "nowrap",
+              "&:hover": {
+                bgcolor: "rgba(108,99,255,0.08)",
+              },
+            }}
+          >
+            Exit
+          </Button>
+        </Box>
+      </Box>
+    </Box>
   );
 }

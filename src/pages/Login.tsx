@@ -150,9 +150,11 @@ export default function Login() {
           elevation={0}
           sx={{
             p: 3,
-            borderRadius: 4,
-            border: "1px solid #e5e7eb",
-            bgcolor: "white",
+            borderRadius: "24px",
+            border: "1px solid rgba(255,255,255,0.8)",
+            bgcolor: "rgba(255,255,255,0.55)",
+            backdropFilter: "blur(20px)",
+            boxShadow: "0 8px 32px rgba(108,99,255,0.08)",
           }}
         >
           {/* Error banner (placeholder for auth errors) */}

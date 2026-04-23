@@ -6,6 +6,7 @@ import LogToday from "../pages/LogToday";
 import WeeklyLog from "../pages/WeeklyLog";
 import Calendar from "../pages/Calendar";
 import Profile from "../pages/Profile";
+import PreferenceSectionPlaceholder from "../pages/PreferenceSectionPlaceholder";
 import { useAuth } from "../hooks/useAuth";
 import FullScreenLoader from "../components/common/FullScreenLoader";
 
@@ -47,6 +48,24 @@ export const router = createBrowserRouter([
       { path: "weekly", element: <WeeklyLog /> },
       { path: "calendar", element: <Calendar /> },
       { path: "profile", element: <Profile /> },
+      {
+        path: "preferences/profile",
+        element: (
+          <PreferenceSectionPlaceholder
+            title="Profile"
+            subtitle="This section will handle name, avatar, and email settings."
+          />
+        ),
+      },
+      {
+        path: "preferences/notifications",
+        element: (
+          <PreferenceSectionPlaceholder
+            title="Notifications"
+            subtitle="This section will handle the basic notification toggles."
+          />
+        ),
+      },
     ],
   },
 ]);

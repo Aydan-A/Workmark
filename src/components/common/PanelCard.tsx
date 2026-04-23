@@ -1,6 +1,13 @@
 import type { ReactNode } from "react";
 import { Box, Button, Paper, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
+import {
+  dashboardCardSubtitleSx,
+  dashboardCardTitleSx,
+  dashboardFocusVisibleSx,
+  dashboardGlassCardSx,
+  dashboardSectionCardPaddingSx,
+} from "../../styles/dashboard";
 
 type PanelCardProps = {
   title: string;
@@ -15,13 +22,9 @@ export default function PanelCard({ title, subtitle, actionLabel, actionTo, chil
     <Paper
       variant="outlined"
       sx={{
-        p: { xs: 2.5, md: 3 },
-        borderRadius: 5,
-        bgcolor: "background.paper",
-        borderColor: "divider",
+        ...dashboardSectionCardPaddingSx,
+        ...dashboardGlassCardSx,
         height: "100%",
-        backgroundImage:
-          "linear-gradient(180deg, rgba(255,255,255,0.84) 0%, rgba(255,255,255,0.96) 100%)",
       }}
     >
       <Box
@@ -30,17 +33,20 @@ export default function PanelCard({ title, subtitle, actionLabel, actionTo, chil
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          minHeight: 58,
-          mb: 3,
+          minHeight: 54,
+          mb: 2.35,
           textAlign: "center",
         }}
       >
         <Box>
-          <Typography variant="h2" sx={{ fontSize: { xs: "1.35rem", md: "1.6rem" } }}>
+          <Typography
+            variant="h2"
+            sx={dashboardCardTitleSx}
+          >
             {title}
           </Typography>
           {subtitle ? (
-            <Typography variant="body2" sx={{ mt: 0.5, color: "text.secondary" }}>
+            <Typography variant="body2" sx={dashboardCardSubtitleSx}>
               {subtitle}
             </Typography>
           ) : null}
@@ -54,11 +60,14 @@ export default function PanelCard({ title, subtitle, actionLabel, actionTo, chil
             sx={{
               px: 0,
               minWidth: 0,
-              fontWeight: 500,
+              fontWeight: 600,
+              letterSpacing: "-0.01em",
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
               position: "absolute",
               right: 0,
               top: "50%",
               transform: "translateY(-50%)",
+              ...dashboardFocusVisibleSx,
             }}
           >
             {actionLabel}

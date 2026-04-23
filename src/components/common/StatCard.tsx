@@ -1,122 +1,187 @@
 import type { ReactNode } from "react";
 import { motion } from "framer-motion";
-import { Box, Paper, Typography } from "@mui/material";
-import { alpha, useTheme } from "@mui/material/styles";
+import { ButtonBase, Paper, Box, Typography } from "@mui/material";
+import { alpha } from "@mui/material/styles";
+import {
+  dashboardFocusVisibleSx,
+  dashboardInteractiveCardSx,
+} from "../../styles/dashboard";
 
 type StatCardProps = {
-  icon: ReactNode;
-  label: string;
+  title: string;
   value: string;
-  suffix?: string;
-  helperText?: string;
+  unit?: string;
+  subtitle?: string;
+  icon: ReactNode;
+  iconColor: string;
+  iconTint?: string;
+  valueColor?: string;
+  badgeLabel?: string;
+  featured?: boolean;
+  onClick?: () => void;
+  ariaLabel: string;
   animationIndex?: number;
 };
 
-export default function StatCard({ icon, label, value, suffix, helperText, animationIndex = 0 }: StatCardProps) {
-  const theme = useTheme();
-
+export default function StatCard({
+  title,
+  value,
+  unit,
+  subtitle,
+  icon,
+  iconColor,
+  iconTint,
+  valueColor = "#2f3360",
+  badgeLabel,
+  featured = false,
+  onClick,
+  ariaLabel,
+  animationIndex = 0,
+}: StatCardProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 28, scale: 0.96 }}
+      initial={{ opacity: 0, y: 20, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      whileHover={{ y: -6, scale: 1.015 }}
+      whileHover={{ y: -3 }}
       transition={{
         type: "spring",
         stiffness: 180,
         damping: 18,
         mass: 0.9,
-        delay: 0.12 + animationIndex * 0.1,
+        delay: 0.08 + animationIndex * 0.08,
       }}
-      whileTap={{ scale: 0.995 }}
-      style={{ height: "100%", willChange: "transform, opacity" }}
+      style={{ height: "100%" }}
     >
-      <Paper
-        variant="outlined"
+      <ButtonBase
+        type="button"
+        onClick={onClick}
+        aria-label={ariaLabel}
         sx={{
-          p: 2.75,
-          borderRadius: 5,
-          bgcolor: "background.paper",
-          borderColor: "divider",
-          minHeight: 188,
-          position: "relative",
-          overflow: "hidden",
-          backgroundImage:
-            "linear-gradient(180deg, rgba(255,255,255,0.82) 0%, rgba(255,255,255,0.94) 100%)",
-          transition: "box-shadow 220ms ease, border-color 220ms ease, background-color 220ms ease",
-          boxShadow: "0 10px 24px rgba(15, 23, 42, 0.04)",
-          "&:hover": {
-            boxShadow: "0 20px 40px rgba(15, 23, 42, 0.1)",
-            borderColor: alpha(theme.palette.primary.main, 0.18),
-          },
+          width: "100%",
+          height: "100%",
+          display: "block",
+          borderRadius: "24px",
+          textAlign: "left",
+          cursor: "pointer",
+          ...dashboardFocusVisibleSx,
         }}
       >
-        <Box
+        <Paper
+          variant="outlined"
           sx={{
-            position: "absolute",
-            right: -18,
-            top: -18,
-            width: 90,
-            height: 90,
-            borderRadius: "50%",
-            bgcolor: alpha(theme.palette.primary.main, 0.06),
-          }}
-        />
-
-        <Box
-          sx={{
-            position: "relative",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            minHeight: 132,
-            textAlign: "center",
+            p: { xs: 1.95, md: 2.2 },
+            minHeight: { xs: 148, md: 158 },
+            height: "100%",
+            ...dashboardInteractiveCardSx,
+            borderColor: featured ? "rgba(108,99,255,0.2)" : undefined,
+            boxShadow: featured ? "0 12px 34px rgba(108,99,255,0.11)" : undefined,
+            backgroundColor: featured ? "rgba(255,255,255,0.62)" : undefined,
           }}
         >
-          <Box
-            sx={{
-              width: 48,
-              height: 48,
-              borderRadius: 3,
-              display: "grid",
-              placeItems: "center",
-              bgcolor: alpha(theme.palette.primary.main, 0.1),
-              color: "primary.main",
-              boxShadow: "inset 0 0 0 1px rgba(112, 87, 246, 0.08)",
-            }}
-          >
-            {icon}
-          </Box>
+          <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1.25 }}>
+            <Box sx={{ display: "grid", gap: 0.55 }}>
+              <Typography
+                variant="subtitle2"
+                sx={{
+                  color: featured ? "#525a88" : "#6d7394",
+                  fontWeight: 600,
+                  letterSpacing: "-0.01em",
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                }}
+              >
+                {title}
+              </Typography>
+              {badgeLabel ? (
+                <Box
+                  component="span"
+                  sx={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "fit-content",
+                    px: 1,
+                    py: 0.45,
+                    borderRadius: 999,
+                    backgroundColor: featured ? "rgba(108,99,255,0.12)" : "rgba(108,99,255,0.08)",
+                    color: featured ? "#584fd1" : "#6f768f",
+                    fontSize: "0.72rem",
+                    fontWeight: 700,
+                    letterSpacing: "-0.01em",
+                    lineHeight: 1,
+                  }}
+                >
+                  {badgeLabel}
+                </Box>
+              ) : null}
+            </Box>
 
-          <Typography variant="subtitle1" sx={{ mt: 2.25, color: "text.secondary" }}>
-            {label}
-          </Typography>
-
-          <Box sx={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 1, mt: 1.5 }}>
-            <Typography
-              variant="h3"
+            {/* Keep the icon integrated into the card, not visually stronger than the whole surface. */}
+            <Box
               sx={{
-                fontSize: { xs: "2rem", md: "2.3rem" },
-                letterSpacing: "-0.04em",
-                lineHeight: 1,
+                width: 32,
+                height: 32,
+                borderRadius: "50%",
+                display: "grid",
+                placeItems: "center",
+                bgcolor: iconTint ?? alpha(iconColor, featured ? 0.14 : 0.1),
+                color: iconColor,
+                boxShadow: `inset 0 0 0 1px ${alpha(iconColor, featured ? 0.18 : 0.1)}`,
+                flexShrink: 0,
               }}
             >
-              {value}
-            </Typography>
-            {suffix ? (
-              <Typography variant="subtitle1" sx={{ color: "text.secondary", fontWeight: 500 }}>
-                {suffix}
+              {icon}
+            </Box>
+          </Box>
+
+          <Box sx={{ mt: { xs: 1.55, md: 1.75 } }}>
+            <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.45 }}>
+              <Typography
+                component="p"
+                sx={{
+                  fontSize: { xs: featured ? "2.75rem" : "2.45rem", md: featured ? "3rem" : "2.8rem" },
+                  fontWeight: 700,
+                  letterSpacing: "-0.05em",
+                  lineHeight: 0.95,
+                  color: valueColor,
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                }}
+              >
+                {value}
+              </Typography>
+              {unit ? (
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: "#8a90ab",
+                    fontWeight: 500,
+                    letterSpacing: "-0.01em",
+                    lineHeight: 1,
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  }}
+                >
+                  {unit}
+                </Typography>
+              ) : null}
+            </Box>
+
+            {subtitle ? (
+              <Typography
+                variant="body2"
+                sx={{
+                  mt: 0.75,
+                  color: "#77809b",
+                  fontWeight: 500,
+                  lineHeight: 1.42,
+                  maxWidth: "25ch",
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                }}
+              >
+                {subtitle}
               </Typography>
             ) : null}
           </Box>
-
-          {helperText ? (
-            <Typography variant="body2" sx={{ mt: 1.25, color: "text.secondary" }}>
-              {helperText}
-            </Typography>
-          ) : null}
-        </Box>
-      </Paper>
+        </Paper>
+      </ButtonBase>
     </motion.div>
   );
 }

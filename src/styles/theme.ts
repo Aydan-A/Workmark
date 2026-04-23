@@ -14,8 +14,8 @@ export const theme = createTheme({
       main: "#1f2340",
     },
     background: {
-      default: "#f7f4ff",
-      paper: "rgba(255,255,255,0.88)",
+      default: "#F0EEFF",
+      paper: "rgba(255,255,255,0.55)",
     },
     text: {
       primary: "#1f2340",
@@ -39,19 +39,19 @@ export const theme = createTheme({
     },
     h1: {
       fontSize: "2rem",
-      fontWeight: 600,
+      fontWeight: 800,
       lineHeight: 1.02,
       letterSpacing: "-0.025em",
     },
     h2: {
       fontSize: "1.5rem",
-      fontWeight: 600,
+      fontWeight: 700,
       lineHeight: 1.08,
       letterSpacing: "-0.02em",
     },
     h3: {
       fontSize: "1.15rem",
-      fontWeight: 600,
+      fontWeight: 700,
       lineHeight: 1.15,
       letterSpacing: "-0.01em",
     },
@@ -68,7 +68,7 @@ export const theme = createTheme({
     },
     button: {
       fontSize: "0.95rem",
-      fontWeight: 500,
+      fontWeight: 600,
       textTransform: "none",
       letterSpacing: "0",
     },
@@ -96,8 +96,14 @@ export const theme = createTheme({
     MuiPaper: {
       styleOverrides: {
         root: {
-          boxShadow: "0 24px 70px rgba(73, 52, 146, 0.08)",
-          backdropFilter: "blur(14px)",
+          backgroundColor: "rgba(255,255,255,0.55)",
+          backdropFilter: "blur(20px)",
+          boxShadow: "0 8px 32px rgba(108,99,255,0.08)",
+          borderRadius: 24,
+          backgroundImage: "none",
+        },
+        outlined: {
+          border: "1px solid rgba(255,255,255,0.8)",
         },
       },
     },

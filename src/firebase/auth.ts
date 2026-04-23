@@ -8,6 +8,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
+  updateEmail,
   updateProfile,
   type User,
 } from "firebase/auth";
@@ -41,6 +42,34 @@ export async function signInWithGoogle() {
 // Sign out current user
 export async function logout() {
   return signOut(auth);
+}
+
+export async function updateAccountDisplayName(nextDisplayName: string) {
+  const user = auth.currentUser;
+
+  if (!user) {
+    throw new Error("You must be signed in to update your profile.");
+  }
+
+  await updateProfile(user, { displayName: nextDisplayName.trim() });
+}
+
+export async function updateAccountEmail(nextEmail: string) {
+  const user = auth.currentUser;
+
+  if (!user) {
+    throw new Error("You must be signed in to update your email.");
+  }
+
+  await updateEmail(user, nextEmail.trim());
+}
+
+export function assertAuthenticatedUserId(): string {
+  const uid = auth.currentUser?.uid;
+  if (!uid) {
+    throw new Error("You must be signed in to access work entries.");
+  }
+  return uid;
 }
 
 // Subscribe to auth state changes (login/logout/refresh)
@@ -92,5 +121,25 @@ export function getAuthErrorMessage(error: unknown, action: AuthAction = "signIn
       return "Password is too weak. Use at least 6 characters.";
     default:
       return fallbackMessage;
+  }
+}
+
+export function getAccountUpdateErrorMessage(error: unknown): string {
+  if (!(error instanceof FirebaseError)) {
+    if (error instanceof Error && error.message) return error.message;
+    return "Could not update your account. Please try again.";
+  }
+
+  switch (error.code) {
+    case "auth/invalid-email":
+      return "Please enter a valid email address.";
+    case "auth/email-already-in-use":
+      return "This email is already in use.";
+    case "auth/requires-recent-login":
+      return "For security, sign in again before updating this field.";
+    case "auth/network-request-failed":
+      return "Network error. Check your connection and try again.";
+    default:
+      return "Could not update your account. Please try again.";
   }
 }

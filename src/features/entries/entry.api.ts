@@ -1,25 +1,34 @@
 import { FirebaseError } from "firebase/app";
 import {
+  addDoc,
   collection,
+  deleteDoc,
   doc,
+  getDoc,
   limit,
   onSnapshot,
   orderBy,
   query,
-  setDoc,
+  updateDoc,
   where,
   type QueryConstraint,
   type Unsubscribe,
 } from "firebase/firestore";
-import { endOfMonth, format, startOfMonth } from "date-fns";
-import { auth, db } from "../../firebase/client";
+import {
+  differenceInMinutes,
+  endOfMonth,
+  format,
+  parse,
+  startOfMonth,
+} from "date-fns";
+import { assertAuthenticatedUserId } from "../../firebase/auth";
+import { db } from "../../firebase/client";
 import type { SaveWorkEntryInput, WorkEntry } from "./entry.types";
 
 const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-const MAX_PROJECTS = 10;
-const MAX_RECEIPT_FILE_NAMES = 3;
+const TIME_PATTERN = /^\d{2}:\d{2}$/;
 const MAX_SHORT_TEXT_LENGTH = 120;
-const MAX_DESCRIPTION_LENGTH = 2000;
+const MAX_NOTE_LENGTH = 2000;
 
 function assertValidDateKey(date: string): string {
   const dateKey = date.trim();
@@ -29,6 +38,87 @@ function assertValidDateKey(date: string): string {
   return dateKey;
 }
 
+function assertValidUserId(uid: string): string {
+  const normalizedUid = uid.trim();
+  if (!normalizedUid) {
+    throw new Error("A user id is required.");
+  }
+  return normalizedUid;
+}
+
+
+function assertValidTime(value: string, fieldLabel: string): string {
+  const normalized = value.trim();
+
+  if (!TIME_PATTERN.test(normalized)) {
+    throw new Error(`${fieldLabel} must use HH:mm.`);
+  }
+
+  const parsed = parse(normalized, "HH:mm", new Date());
+  if (Number.isNaN(parsed.getTime())) {
+    throw new Error(`${fieldLabel} must use HH:mm.`);
+  }
+
+  return normalized;
+}
+
+function assertValidShortText(value: string, fieldLabel: string): string {
+  const normalized = value.trim();
+
+  if (!normalized) {
+    throw new Error(`${fieldLabel} is required.`);
+  }
+
+  if (normalized.length > MAX_SHORT_TEXT_LENGTH) {
+    throw new Error(`${fieldLabel} must be ${MAX_SHORT_TEXT_LENGTH} characters or fewer.`);
+  }
+
+  return normalized;
+}
+
+function normalizeOptionalNote(note: string | undefined): string | undefined {
+  const normalized = note?.trim();
+
+  if (!normalized) return undefined;
+
+  if (normalized.length > MAX_NOTE_LENGTH) {
+    throw new Error(`Note must be ${MAX_NOTE_LENGTH} characters or fewer.`);
+  }
+
+  return normalized;
+}
+
+function normalizeBoolean(value: boolean, fieldLabel: string): boolean {
+  if (typeof value !== "boolean") {
+    throw new Error(`${fieldLabel} must be true or false.`);
+  }
+
+  return value;
+}
+
+
+function normalizeSaveInput(input: SaveWorkEntryInput): SaveWorkEntryInput {
+  const date = assertValidDateKey(input.date);
+  const startTime = assertValidTime(input.startTime, "Start time");
+  const endTime = assertValidTime(input.endTime, "End time");
+  const projectId = assertValidShortText(input.projectId, "Project");
+  const projectName = assertValidShortText(input.projectName, "Project name");
+  const isRemote = normalizeBoolean(input.isRemote, "Remote flag");
+  const note = normalizeOptionalNote(input.note);
+  const hours = computeHours(startTime, endTime);
+
+  return {
+    date,
+    startTime,
+    endTime,
+    hours,
+    projectId,
+    projectName,
+    isRemote,
+    ...(note ? { note } : {}),
+  };
+}
+
 type EntrySubscriptionOptions = {
   startDate?: string;
   endDate?: string;
@@ -36,89 +126,141 @@ type EntrySubscriptionOptions = {
   limitCount?: number;
 };
 
-function assertAuthenticatedUserId(): string {
-  const uid = auth.currentUser?.uid;
-  if (!uid) {
-    throw new Error("You must be signed in to access work entries.");
+export function computeHours(startTime: string, endTime: string): number {
+  const normalizedStart = assertValidTime(startTime, "Start time");
+  const normalizedEnd = assertValidTime(endTime, "End time");
+  const start = parse(normalizedStart, "HH:mm", new Date());
+  const end = parse(normalizedEnd, "HH:mm", new Date());
+  const diffMinutes = differenceInMinutes(end, start);
+
+  if (diffMinutes <= 0) {
+    throw new Error("End time must be later than start time.");
   }
-  return uid;
+
+  return Number((diffMinutes / 60).toFixed(2));
 }
 
-function assertValidHours(value: number, fieldLabel: string): number {
-  if (!Number.isFinite(value) || value < 0 || value > 24) {
-    throw new Error(`${fieldLabel} must be between 0 and 24.`);
-  }
-  return value;
+export async function createEntry(uid: string, input: SaveWorkEntryInput): Promise<string> {
+  const normalizedUid = assertValidUserId(uid);
+  const normalizedInput = normalizeSaveInput(input);
+  const nowIso = new Date().toISOString();
+  const payload: Omit<WorkEntry, "id"> = {
+    ...normalizedInput,
+    createdAt: nowIso,
+    updatedAt: nowIso,
+  };
+  const entriesRef = collection(db, "users", normalizedUid, "entries");
+  const docRef = await addDoc(entriesRef, payload);
+  return docRef.id;
 }
 
-function normalizeStringList(
-  values: string[],
-  fieldLabel: string,
-  maxItems: number,
-  maxLength: number,
-): string[] {
-  const normalized = Array.from(
-    new Set(values.map((value) => value.trim()).filter((value) => value.length > 0)),
-  );
+export async function updateEntry(
+  uid: string,
+  entryId: string,
+  updates: Partial<SaveWorkEntryInput>,
+): Promise<void> {
+  const normalizedUid = assertValidUserId(uid);
+  const normalizedEntryId = entryId.trim();
 
-  if (normalized.length > maxItems) {
-    throw new Error(`${fieldLabel} cannot exceed ${maxItems} items.`);
+  if (!normalizedEntryId) {
+    throw new Error("An entry id is required.");
   }
 
-  if (normalized.some((value) => value.length > maxLength)) {
-    throw new Error(`${fieldLabel} items must be ${maxLength} characters or fewer.`);
+  const entryRef = doc(db, "users", normalizedUid, "entries", normalizedEntryId);
+  const snapshot = await getDoc(entryRef);
+
+  if (!snapshot.exists()) {
+    throw new Error("Entry not found.");
   }
 
-  return normalized;
+  const currentEntry = snapshot.data() as Omit<WorkEntry, "id">;
+  const nextStartTime = updates.startTime !== undefined
+    ? assertValidTime(updates.startTime, "Start time")
+    : currentEntry.startTime;
+  const nextEndTime = updates.endTime !== undefined
+    ? assertValidTime(updates.endTime, "End time")
+    : currentEntry.endTime;
+
+  const payload: Partial<SaveWorkEntryInput> & { updatedAt: string } = {
+    updatedAt: new Date().toISOString(),
+  };
+
+  if (updates.date !== undefined) {
+    payload.date = assertValidDateKey(updates.date);
+  }
+
+  if (updates.startTime !== undefined) {
+    payload.startTime = nextStartTime;
+  }
+
+  if (updates.endTime !== undefined) {
+    payload.endTime = nextEndTime;
+  }
+
+  if (updates.projectId !== undefined) {
+    payload.projectId = assertValidShortText(updates.projectId, "Project");
+  }
+
+  if (updates.projectName !== undefined) {
+    payload.projectName = assertValidShortText(updates.projectName, "Project name");
+  }
+
+  if (updates.isRemote !== undefined) {
+    payload.isRemote = normalizeBoolean(updates.isRemote, "Remote flag");
+  }
+
+  if (updates.note !== undefined) {
+    const nextNote = normalizeOptionalNote(updates.note);
+    payload.note = nextNote;
+  }
+
+  if (updates.startTime !== undefined || updates.endTime !== undefined) {
+    payload.hours = computeHours(nextStartTime, nextEndTime);
+  }
+
+  await updateDoc(entryRef, payload);
 }
 
-function normalizeReceiptFileNames(fileNames: string[]): string[] {
-  return normalizeStringList(
-    fileNames.map((name) => name.replace(/[\\/\u0000-\u001F\u007F]+/g, "_")),
-    "Receipt filenames",
-    MAX_RECEIPT_FILE_NAMES,
-    MAX_SHORT_TEXT_LENGTH,
-  );
+export async function deleteEntry(uid: string, entryId: string): Promise<void> {
+  const normalizedUid = assertValidUserId(uid);
+  const normalizedEntryId = entryId.trim();
+
+  if (!normalizedEntryId) {
+    throw new Error("An entry id is required.");
+  }
+
+  await deleteDoc(doc(db, "users", normalizedUid, "entries", normalizedEntryId));
 }
 
 export async function saveWorkEntry(input: SaveWorkEntryInput): Promise<void> {
-  // Derive the target user from the active auth session instead of trusting a caller-supplied uid.
-  // Firestore rules must still enforce ownership, but this removes an easy footgun in app code.
   const uid = assertAuthenticatedUserId();
-  const dateKey = assertValidDateKey(input.date);
-  const totalHours = assertValidHours(input.totalHours, "Total hours");
-  const remoteHours = assertValidHours(input.remoteHours, "Remote hours");
-  if (remoteHours > totalHours) {
-    throw new Error("Remote hours cannot be greater than total hours.");
-  }
-
-  const projects = normalizeStringList(
-    input.projects,
-    "Projects",
-    MAX_PROJECTS,
-    MAX_SHORT_TEXT_LENGTH,
-  );
-  const receiptFileNames = normalizeReceiptFileNames(input.receiptFileNames);
-  const description = input.description.trim();
-  if (description.length > MAX_DESCRIPTION_LENGTH) {
-    throw new Error(`Description must be ${MAX_DESCRIPTION_LENGTH} characters or fewer.`);
-  }
-
-  const nowIso = new Date().toISOString();
-
-  const entryDoc = doc(db, "users", uid, "entries", dateKey);
-  const payload: WorkEntry = {
-    date: dateKey,
-    totalHours,
-    remoteHours,
-    projects,
-    description,
-    receiptFileNames,
-    updatedAt: nowIso,
-  };
-
-  await setDoc(entryDoc, payload, { merge: true });
+  await createEntry(uid, input);
 }
+
+export function subscribeToEntry(
+  date: string,
+  onData: (entry: WorkEntry | null) => void,
+  onError?: (error: unknown) => void,
+): Unsubscribe {
+  let uid: string;
+
+  try {
+    uid = assertAuthenticatedUserId();
+  } catch (error) {
+    onError?.(error);
+    return () => undefined;
+  }
+
+  return subscribeToEntriesForDate(
+    uid,
+    date,
+    (entries) => {
+      onData(entries[0] ?? null);
+    },
+    onError,
+  );
+}
+
 
 export function subscribeToEntries(
   onData: (entries: WorkEntry[]) => void,
@@ -143,7 +285,13 @@ export function subscribeToEntries(
     constraints.push(where("date", "<=", assertValidDateKey(options.endDate)));
   }
 
-  constraints.push(orderBy("date", options.orderDirection ?? "asc"));
+  if (options.startDate || options.endDate) {
+    constraints.push(orderBy("date", options.orderDirection ?? "asc"));
+    constraints.push(orderBy("startTime", options.orderDirection ?? "asc"));
+  } else {
+    constraints.push(orderBy("date", options.orderDirection ?? "asc"));
+    constraints.push(orderBy("startTime", options.orderDirection ?? "asc"));
+  }
 
   if (options.limitCount) {
     constraints.push(limit(options.limitCount));
@@ -155,7 +303,10 @@ export function subscribeToEntries(
   return onSnapshot(
     entriesQuery,
     (snapshot) => {
-      const entries = snapshot.docs.map((docSnapshot) => docSnapshot.data() as WorkEntry);
+      const entries = snapshot.docs.map((docSnapshot) => ({
+        id: docSnapshot.id,
+        ...(docSnapshot.data() as Omit<WorkEntry, "id">),
+      }));
       onData(entries);
     },
     (error) => {
@@ -164,26 +315,82 @@ export function subscribeToEntries(
   );
 }
 
-export function subscribeToEntry(
+export function subscribeToEntriesForDate(
+  uid: string,
   date: string,
-  onData: (entry: WorkEntry | null) => void,
+  onData: (entries: WorkEntry[]) => void,
   onError?: (error: unknown) => void,
 ): Unsubscribe {
-  let uid: string;
+  let normalizedUid: string;
+  let dateKey: string;
+
   try {
-    uid = assertAuthenticatedUserId();
+    normalizedUid = assertValidUserId(uid);
+    dateKey = assertValidDateKey(date);
   } catch (error) {
     onError?.(error);
     return () => undefined;
   }
 
-  const dateKey = assertValidDateKey(date);
-  const entryRef = doc(db, "users", uid, "entries", dateKey);
+  const entriesRef = collection(db, "users", normalizedUid, "entries");
+  const entriesQuery = query(
+    entriesRef,
+    where("date", "==", dateKey),
+    orderBy("startTime", "asc"),
+  );
 
   return onSnapshot(
-    entryRef,
+    entriesQuery,
     (snapshot) => {
-      onData(snapshot.exists() ? (snapshot.data() as WorkEntry) : null);
+      const entries = snapshot.docs.map((docSnapshot) => ({
+        id: docSnapshot.id,
+        ...(docSnapshot.data() as Omit<WorkEntry, "id">),
+      }));
+      onData(entries);
+    },
+    (error) => {
+      onError?.(error);
+    },
+  );
+}
+
+export function subscribeToEntriesForRange(
+  uid: string,
+  startDate: string,
+  endDate: string,
+  onData: (entries: WorkEntry[]) => void,
+  onError?: (error: unknown) => void,
+): Unsubscribe {
+  let normalizedUid: string;
+  let startDateKey: string;
+  let endDateKey: string;
+
+  try {
+    normalizedUid = assertValidUserId(uid);
+    startDateKey = assertValidDateKey(startDate);
+    endDateKey = assertValidDateKey(endDate);
+  } catch (error) {
+    onError?.(error);
+    return () => undefined;
+  }
+
+  const entriesRef = collection(db, "users", normalizedUid, "entries");
+  const entriesQuery = query(
+    entriesRef,
+    where("date", ">=", startDateKey),
+    where("date", "<=", endDateKey),
+    orderBy("date", "asc"),
+    orderBy("startTime", "asc"),
+  );
+
+  return onSnapshot(
+    entriesQuery,
+    (snapshot) => {
+      const entries = snapshot.docs.map((docSnapshot) => ({
+        id: docSnapshot.id,
+        ...(docSnapshot.data() as Omit<WorkEntry, "id">),
+      }));
+      onData(entries);
     },
     (error) => {
       onError?.(error);
@@ -196,14 +403,19 @@ export function subscribeToMonthEntries(
   onData: (entries: WorkEntry[]) => void,
   onError?: (error: unknown) => void,
 ): Unsubscribe {
+  let uid: string;
+
+  try {
+    uid = assertAuthenticatedUserId();
+  } catch (error) {
+    onError?.(error);
+    return () => undefined;
+  }
+
   const monthStartKey = format(startOfMonth(visibleMonth), "yyyy-MM-dd");
   const monthEndKey = format(endOfMonth(visibleMonth), "yyyy-MM-dd");
 
-  return subscribeToEntries(onData, onError, {
-    startDate: monthStartKey,
-    endDate: monthEndKey,
-    orderDirection: "asc",
-  });
+  return subscribeToEntriesForRange(uid, monthStartKey, monthEndKey, onData, onError);
 }
 
 export function getEntryErrorMessage(error: unknown): string {
@@ -226,18 +438,24 @@ export function getEntryErrorMessage(error: unknown): string {
 
 export function getEntryLoadErrorMessage(error: unknown): string {
   if (!(error instanceof FirebaseError)) {
-    if (error instanceof Error && error.message) return error.message;
+    if (import.meta.env.DEV && error instanceof Error && error.message) {
+      return `Entry load error: ${error.message}`;
+    }
     return "Could not load your entries. Please try again.";
   }
 
+  const devMessage = `Firestore entry load error (${error.code}): ${error.message}`;
+
   switch (error.code) {
     case "permission-denied":
-      return "You do not have permission to view these entries.";
+      return import.meta.env.DEV ? devMessage : "You do not have permission to view these entries.";
+    case "failed-precondition":
+      return import.meta.env.DEV ? devMessage : "Entry data needs a Firestore index or setup update before it can load.";
     case "unauthenticated":
-      return "Please sign in again and try loading your entries.";
+      return import.meta.env.DEV ? devMessage : "Please sign in again and try loading your entries.";
     case "unavailable":
-      return "Service is temporarily unavailable. Try again.";
+      return import.meta.env.DEV ? devMessage : "Service is temporarily unavailable. Try again.";
     default:
-      return "Could not load your entries. Please try again.";
+      return import.meta.env.DEV ? devMessage : "Could not load your entries. Please try again.";
   }
 }

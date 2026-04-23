@@ -9,50 +9,98 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    function isValidEntry(entryId) {
+    function isValidUserDocument(data) {
+      return data.keys().hasOnly([
+               'fullName',
+               'email',
+               'phone',
+               'timezone',
+               'language',
+               'updatedAt'
+             ]) &&
+             (!data.keys().hasAny(['fullName']) || data.fullName is string) &&
+             (!data.keys().hasAny(['email']) || data.email is string) &&
+             (!data.keys().hasAny(['phone']) || data.phone is string) &&
+             (!data.keys().hasAny(['timezone']) || data.timezone is string) &&
+             (!data.keys().hasAny(['language']) || data.language is string) &&
+             (!data.keys().hasAny(['updatedAt']) || data.updatedAt is string);
+    }
+
+    function isValidEntry() {
       return request.resource.data.keys().hasOnly([
                'date',
-               'totalHours',
-               'remoteHours',
-               'projects',
-               'description',
-               'receiptFileNames',
+               'startTime',
+               'endTime',
+               'hours',
+               'projectId',
+               'projectName',
+               'isRemote',
+               'note',
+               'createdAt',
                'updatedAt'
              ]) &&
              request.resource.data.keys().hasAll([
                'date',
-               'totalHours',
-               'remoteHours',
-               'projects',
-               'description',
-               'receiptFileNames',
+               'startTime',
+               'endTime',
+               'hours',
+               'projectId',
+               'projectName',
+               'isRemote',
                'updatedAt'
              ]) &&
              request.resource.data.date is string &&
-             request.resource.data.date == entryId &&
              request.resource.data.date.matches('^\\d{4}-\\d{2}-\\d{2}$') &&
-             request.resource.data.totalHours is number &&
-             request.resource.data.totalHours >= 0 &&
-             request.resource.data.totalHours <= 24 &&
-             request.resource.data.remoteHours is number &&
-             request.resource.data.remoteHours >= 0 &&
-             request.resource.data.remoteHours <= request.resource.data.totalHours &&
-             request.resource.data.projects is list &&
-             request.resource.data.projects.size() <= 10 &&
-             request.resource.data.description is string &&
-             request.resource.data.description.size() <= 2000 &&
-             request.resource.data.receiptFileNames is list &&
-             request.resource.data.receiptFileNames.size() <= 3 &&
+             request.resource.data.startTime is string &&
+             request.resource.data.startTime.matches('^\\d{2}:\\d{2}$') &&
+             request.resource.data.endTime is string &&
+             request.resource.data.endTime.matches('^\\d{2}:\\d{2}$') &&
+             request.resource.data.hours is number &&
+             request.resource.data.hours > 0 &&
+             request.resource.data.hours <= 24 &&
+             request.resource.data.projectId is string &&
+             request.resource.data.projectName is string &&
+             request.resource.data.isRemote is bool &&
+             (!request.resource.data.keys().hasAny(['note']) || request.resource.data.note is string) &&
+             (!request.resource.data.keys().hasAny(['createdAt']) || request.resource.data.createdAt is string) &&
+             request.resource.data.updatedAt is string;
+    }
+
+    function isValidProject() {
+      return request.resource.data.keys().hasOnly([
+               'name',
+               'color',
+               'archived',
+               'createdAt',
+               'updatedAt'
+             ]) &&
+             request.resource.data.keys().hasAll([
+               'name',
+               'archived',
+               'updatedAt'
+             ]) &&
+             request.resource.data.name is string &&
+             request.resource.data.name.size() > 0 &&
+             request.resource.data.name.size() <= 60 &&
+             (!request.resource.data.keys().hasAny(['color']) || request.resource.data.color == null || request.resource.data.color is string) &&
+             request.resource.data.archived is bool &&
+             (!request.resource.data.keys().hasAny(['createdAt']) || request.resource.data.createdAt is string) &&
              request.resource.data.updatedAt is string;
     }
 
     match /users/{userId} {
-      // Never trust route guards or client-side uid checks for ownership.
-      allow read, write: if isOwner(userId);
+      allow read: if isSignedIn();
+      allow create: if isOwner(userId) && isValidUserDocument(request.resource.data);
+      allow update: if isOwner(userId) && isValidUserDocument(request.resource.data);
 
       match /entries/{entryId} {
         allow read, delete: if isOwner(userId);
-        allow create, update: if isOwner(userId) && isValidEntry(entryId);
+        allow create, update: if isOwner(userId) && isValidEntry();
+      }
+
+      match /projects/{projectId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidProject();
       }
     }
 

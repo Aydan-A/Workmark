@@ -2,6 +2,7 @@ import {
   addDays,
   differenceInCalendarDays,
   format,
+  parse,
   startOfDay,
   startOfWeek,
 } from "date-fns";
@@ -15,22 +16,19 @@ import type {
 } from "./entry.types";
 
 function parseDateKey(dateKey: string): Date {
-  return new Date(`${dateKey}T00:00:00`);
+  return parse(dateKey, "yyyy-MM-dd", new Date());
 }
 
 export function getEntryPrimaryLabel(entry: WorkEntry): string {
-  const primaryProject = entry.projects.find((project) => project.trim().length > 0);
-  return primaryProject?.trim() || entry.project?.trim() || "Work log";
+  return entry.projectName?.trim() || "Uncategorized";
 }
 
 export function getEntryLocationLabel(entry: WorkEntry): string {
-  if (entry.remoteHours <= 0) return "On-site";
-  if (entry.remoteHours >= entry.totalHours) return "Remote";
-  return "Hybrid";
+  return entry.isRemote ? "Remote" : "Office";
 }
 
 export function getEntrySummary(entry: WorkEntry): string {
-  return entry.description.trim() || "No notes added.";
+  return entry.note?.trim() ?? "";
 }
 
 export function formatEntryDateLabel(dateKey: string, referenceDate: Date = new Date()): string {
@@ -49,14 +47,20 @@ export function buildRecentDashboardLogs(
   maxEntries = 4,
 ): DashboardLog[] {
   return [...entries]
-    .sort((left, right) => right.date.localeCompare(left.date))
+    .sort((left, right) => {
+      if (left.date !== right.date) {
+        return right.date.localeCompare(left.date);
+      }
+
+      return right.startTime.localeCompare(left.startTime);
+    })
     .slice(0, maxEntries)
     .map((entry) => ({
-      id: entry.date,
+      id: entry.id,
       title: getEntryPrimaryLabel(entry),
       location: getEntryLocationLabel(entry),
       summary: getEntrySummary(entry),
-      hours: entry.totalHours,
+      hours: entry.hours,
       dateLabel: formatEntryDateLabel(entry.date, referenceDate),
     }));
 }
@@ -69,7 +73,7 @@ export function buildWeeklyOverview(
   const hoursByDate = new Map<string, number>();
 
   for (const entry of entries) {
-    hoursByDate.set(entry.date, (hoursByDate.get(entry.date) ?? 0) + entry.totalHours);
+    hoursByDate.set(entry.date, (hoursByDate.get(entry.date) ?? 0) + entry.hours);
   }
 
   return Array.from({ length: 7 }, (_, index) => {
@@ -77,42 +81,52 @@ export function buildWeeklyOverview(
     const dateKey = format(date, "yyyy-MM-dd");
 
     return {
+      dateKey,
       day: format(date, "EEE"),
+      dateLabel: format(date, "MMM d"),
       hours: hoursByDate.get(dateKey) ?? 0,
+      isToday: dateKey === format(referenceDate, "yyyy-MM-dd"),
     };
   });
 }
 
 export function getHoursForDate(entries: WorkEntry[], dateKey: string): number {
   return entries.reduce(
-    (total, entry) => (entry.date === dateKey ? total + entry.totalHours : total),
+    (total, entry) => (entry.date === dateKey ? total + entry.hours : total),
     0,
   );
 }
 
 export function getTotalRemoteHours(entries: WorkEntry[]): number {
-  return entries.reduce((total, entry) => total + Math.max(entry.remoteHours, 0), 0);
+  return entries.reduce(
+    (total, entry) => (entry.isRemote ? total + entry.hours : total),
+    0,
+  );
 }
 
 export function countLoggedDays(entries: WorkEntry[]): number {
   return new Set(
     entries
-      .filter((entry) => entry.remoteHours > 0)
+      .filter((entry) => entry.hours > 0)
       .map((entry) => entry.date),
   ).size;
 }
 
 export function calculateAverageHours(entries: WorkEntry[]): number {
+  if (entries.length === 0) return 0;
+
   const loggedDays = countLoggedDays(entries);
   if (loggedDays === 0) return 0;
-  return getTotalRemoteHours(entries) / loggedDays;
+
+  const totalHours = entries.reduce((total, entry) => total + entry.hours, 0);
+  return totalHours / loggedDays;
 }
 
 export function findBusiestDay(entries: WorkEntry[]): WeeklyBusiestDay | null {
   const hoursByDate = new Map<string, number>();
 
   for (const entry of entries) {
-    hoursByDate.set(entry.date, (hoursByDate.get(entry.date) ?? 0) + Math.max(entry.remoteHours, 0));
+    hoursByDate.set(entry.date, (hoursByDate.get(entry.date) ?? 0) + entry.hours);
   }
 
   let busiest: WeeklyBusiestDay | null = null;
@@ -139,7 +153,7 @@ export function findTopProject(entries: WorkEntry[]): WeeklyTopProject | null {
     const projectName = getEntryPrimaryLabel(entry);
     const current = projectTotals.get(projectName) ?? { hours: 0, dates: new Set<string>() };
 
-    current.hours += Math.max(entry.remoteHours, 0);
+    current.hours += entry.hours;
     current.dates.add(entry.date);
     projectTotals.set(projectName, current);
   }
@@ -166,11 +180,8 @@ export function findTopProject(entries: WorkEntry[]): WeeklyTopProject | null {
   return topProject;
 }
 
-export function getSafeReceiptCountTotal(entries: WorkEntry[]): number {
-  return entries.reduce((total, entry) => {
-    const receiptCount = Array.isArray(entry.receiptFileNames) ? entry.receiptFileNames.length : 0;
-    return total + receiptCount;
-  }, 0);
+export function getSafeReceiptCountTotal(_entries: WorkEntry[]): number {
+  return 0;
 }
 
 export function buildCompactDailyBreakdownRows(entries: WorkEntry[]): CompactDailyBreakdownRow[] {
@@ -191,16 +202,37 @@ export function buildCompactDailyBreakdownRows(entries: WorkEntry[]): CompactDai
       );
       const projectLabel =
         uniqueProjects.length <= 1
-          ? (uniqueProjects[0] ?? "No project")
+          ? (uniqueProjects[0] ?? "Uncategorized")
           : `${uniqueProjects.length} projects`;
 
       return {
         date,
         day: format(dateObject, "EEE"),
         dateLabel: format(dateObject, "MMM d"),
-        hours: getTotalRemoteHours(dateEntries),
+        hours: dateEntries.reduce((total, entry) => total + entry.hours, 0),
         projectLabel,
-        receiptCount: getSafeReceiptCountTotal(dateEntries),
+        receiptCount: 0,
       };
     });
+}
+
+export function buildProjectId(name: string): string {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "general";
+}
+
+export function buildTimeRangeFromHours(hours: number): { startTime: string; endTime: string } {
+  if (!Number.isFinite(hours) || hours <= 0 || hours >= 24) {
+    throw new Error("Hours must be greater than 0 and less than 24.");
+  }
+  const totalMinutes = Math.round(hours * 60);
+  const endHours = Math.floor(totalMinutes / 60);
+  const endMinutes = totalMinutes % 60;
+  return {
+    startTime: "00:00",
+    endTime: `${String(endHours).padStart(2, "0")}:${String(endMinutes).padStart(2, "0")}`,
+  };
 }
