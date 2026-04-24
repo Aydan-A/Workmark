@@ -5,21 +5,30 @@ import AddIcon from "@mui/icons-material/Add";
 import { useLogToday } from "../features/entries/hooks/useLogToday";
 import { DaySummaryRow } from "../features/entries/components/DaySummaryRow";
 import { EntryCard } from "../features/entries/components/EntryCard";
+import { EntryModal } from "../features/entries/components/EntryModal";
 
 export default function LogToday() {
   const {
     selectedDateLabel,
     isToday,
     entries,
+    projects,
     loadError,
     totalHours,
     remoteHours,
     officeHours,
+    modal,
+    defaultStartTime,
+    defaultIsRemote,
+    isSaving,
+    saveError,
     goToPrevDay,
     goToNextDay,
     openAddModal,
     openEditModal,
     openDeleteDialog,
+    closeModal,
+    saveEntry,
   } = useLogToday();
 
   return (
@@ -96,6 +105,21 @@ export default function LogToday() {
             </Button>
           </Box>
         </Box>
+      )}
+
+      {modal && (
+        <EntryModal
+          open
+          mode={modal.mode}
+          initialEntry={modal.entry}
+          defaultStartTime={defaultStartTime}
+          defaultIsRemote={defaultIsRemote}
+          projects={projects}
+          onSave={saveEntry}
+          onClose={closeModal}
+          isSaving={isSaving}
+          saveError={saveError}
+        />
       )}
     </Box>
   );

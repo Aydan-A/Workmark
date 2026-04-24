@@ -1,0 +1,143 @@
+import { useState } from "react";
+import {
+  Autocomplete,
+  Box,
+  CircularProgress,
+  TextField,
+  Typography,
+  createFilterOptions,
+} from "@mui/material";
+import { createProject } from "../project.api";
+import type { Project } from "../entry.types";
+
+type ProjectValue = { id: string; name: string; color?: string };
+type ProjectOption = ProjectValue & { isCreate?: true };
+
+type Props = {
+  projects: Project[];
+  value: ProjectValue | null;
+  onChange: (value: ProjectValue | null) => void;
+  error?: string;
+};
+
+const COLOR_PALETTE = [
+  "#7057f6", "#f59e0b", "#10b981", "#ef4444",
+  "#3b82f6", "#ec4899", "#8b5cf6", "#06b6d4",
+];
+
+function projectColor(projectId: string): string {
+  let h = 0;
+  for (let i = 0; i < projectId.length; i++) {
+    h = (Math.imul(31, h) + projectId.charCodeAt(i)) | 0;
+  }
+  return COLOR_PALETTE[Math.abs(h) % COLOR_PALETTE.length];
+}
+
+const filter = createFilterOptions<ProjectOption>();
+
+export function ProjectAutocomplete({ projects, value, onChange, error }: Props) {
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+
+  const options: ProjectOption[] = projects.map((p) => ({
+    id: p.id,
+    name: p.name,
+    color: p.color,
+  }));
+
+  const handleChange = (_: React.SyntheticEvent, newValue: ProjectOption | null) => {
+    if (!newValue) { onChange(null); return; }
+    if (newValue.isCreate) {
+      void handleCreate(newValue.name);
+    } else {
+      onChange({ id: newValue.id, name: newValue.name, color: newValue.color });
+    }
+  };
+
+  const handleCreate = async (name: string) => {
+    setCreating(true);
+    setCreateError(null);
+    try {
+      const id = await createProject({ name });
+      onChange({ id, name });
+    } catch {
+      setCreateError("Could not create project. Try again.");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  return (
+    <Box>
+      <Autocomplete<ProjectOption>
+        options={options}
+        value={value ? { id: value.id, name: value.name, color: value.color } : null}
+        onChange={handleChange}
+        disabled={creating}
+        getOptionLabel={(option) => option.name}
+        isOptionEqualToValue={(option, val) => option.id === val.id}
+        filterOptions={(opts, params) => {
+          const filtered = filter(opts, params);
+          const { inputValue } = params;
+          const isExisting = opts.some(
+            (o) => !o.isCreate && o.name.toLowerCase() === inputValue.toLowerCase(),
+          );
+          if (inputValue && !isExisting) {
+            filtered.push({ id: "__create__", name: inputValue, isCreate: true });
+          }
+          return filtered;
+        }}
+        renderOption={(props, option) => {
+          const { key, ...optionProps } = props as typeof props & { key: React.Key };
+          return (
+            <Box key={key} component="li" {...optionProps}>
+              {option.isCreate ? (
+                <Typography variant="body2" sx={{ color: "primary.main" }}>
+                  + Create "{option.name}" as new project
+                </Typography>
+              ) : (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <Box
+                    sx={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: "50%",
+                      bgcolor: option.color ?? projectColor(option.id),
+                      flexShrink: 0,
+                    }}
+                  />
+                  <Typography variant="body2">{option.name}</Typography>
+                </Box>
+              )}
+            </Box>
+          );
+        }}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            label="Project"
+            placeholder="Search or create a project"
+            error={!!error}
+            helperText={error}
+            slotProps={{
+              input: {
+                ...params.InputProps,
+                endAdornment: (
+                  <>
+                    {creating && <CircularProgress size={16} sx={{ mr: 0.5 }} />}
+                    {params.InputProps.endAdornment}
+                  </>
+                ),
+              },
+            }}
+          />
+        )}
+      />
+      {createError && (
+        <Typography variant="caption" sx={{ color: "error.main", mt: 0.5, display: "block" }}>
+          {createError}
+        </Typography>
+      )}
+    </Box>
+  );
+}

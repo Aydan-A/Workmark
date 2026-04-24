@@ -2,10 +2,17 @@ import { useEffect, useMemo, useState } from "react";
 import { addDays, format, subDays } from "date-fns";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../../../hooks/useAuth";
-import { getEntryLoadErrorMessage, subscribeToEntriesForDate } from "../entry.api";
+import {
+  computeHours,
+  createEntry,
+  getEntryErrorMessage,
+  getEntryLoadErrorMessage,
+  subscribeToEntriesForDate,
+  updateEntry,
+} from "../entry.api";
 import { subscribeToProjects } from "../project.api";
 import { getTotalRemoteHours, parseDateKey } from "../entry.utils";
-import type { Project, WorkEntry } from "../entry.types";
+import type { Project, SaveWorkEntryInput, WorkEntry } from "../entry.types";
 
 const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -38,6 +45,7 @@ export function useLogToday() {
   const [modal, setModal] = useState<ModalState | null>(null);
   const [pendingDelete, setPendingDelete] = useState<WorkEntry | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const goToDate = (date: string) => {
     setSelectedDate(date);
@@ -132,7 +140,36 @@ export function useLogToday() {
 
   const closeDeleteDialog = () => setPendingDelete(null);
 
-  const saveEntry = async (_data: EntryFormData): Promise<void> => {};
+  const saveEntry = async (data: EntryFormData): Promise<void> => {
+    if (!user) {
+      setSaveError("You must be signed in to save an entry.");
+      return;
+    }
+    setIsSaving(true);
+    setSaveError(null);
+    try {
+      const input: SaveWorkEntryInput = {
+        date: selectedDate,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        hours: computeHours(data.startTime, data.endTime),
+        projectId: data.project.id,
+        projectName: data.project.name,
+        isRemote: data.isRemote,
+        note: data.note.trim() || undefined,
+      };
+      if (modal?.mode === "edit" && modal.entry) {
+        await updateEntry(user.uid, modal.entry.id, input);
+      } else {
+        await createEntry(user.uid, input);
+      }
+      setModal(null);
+    } catch (error) {
+      setSaveError(getEntryErrorMessage(error));
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const confirmDelete = async (): Promise<void> => {
     setPendingDelete(null);
@@ -162,6 +199,7 @@ export function useLogToday() {
     closeDeleteDialog,
     saveEntry,
     confirmDelete,
+    isSaving,
     saveError,
   };
 }
