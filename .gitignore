@@ -31,3 +31,4 @@ dist-ssr
 
 # Private working notes
 .docs/
+dist/
