@@ -190,7 +190,14 @@ export function EntryModal({
                 type="time"
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
-                slotProps={{ htmlInput: { step: 60, placeholder: "HH:MM", pattern: "[0-9]{2}:[0-9]{2}" } }}
+                slotProps={{
+                  htmlInput: {
+                    step: 60,
+                    onClick: (e: React.MouseEvent<HTMLInputElement>) => {
+                      try { e.currentTarget.showPicker(); } catch { /* unsupported */ }
+                    },
+                  },
+                }}
                 fullWidth
                 error={!!timeError}
               />
@@ -201,7 +208,14 @@ export function EntryModal({
                 type="time"
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
-                slotProps={{ htmlInput: { step: 60, placeholder: "HH:MM", pattern: "[0-9]{2}:[0-9]{2}" } }}
+                slotProps={{
+                  htmlInput: {
+                    step: 60,
+                    onClick: (e: React.MouseEvent<HTMLInputElement>) => {
+                      try { e.currentTarget.showPicker(); } catch { /* unsupported */ }
+                    },
+                  },
+                }}
                 fullWidth
                 error={!!timeError}
               />

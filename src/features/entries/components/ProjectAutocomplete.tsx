@@ -58,8 +58,8 @@ export function ProjectAutocomplete({ projects, value, onChange, error }: Props)
     setCreating(true);
     setCreateError(null);
     try {
-      const id = await createProject({ name });
-      onChange({ id, name });
+      const result = await createProject({ name });
+      onChange({ id: result.id, name: result.name });
     } catch (error) {
       setCreateError(
         error instanceof Error ? error.message : "Could not create project. Try again.",

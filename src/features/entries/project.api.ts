@@ -65,7 +65,9 @@ export function subscribeToProjects(
   );
 }
 
-export async function createProject(input: SaveProjectInput): Promise<string> {
+export async function createProject(
+  input: SaveProjectInput,
+): Promise<{ id: string; name: string }> {
   const uid = assertAuthenticatedUserId();
   const name = normalizeProjectName(input.name);
   const color = normalizeOptionalColor(input.color);
@@ -75,11 +77,11 @@ export async function createProject(input: SaveProjectInput): Promise<string> {
     query(projectsRef, where("archived", "==", false)),
   );
   const nameLower = name.toLowerCase();
-  const isDuplicate = existingSnap.docs.some(
+  const existingDoc = existingSnap.docs.find(
     (docSnap) => (docSnap.data().name as string).toLowerCase() === nameLower,
   );
-  if (isDuplicate) {
-    throw new Error(`A project named "${name}" already exists.`);
+  if (existingDoc) {
+    return { id: existingDoc.id, name: existingDoc.data().name as string };
   }
 
   const nowIso = new Date().toISOString();
@@ -90,7 +92,7 @@ export async function createProject(input: SaveProjectInput): Promise<string> {
     createdAt: nowIso,
     updatedAt: nowIso,
   });
-  return docRef.id;
+  return { id: docRef.id, name };
 }
 
 export async function renameProject(projectId: string, newName: string): Promise<void> {
