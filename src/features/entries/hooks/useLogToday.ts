@@ -12,7 +12,7 @@ import {
   updateEntry,
 } from "../entry.api";
 import { subscribeToProjects } from "../project.api";
-import { getTotalRemoteHours, parseDateKey } from "../entry.utils";
+import { checkTimeOverlap, getTotalRemoteHours, parseDateKey } from "../entry.utils";
 import type { Project, SaveWorkEntryInput, WorkEntry } from "../entry.types";
 
 const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -157,6 +157,13 @@ export function useLogToday() {
   const saveEntry = async (data: EntryFormData): Promise<void> => {
     if (!user) {
       setSaveError("You must be signed in to save an entry.");
+      return;
+    }
+    const otherEntries = entries.filter((e) =>
+      modal?.mode === "edit" ? e.id !== modal.entry.id : true,
+    );
+    if (checkTimeOverlap(data.startTime, data.endTime, otherEntries)) {
+      setSaveError("This time overlaps with an existing entry.");
       return;
     }
     setIsSaving(true);

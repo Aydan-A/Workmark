@@ -113,6 +113,16 @@ export function getTotalRemoteHours(entries: WorkEntry[]): number {
   );
 }
 
+export function checkTimeOverlap(
+  startTime: string,
+  endTime: string,
+  existingEntries: WorkEntry[],
+): boolean {
+  return existingEntries.some(
+    (e) => startTime < e.endTime && endTime > e.startTime,
+  );
+}
+
 export function countLoggedDays(entries: WorkEntry[]): number {
   return new Set(
     entries

@@ -55,7 +55,7 @@ export function useMonthEntries() {
     () =>
       Array.from(entriesByDate.entries()).map(([date, summary]) => ({
         id: date,
-        title: `${formatHours(summary.totalHours)}h${summary.remoteHours > 0 ? ` · ${formatHours(summary.remoteHours)}r` : ""}`,
+        title: `${formatHours(summary.totalHours)}h`,
         start: date,
         allDay: true,
         backgroundColor: "#6366f1",

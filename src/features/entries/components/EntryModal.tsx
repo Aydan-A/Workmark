@@ -21,7 +21,6 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { computeHours } from "../entry.api";
-import { formatHours } from "../entry.utils";
 import { ProjectAutocomplete } from "./ProjectAutocomplete";
 import type { EntryFormData } from "../hooks/useLogToday";
 import type { Project, WorkEntry } from "../entry.types";
@@ -114,7 +113,8 @@ export function EntryModal({
 
   const durationLabel = useMemo(() => {
     try {
-      return formatHours(computeHours(startTime, endTime));
+      const h = computeHours(startTime, endTime);
+      return Number.isInteger(h) ? `${h}h` : `${h.toFixed(1)}h`;
     } catch {
       return null;
     }
@@ -182,29 +182,34 @@ export function EntryModal({
       </Box>
 
       <Stack spacing={2.5}>
-        <Box sx={{ display: "flex", gap: 2 }}>
-          <Box sx={{ flex: 1 }}>
-            <FieldLabel label="Start" />
-            <TextField
-              type="time"
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              slotProps={{ htmlInput: { step: 60 } }}
-              fullWidth
-              error={!!timeError}
-            />
+        <Box>
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <Box sx={{ flex: 1 }}>
+              <FieldLabel label="Start" />
+              <TextField
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                slotProps={{ htmlInput: { step: 60, placeholder: "HH:MM", pattern: "[0-9]{2}:[0-9]{2}" } }}
+                fullWidth
+                error={!!timeError}
+              />
+            </Box>
+            <Box sx={{ flex: 1 }}>
+              <FieldLabel label="End" />
+              <TextField
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                slotProps={{ htmlInput: { step: 60, placeholder: "HH:MM", pattern: "[0-9]{2}:[0-9]{2}" } }}
+                fullWidth
+                error={!!timeError}
+              />
+            </Box>
           </Box>
-          <Box sx={{ flex: 1 }}>
-            <FieldLabel label="End" />
-            <TextField
-              type="time"
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              slotProps={{ htmlInput: { step: 60 } }}
-              fullWidth
-              error={!!timeError}
-            />
-          </Box>
+          <Typography variant="caption" sx={{ color: "text.secondary", mt: 0.5, display: "block" }}>
+            24-hour format (e.g., 09:00, 14:30)
+          </Typography>
         </Box>
 
         {timeError ? (
@@ -213,7 +218,7 @@ export function EntryModal({
           </Typography>
         ) : durationLabel ? (
           <Box>
-            <Chip label={`Duration: ${durationLabel}`} size="small" variant="outlined" />
+            <Chip label={`Duration: ${durationLabel}`} size="small" sx={{ bgcolor: "grey.100" }} />
           </Box>
         ) : null}
 
