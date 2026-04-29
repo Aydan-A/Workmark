@@ -142,6 +142,18 @@ export function useLogToday() {
 
   const closeDeleteDialog = () => setPendingDelete(null);
 
+  const refetchProjects = () => {
+    if (!user) return;
+    let unsubscribe: (() => void) | undefined;
+    unsubscribe = subscribeToProjects(
+      (nextProjects) => {
+        setProjects(nextProjects);
+        unsubscribe?.();
+      },
+      () => {},
+    );
+  };
+
   const saveEntry = async (data: EntryFormData): Promise<void> => {
     if (!user) {
       setSaveError("You must be signed in to save an entry.");
@@ -166,6 +178,7 @@ export function useLogToday() {
         await createEntry(user.uid, input);
       }
       setModal(null);
+      refetchProjects();
     } catch (error) {
       setSaveError(getEntryErrorMessage(error));
     } finally {

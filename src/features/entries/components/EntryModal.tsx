@@ -5,6 +5,10 @@ import {
   Button,
   Chip,
   Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Drawer,
   FormControlLabel,
   IconButton,
@@ -86,6 +90,7 @@ export function EntryModal({
   const [isRemote, setIsRemote] = useState(defaultIsRemote);
   const [timeError, setTimeError] = useState<string | null>(null);
   const [projectError, setProjectError] = useState<string | null>(null);
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -104,6 +109,7 @@ export function EntryModal({
     }
     setTimeError(null);
     setProjectError(null);
+    setShowDiscardConfirm(false);
   }, [open, mode, initialEntry, defaultStartTime, defaultIsRemote]);
 
   const durationLabel = useMemo(() => {
@@ -113,6 +119,30 @@ export function EntryModal({
       return null;
     }
   }, [startTime, endTime]);
+
+  const isDirty = useMemo(() => {
+    if (mode !== "edit" || !initialEntry) return false;
+    return (
+      startTime !== initialEntry.startTime ||
+      endTime !== initialEntry.endTime ||
+      project?.id !== initialEntry.projectId ||
+      note !== (initialEntry.note ?? "") ||
+      isRemote !== initialEntry.isRemote
+    );
+  }, [mode, initialEntry, startTime, endTime, project, note, isRemote]);
+
+  const handleClose = () => {
+    if (isDirty) {
+      setShowDiscardConfirm(true);
+    } else {
+      onClose();
+    }
+  };
+
+  const handleDiscard = () => {
+    setShowDiscardConfirm(false);
+    onClose();
+  };
 
   const handleSubmit = async () => {
     let valid = true;
@@ -146,7 +176,7 @@ export function EntryModal({
         <Typography variant="h6" sx={{ fontWeight: 700 }}>
           {mode === "edit" ? "Edit entry" : "New entry"}
         </Typography>
-        <IconButton size="small" onClick={onClose} aria-label="Close">
+        <IconButton size="small" onClick={handleClose} aria-label="Close">
           <CloseIcon fontSize="small" />
         </IconButton>
       </Box>
@@ -260,37 +290,65 @@ export function EntryModal({
     </Box>
   );
 
+  const discardDialog = (
+    <Dialog
+      open={showDiscardConfirm}
+      onClose={() => setShowDiscardConfirm(false)}
+      maxWidth="xs"
+      fullWidth
+    >
+      <DialogTitle sx={{ fontWeight: 700 }}>Close without saving?</DialogTitle>
+      <DialogContent>
+        <DialogContentText>Your changes will be lost.</DialogContentText>
+      </DialogContent>
+      <DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>
+        <Button variant="outlined" onClick={() => setShowDiscardConfirm(false)}>
+          Keep editing
+        </Button>
+        <Button variant="contained" color="error" onClick={handleDiscard}>
+          Discard
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+
   if (isMobile) {
     return (
-      <Drawer
-        anchor="bottom"
-        open={open}
-        onClose={onClose}
-        slotProps={{
-          paper: {
-            sx: {
-              borderRadius: "20px 20px 0 0",
-              maxHeight: "92vh",
-              overflow: "auto",
-              bgcolor: "rgba(255,255,255,0.92)",
+      <>
+        <Drawer
+          anchor="bottom"
+          open={open}
+          onClose={handleClose}
+          slotProps={{
+            paper: {
+              sx: {
+                borderRadius: "20px 20px 0 0",
+                maxHeight: "92vh",
+                overflow: "auto",
+                bgcolor: "rgba(255,255,255,0.92)",
+              },
             },
-          },
-        }}
-      >
-        {content}
-      </Drawer>
+          }}
+        >
+          {content}
+        </Drawer>
+        {discardDialog}
+      </>
     );
   }
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="sm"
-      fullWidth
-      slotProps={{ paper: { sx: { bgcolor: "rgba(255,255,255,0.92)" } } }}
-    >
-      {content}
-    </Dialog>
+    <>
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        maxWidth="sm"
+        fullWidth
+        slotProps={{ paper: { sx: { bgcolor: "rgba(255,255,255,0.92)" } } }}
+      >
+        {content}
+      </Dialog>
+      {discardDialog}
+    </>
   );
 }
