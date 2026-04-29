@@ -69,8 +69,20 @@ export async function createProject(input: SaveProjectInput): Promise<string> {
   const uid = assertAuthenticatedUserId();
   const name = normalizeProjectName(input.name);
   const color = normalizeOptionalColor(input.color);
-  const nowIso = new Date().toISOString();
   const projectsRef = collection(db, "users", uid, "projects");
+
+  const existingSnap = await getDocs(
+    query(projectsRef, where("archived", "==", false)),
+  );
+  const nameLower = name.toLowerCase();
+  const isDuplicate = existingSnap.docs.some(
+    (docSnap) => (docSnap.data().name as string).toLowerCase() === nameLower,
+  );
+  if (isDuplicate) {
+    throw new Error(`A project named "${name}" already exists.`);
+  }
+
+  const nowIso = new Date().toISOString();
   const docRef = await addDoc(projectsRef, {
     name,
     ...(color ? { color } : {}),

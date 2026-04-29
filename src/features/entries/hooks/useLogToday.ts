@@ -89,7 +89,7 @@ export function useLogToday() {
     }
     return subscribeToProjects(
       (nextProjects) => setProjects(nextProjects),
-      () => setProjects([]),
+      () => {},
     );
   }, [user?.uid]);
 
@@ -142,18 +142,6 @@ export function useLogToday() {
 
   const closeDeleteDialog = () => setPendingDelete(null);
 
-  const refetchProjects = () => {
-    if (!user) return;
-    let unsubscribe: (() => void) | undefined;
-    unsubscribe = subscribeToProjects(
-      (nextProjects) => {
-        setProjects(nextProjects);
-        unsubscribe?.();
-      },
-      () => {},
-    );
-  };
-
   const saveEntry = async (data: EntryFormData): Promise<void> => {
     if (!user) {
       setSaveError("You must be signed in to save an entry.");
@@ -184,8 +172,22 @@ export function useLogToday() {
       } else {
         await createEntry(user.uid, input);
       }
+      setProjects((prev) => {
+        if (prev.some((p) => p.id === data.project.id)) return prev;
+        const nowIso = new Date().toISOString();
+        return [
+          ...prev,
+          {
+            id: data.project.id,
+            name: data.project.name,
+            color: data.project.color,
+            archived: false,
+            createdAt: nowIso,
+            updatedAt: nowIso,
+          },
+        ];
+      });
       setModal(null);
-      refetchProjects();
     } catch (error) {
       setSaveError(getEntryErrorMessage(error));
     } finally {
