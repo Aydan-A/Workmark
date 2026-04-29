@@ -3,9 +3,11 @@ import {
   Alert,
   Box,
   Button,
+  Chip,
   Dialog,
   Drawer,
   FormControlLabel,
+  IconButton,
   Stack,
   Switch,
   TextField,
@@ -13,6 +15,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import { computeHours } from "../entry.api";
 import { formatHours } from "../entry.utils";
 import { ProjectAutocomplete } from "./ProjectAutocomplete";
@@ -36,6 +39,29 @@ function addOneHour(time: string): string {
   const [h, m] = time.split(":").map(Number);
   const next = (h + 1) % 24;
   return `${String(next).padStart(2, "0")}:${String(m ?? 0).padStart(2, "0")}`;
+}
+
+function FieldLabel({ label, suffix }: { label: string; suffix?: string }) {
+  return (
+    <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5, mb: 0.5 }}>
+      <Typography
+        variant="caption"
+        sx={{
+          textTransform: "uppercase",
+          letterSpacing: "0.07em",
+          color: "text.secondary",
+          fontWeight: 600,
+        }}
+      >
+        {label}
+      </Typography>
+      {suffix && (
+        <Typography variant="caption" sx={{ color: "text.disabled" }}>
+          {suffix}
+        </Typography>
+      )}
+    </Box>
+  );
 }
 
 export function EntryModal({
@@ -108,44 +134,58 @@ export function EntryModal({
   };
 
   const content = (
-    <Box sx={{ p: { xs: 2.5, sm: 3 } }}>
-      <Typography variant="h6" sx={{ mb: 2.5, fontWeight: 700 }}>
-        {mode === "edit" ? "Edit entry" : "Add entry"}
-      </Typography>
+    <Box sx={{ p: { xs: 2.5, sm: 3 }, bgcolor: "rgba(255,255,255,0.92)" }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 2.5,
+        }}
+      >
+        <Typography variant="h6" sx={{ fontWeight: 700 }}>
+          {mode === "edit" ? "Edit entry" : "New entry"}
+        </Typography>
+        <IconButton size="small" onClick={onClose} aria-label="Close">
+          <CloseIcon fontSize="small" />
+        </IconButton>
+      </Box>
+
       <Stack spacing={2.5}>
-        <Box sx={{ display: "flex", gap: 2, alignItems: "flex-start" }}>
-          <TextField
-            label="Start"
-            type="time"
-            value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
-            slotProps={{ inputLabel: { shrink: true } }}
-            sx={{ flex: 1 }}
-            error={!!timeError}
-          />
-          <TextField
-            label="End"
-            type="time"
-            value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
-            slotProps={{ inputLabel: { shrink: true } }}
-            sx={{ flex: 1 }}
-            error={!!timeError}
-          />
-          {durationLabel && (
-            <Box sx={{ pt: 1.75, flexShrink: 0 }}>
-              <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: 600 }}>
-                {durationLabel}
-              </Typography>
-            </Box>
-          )}
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <Box sx={{ flex: 1 }}>
+            <FieldLabel label="Start" />
+            <TextField
+              type="time"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+              slotProps={{ htmlInput: { step: 60 } }}
+              fullWidth
+              error={!!timeError}
+            />
+          </Box>
+          <Box sx={{ flex: 1 }}>
+            <FieldLabel label="End" />
+            <TextField
+              type="time"
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+              slotProps={{ htmlInput: { step: 60 } }}
+              fullWidth
+              error={!!timeError}
+            />
+          </Box>
         </Box>
 
-        {timeError && (
+        {timeError ? (
           <Typography variant="caption" sx={{ color: "error.main", display: "block" }}>
             {timeError}
           </Typography>
-        )}
+        ) : durationLabel ? (
+          <Box>
+            <Chip label={`Duration: ${durationLabel}`} size="small" variant="outlined" />
+          </Box>
+        ) : null}
 
         <ProjectAutocomplete
           projects={projects}
@@ -154,25 +194,35 @@ export function EntryModal({
           error={projectError ?? undefined}
         />
 
-        <TextField
-          label="Note"
-          placeholder="What did you work on?"
-          multiline
-          minRows={2}
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          slotProps={{ inputLabel: { shrink: true } }}
-        />
+        <Box>
+          <FieldLabel label="Note" suffix="optional" />
+          <TextField
+            placeholder="What did you work on?"
+            multiline
+            minRows={2}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            fullWidth
+          />
+        </Box>
 
-        <FormControlLabel
-          control={
-            <Switch
-              checked={isRemote}
-              onChange={(e) => setIsRemote(e.target.checked)}
-            />
-          }
-          label="Remote"
-        />
+        <Box>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={isRemote}
+                onChange={(e) => setIsRemote(e.target.checked)}
+              />
+            }
+            label="Remote"
+          />
+          <Typography
+            variant="caption"
+            sx={{ color: "text.secondary", display: "block", ml: "42px" }}
+          >
+            Worked from home or elsewhere
+          </Typography>
+        </Box>
 
         {saveError && (
           <Alert severity="error" sx={{ py: 0.5 }}>
@@ -180,12 +230,30 @@ export function EntryModal({
           </Alert>
         )}
 
-        <Box sx={{ display: "flex", gap: 1.5, justifyContent: "flex-end", pt: 0.5 }}>
-          <Button variant="text" onClick={onClose} disabled={isSaving}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column-reverse", sm: "row" },
+            gap: 1.5,
+            justifyContent: { sm: "flex-end" },
+            pt: 0.5,
+          }}
+        >
+          <Button
+            variant="outlined"
+            onClick={onClose}
+            disabled={isSaving}
+            sx={{ width: { xs: "100%", sm: "auto" } }}
+          >
             Cancel
           </Button>
-          <Button variant="contained" onClick={handleSubmit} disabled={isSaving}>
-            {isSaving ? "Saving…" : "Save"}
+          <Button
+            variant="contained"
+            onClick={handleSubmit}
+            disabled={isSaving}
+            sx={{ width: { xs: "100%", sm: "auto" } }}
+          >
+            {isSaving ? "Saving…" : "Save entry"}
           </Button>
         </Box>
       </Stack>
@@ -199,7 +267,14 @@ export function EntryModal({
         open={open}
         onClose={onClose}
         slotProps={{
-          paper: { sx: { borderRadius: "20px 20px 0 0", maxHeight: "92vh", overflow: "auto" } },
+          paper: {
+            sx: {
+              borderRadius: "20px 20px 0 0",
+              maxHeight: "92vh",
+              overflow: "auto",
+              bgcolor: "rgba(255,255,255,0.92)",
+            },
+          },
         }}
       >
         {content}
@@ -208,7 +283,13 @@ export function EntryModal({
   }
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      slotProps={{ paper: { sx: { bgcolor: "rgba(255,255,255,0.92)" } } }}
+    >
       {content}
     </Dialog>
   );

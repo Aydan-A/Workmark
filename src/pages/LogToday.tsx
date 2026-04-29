@@ -6,6 +6,7 @@ import { useLogToday } from "../features/entries/hooks/useLogToday";
 import { DaySummaryRow } from "../features/entries/components/DaySummaryRow";
 import { EntryCard } from "../features/entries/components/EntryCard";
 import { EntryModal } from "../features/entries/components/EntryModal";
+import { DeleteEntryDialog } from "../features/entries/components/DeleteEntryDialog";
 
 export default function LogToday() {
   const {
@@ -29,6 +30,10 @@ export default function LogToday() {
     openDeleteDialog,
     closeModal,
     saveEntry,
+    pendingDelete,
+    isDeleting,
+    confirmDelete,
+    closeDeleteDialog,
   } = useLogToday();
 
   return (
@@ -121,6 +126,14 @@ export default function LogToday() {
           saveError={saveError}
         />
       )}
+
+      <DeleteEntryDialog
+        open={!!pendingDelete}
+        entry={pendingDelete}
+        isDeleting={isDeleting}
+        onConfirm={confirmDelete}
+        onClose={closeDeleteDialog}
+      />
     </Box>
   );
 }

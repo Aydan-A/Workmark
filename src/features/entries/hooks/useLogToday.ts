@@ -5,6 +5,7 @@ import { useAuth } from "../../../hooks/useAuth";
 import {
   computeHours,
   createEntry,
+  deleteEntry,
   getEntryErrorMessage,
   getEntryLoadErrorMessage,
   subscribeToEntriesForDate,
@@ -46,6 +47,7 @@ export function useLogToday() {
   const [pendingDelete, setPendingDelete] = useState<WorkEntry | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const goToDate = (date: string) => {
     setSelectedDate(date);
@@ -89,7 +91,7 @@ export function useLogToday() {
       (nextProjects) => setProjects(nextProjects),
       () => setProjects([]),
     );
-  }, [user]);
+  }, [user?.uid]);
 
   const totalHours = useMemo(
     () => entries.reduce((sum, e) => sum + e.hours, 0),
@@ -172,7 +174,17 @@ export function useLogToday() {
   };
 
   const confirmDelete = async (): Promise<void> => {
-    setPendingDelete(null);
+    if (!user || !pendingDelete) return;
+    setIsDeleting(true);
+    setSaveError(null);
+    try {
+      await deleteEntry(user.uid, pendingDelete.id);
+      setPendingDelete(null);
+    } catch (error) {
+      setSaveError(getEntryErrorMessage(error));
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return {
@@ -200,6 +212,7 @@ export function useLogToday() {
     saveEntry,
     confirmDelete,
     isSaving,
+    isDeleting,
     saveError,
   };
 }
