@@ -39,11 +39,15 @@ export function ProjectAutocomplete({ projects, value, onChange, error }: Props)
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
-  const options: ProjectOption[] = projects.map((p) => ({
-    id: p.id,
-    name: p.name,
-    color: p.color,
-  }));
+  const seen = new Set<string>();
+  const options: ProjectOption[] = projects
+    .filter((p) => {
+      const key = p.name.trim().toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .map((p) => ({ id: p.id, name: p.name, color: p.color }));
 
   const handleChange = (_: React.SyntheticEvent, newValue: ProjectOption | null) => {
     if (!newValue) { onChange(null); return; }
@@ -76,6 +80,7 @@ export function ProjectAutocomplete({ projects, value, onChange, error }: Props)
         value={value ? { id: value.id, name: value.name, color: value.color } : null}
         onChange={handleChange}
         disabled={creating}
+        openOnFocus
         getOptionLabel={(option) => option.name}
         isOptionEqualToValue={(option, val) => option.id === val.id}
         filterOptions={(opts, params) => {

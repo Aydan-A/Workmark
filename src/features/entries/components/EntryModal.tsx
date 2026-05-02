@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Box,
@@ -21,9 +21,12 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { computeHours } from "../entry.api";
+import { deleteReceiptFile } from "../receipt.api";
 import { ProjectAutocomplete } from "./ProjectAutocomplete";
+import { ReceiptUploadField } from "./ReceiptUploadField";
+import { useAuth } from "../../../hooks/useAuth";
 import type { EntryFormData } from "../hooks/useLogToday";
-import type { Project, WorkEntry } from "../entry.types";
+import type { Project, Receipt, WorkEntry } from "../entry.types";
 
 type Props = {
   open: boolean;
@@ -81,15 +84,21 @@ export function EntryModal({
 }: Props) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const { user } = useAuth();
 
   const [startTime, setStartTime] = useState(defaultStartTime);
   const [endTime, setEndTime] = useState(addOneHour(defaultStartTime));
   const [project, setProject] = useState<EntryFormData["project"] | null>(null);
   const [note, setNote] = useState("");
   const [isRemote, setIsRemote] = useState(defaultIsRemote);
+  const [receipts, setReceipts] = useState<Receipt[]>([]);
+  const [removedPaths, setRemovedPaths] = useState<string[]>([]);
   const [timeError, setTimeError] = useState<string | null>(null);
   const [projectError, setProjectError] = useState<string | null>(null);
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+
+  // Tracks storage paths uploaded in this modal session for cancel-cleanup.
+  const uploadedPathsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (!open) return;
@@ -99,17 +108,45 @@ export function EntryModal({
       setProject({ id: initialEntry.projectId, name: initialEntry.projectName });
       setNote(initialEntry.note ?? "");
       setIsRemote(initialEntry.isRemote);
+      setReceipts(initialEntry.receipts ?? []);
     } else {
       setStartTime(defaultStartTime);
       setEndTime(addOneHour(defaultStartTime));
       setProject(null);
       setNote("");
       setIsRemote(defaultIsRemote);
+      setReceipts([]);
     }
+    setRemovedPaths([]);
+    uploadedPathsRef.current.clear();
     setTimeError(null);
     setProjectError(null);
     setShowDiscardConfirm(false);
   }, [open, mode, initialEntry, defaultStartTime, defaultIsRemote]);
+
+  // Called by ReceiptUploadField whenever the committed receipts list changes.
+  const handleReceiptsChange = (next: Receipt[]) => {
+    // Detect newly added receipts (upload just completed).
+    next
+      .filter((r) => !receipts.some((e) => e.id === r.id))
+      .forEach((r) => uploadedPathsRef.current.add(r.storagePath));
+
+    // Detect removed receipts and handle appropriately.
+    receipts
+      .filter((r) => !next.some((n) => n.id === r.id))
+      .forEach((r) => {
+        if (uploadedPathsRef.current.has(r.storagePath)) {
+          // Newly uploaded this session → delete from Storage immediately.
+          void deleteReceiptFile(r.storagePath);
+          uploadedPathsRef.current.delete(r.storagePath);
+        } else {
+          // Pre-existing receipt in edit mode → queue for deletion on Save.
+          setRemovedPaths((prev) => [...prev, r.storagePath]);
+        }
+      });
+
+    setReceipts(next);
+  };
 
   const durationLabel = useMemo(() => {
     try {
@@ -122,17 +159,27 @@ export function EntryModal({
 
   const isDirty = useMemo(() => {
     if (mode !== "edit" || !initialEntry) return false;
+    const existingIds = new Set(initialEntry.receipts?.map((r) => r.id) ?? []);
     return (
       startTime !== initialEntry.startTime ||
       endTime !== initialEntry.endTime ||
       project?.id !== initialEntry.projectId ||
       note !== (initialEntry.note ?? "") ||
-      isRemote !== initialEntry.isRemote
+      isRemote !== initialEntry.isRemote ||
+      receipts.length !== (initialEntry.receipts?.length ?? 0) ||
+      receipts.some((r) => !existingIds.has(r.id))
     );
-  }, [mode, initialEntry, startTime, endTime, project, note, isRemote]);
+  }, [mode, initialEntry, startTime, endTime, project, note, isRemote, receipts]);
+
+  const cleanupAndClose = () => {
+    // Delete any files uploaded during this session that were never saved.
+    uploadedPathsRef.current.forEach((path) => void deleteReceiptFile(path));
+    uploadedPathsRef.current.clear();
+    onClose();
+  };
 
   const handleClose = () => {
-    if (isDirty) {
+    if (isDirty || uploadedPathsRef.current.size > 0) {
       setShowDiscardConfirm(true);
     } else {
       onClose();
@@ -141,7 +188,7 @@ export function EntryModal({
 
   const handleDiscard = () => {
     setShowDiscardConfirm(false);
-    onClose();
+    cleanupAndClose();
   };
 
   const handleSubmit = async () => {
@@ -160,7 +207,15 @@ export function EntryModal({
       valid = false;
     }
     if (!valid) return;
-    await onSave({ startTime, endTime, project: project!, note, isRemote });
+    await onSave({
+      startTime,
+      endTime,
+      project: project!,
+      note,
+      isRemote,
+      receipts,
+      removedReceiptPaths: removedPaths,
+    });
   };
 
   const content = (
@@ -255,6 +310,19 @@ export function EntryModal({
           />
         </Box>
 
+        {user && (
+          <Box>
+            <FieldLabel label="Documents" suffix="optional" />
+            <ReceiptUploadField
+              value={receipts}
+              entryId={mode === "edit" && initialEntry ? initialEntry.id : null}
+              uid={user.uid}
+              onChange={handleReceiptsChange}
+              disabled={isSaving}
+            />
+          </Box>
+        )}
+
         <Box>
           <FormControlLabel
             control={
@@ -290,7 +358,7 @@ export function EntryModal({
         >
           <Button
             variant="outlined"
-            onClick={onClose}
+            onClick={handleClose}
             disabled={isSaving}
             sx={{ width: { xs: "100%", sm: "auto" } }}
           >

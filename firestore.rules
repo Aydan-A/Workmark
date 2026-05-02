@@ -36,6 +36,7 @@ service cloud.firestore {
                'projectName',
                'isRemote',
                'note',
+               'receipts',
                'createdAt',
                'updatedAt'
              ]) &&
@@ -62,6 +63,7 @@ service cloud.firestore {
              request.resource.data.projectName is string &&
              request.resource.data.isRemote is bool &&
              (!request.resource.data.keys().hasAny(['note']) || request.resource.data.note is string) &&
+             (!request.resource.data.keys().hasAny(['receipts']) || (request.resource.data.receipts is list && request.resource.data.receipts.size() <= 5)) &&
              (!request.resource.data.keys().hasAny(['createdAt']) || request.resource.data.createdAt is string) &&
              request.resource.data.updatedAt is string;
     }

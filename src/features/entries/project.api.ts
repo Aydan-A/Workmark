@@ -4,7 +4,6 @@ import {
   doc,
   getDocs,
   onSnapshot,
-  orderBy,
   query,
   updateDoc,
   where,
@@ -44,19 +43,24 @@ export function subscribeToProjects(
   }
 
   const projectsRef = collection(db, "users", uid, "projects");
-  const projectsQuery = query(
-    projectsRef,
-    where("archived", "==", false),
-    orderBy("name", "asc"),
-  );
+  const projectsQuery = query(projectsRef, where("archived", "==", false));
 
   return onSnapshot(
     projectsQuery,
     (snapshot) => {
-      const projects = snapshot.docs.map((docSnapshot) => ({
-        id: docSnapshot.id,
-        ...(docSnapshot.data() as Omit<Project, "id">),
-      }));
+      const seen = new Set<string>();
+      const projects = snapshot.docs
+        .map((docSnapshot) => ({
+          id: docSnapshot.id,
+          ...(docSnapshot.data() as Omit<Project, "id">),
+        }))
+        .filter((p) => {
+          const key = p.name.trim().toLowerCase();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        })
+        .sort((a, b) => a.name.localeCompare(b.name));
       onData(projects);
     },
     (error) => {

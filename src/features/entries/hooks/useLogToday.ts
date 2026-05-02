@@ -12,8 +12,9 @@ import {
   updateEntry,
 } from "../entry.api";
 import { subscribeToProjects } from "../project.api";
+import { deleteReceiptFile, movePendingReceipts } from "../receipt.api";
 import { checkTimeOverlap, getTotalRemoteHours, parseDateKey } from "../entry.utils";
-import type { Project, SaveWorkEntryInput, WorkEntry } from "../entry.types";
+import type { Project, Receipt, SaveWorkEntryInput, WorkEntry } from "../entry.types";
 
 const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -27,6 +28,8 @@ export type EntryFormData = {
   project: { id: string; name: string; color?: string };
   note: string;
   isRemote: boolean;
+  receipts: Receipt[];
+  removedReceiptPaths: string[];
 };
 
 export function useLogToday() {
@@ -168,12 +171,22 @@ export function useLogToday() {
         note: data.note.trim() || undefined,
       };
       if (modal?.mode === "edit" && modal.entry) {
-        await updateEntry(user.uid, modal.entry.id, input);
+        // Always include the receipts key so updateEntry can call deleteField()
+        // when the user has removed all attachments.
+        await updateEntry(user.uid, modal.entry.id, { ...input, receipts: data.receipts });
+        if (data.removedReceiptPaths.length > 0) {
+          await Promise.allSettled(data.removedReceiptPaths.map(deleteReceiptFile));
+        }
       } else {
-        await createEntry(user.uid, input);
+        const entryId = await createEntry(user.uid, input);
+        if (data.receipts.length > 0) {
+          const finalReceipts = await movePendingReceipts(user.uid, entryId, data.receipts);
+          await updateEntry(user.uid, entryId, { receipts: finalReceipts });
+        }
       }
       setProjects((prev) => {
-        if (prev.some((p) => p.id === data.project.id)) return prev;
+        const nameLower = data.project.name.trim().toLowerCase();
+        if (prev.some((p) => p.id === data.project.id || p.name.trim().toLowerCase() === nameLower)) return prev;
         const nowIso = new Date().toISOString();
         return [
           ...prev,

@@ -3,6 +3,7 @@ import {
   addDoc,
   collection,
   deleteDoc,
+  deleteField,
   doc,
   getDoc,
   limit,
@@ -14,6 +15,7 @@ import {
   type QueryConstraint,
   type Unsubscribe,
 } from "firebase/firestore";
+import { deleteEntryReceipts } from "./receipt.api";
 import {
   differenceInMinutes,
   endOfMonth,
@@ -214,6 +216,14 @@ export async function updateEntry(
     payload.note = nextNote;
   }
 
+  if ("receipts" in updates) {
+    if (updates.receipts && updates.receipts.length > 0) {
+      (payload as Record<string, unknown>).receipts = updates.receipts;
+    } else {
+      (payload as Record<string, unknown>).receipts = deleteField();
+    }
+  }
+
   if (updates.startTime !== undefined || updates.endTime !== undefined) {
     payload.hours = computeHours(nextStartTime, nextEndTime);
   }
@@ -230,6 +240,9 @@ export async function deleteEntry(uid: string, entryId: string): Promise<void> {
   }
 
   await deleteDoc(doc(db, "users", normalizedUid, "entries", normalizedEntryId));
+  // Cascade-delete Storage files. Fire-and-forget so a Storage hiccup never
+  // blocks the Firestore delete from completing.
+  void deleteEntryReceipts(normalizedUid, normalizedEntryId);
 }
 
 export async function saveWorkEntry(input: SaveWorkEntryInput): Promise<void> {
