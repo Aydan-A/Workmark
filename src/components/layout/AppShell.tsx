@@ -10,7 +10,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         position: "relative",
         minHeight: "100vh",
         overflow: "hidden",
-        bgcolor: "#F0EEFF",
+        bgcolor: "#E4DFEF",
         "&::before": {
           content: '""',
           position: "absolute",
