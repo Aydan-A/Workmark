@@ -22,10 +22,11 @@ type Props = {
   entryId: string | null;
   uid: string;
   onChange: (receipts: Receipt[]) => void;
+  onUploading?: (uploading: boolean) => void;
   disabled?: boolean;
 };
 
-export function ReceiptUploadField({ value, entryId, uid, onChange, disabled }: Props) {
+export function ReceiptUploadField({ value, entryId, uid, onChange, onUploading, disabled }: Props) {
   const [uploadItems, setUploadItems] = useState<UploadItem[]>([]);
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -38,6 +39,10 @@ export function ReceiptUploadField({ value, entryId, uid, onChange, disabled }: 
   useEffect(() => {
     valueRef.current = value;
   }, [value]);
+
+  useEffect(() => {
+    onUploading?.(uploadItems.some((u) => !u.error));
+  }, [uploadItems, onUploading]);
 
   useEffect(() => {
     return () => {

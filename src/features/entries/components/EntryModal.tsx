@@ -93,6 +93,7 @@ export function EntryModal({
   const [isRemote, setIsRemote] = useState(defaultIsRemote);
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [removedPaths, setRemovedPaths] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   const [timeError, setTimeError] = useState<string | null>(null);
   const [projectError, setProjectError] = useState<string | null>(null);
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
@@ -318,6 +319,7 @@ export function EntryModal({
               entryId={mode === "edit" && initialEntry ? initialEntry.id : null}
               uid={user.uid}
               onChange={handleReceiptsChange}
+              onUploading={setIsUploading}
               disabled={isSaving}
             />
           </Box>
@@ -367,10 +369,10 @@ export function EntryModal({
           <Button
             variant="contained"
             onClick={handleSubmit}
-            disabled={isSaving}
+            disabled={isSaving || isUploading}
             sx={{ width: { xs: "100%", sm: "auto" } }}
           >
-            {isSaving ? "Saving…" : "Save entry"}
+            {isSaving ? "Saving…" : isUploading ? "Uploading…" : "Save entry"}
           </Button>
         </Box>
       </Stack>

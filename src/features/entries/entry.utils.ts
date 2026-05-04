@@ -9,6 +9,7 @@ import {
 import type {
   CompactDailyBreakdownRow,
   DashboardLog,
+  TopProjectStat,
   WeeklyBusiestDay,
   WeeklyPoint,
   WeeklyTopProject,
@@ -254,4 +255,55 @@ export function buildTimeRangeFromHours(hours: number): { startTime: string; end
     startTime: "00:00",
     endTime: `${String(endHours).padStart(2, "0")}:${String(endMinutes).padStart(2, "0")}`,
   };
+}
+
+// Counts consecutive days with at least one entry, walking back from today (or
+// yesterday if today has no entry). Entries must cover at least the last 90 days
+// for the count to be fully accurate.
+export function calcStreakDays(entries: WorkEntry[], referenceDate: Date = new Date()): number {
+  const todayKey = format(referenceDate, "yyyy-MM-dd");
+  const datesWithEntries = new Set(
+    entries.filter((e) => e.hours > 0).map((e) => e.date),
+  );
+
+  const anchorKey = datesWithEntries.has(todayKey)
+    ? todayKey
+    : format(addDays(referenceDate, -1), "yyyy-MM-dd");
+
+  if (!datesWithEntries.has(anchorKey)) return 0;
+
+  let streak = 0;
+  let cursor = parseDateKey(anchorKey);
+
+  while (datesWithEntries.has(format(cursor, "yyyy-MM-dd"))) {
+    streak++;
+    cursor = addDays(cursor, -1);
+  }
+
+  return streak;
+}
+
+export function buildTopProjectStats(
+  entries: WorkEntry[],
+  projectColorMap: Map<string, string | undefined>,
+  topN = 3,
+): TopProjectStat[] {
+  const projectTotals = new Map<string, { name: string; hours: number }>();
+
+  for (const entry of entries) {
+    const current = projectTotals.get(entry.projectId) ?? { name: entry.projectName, hours: 0 };
+    current.hours += entry.hours;
+    projectTotals.set(entry.projectId, current);
+  }
+
+  return [...projectTotals.entries()]
+    .filter(([, data]) => data.hours > 0)
+    .sort(([, a], [, b]) => b.hours - a.hours)
+    .slice(0, topN)
+    .map(([id, data]) => ({
+      id,
+      name: data.name,
+      color: projectColorMap.get(id),
+      hours: data.hours,
+    }));
 }

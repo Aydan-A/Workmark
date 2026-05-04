@@ -67,6 +67,13 @@ export type WeeklyTopProject = {
   days: number;
 };
 
+export type TopProjectStat = {
+  id: string;
+  name: string;
+  color: string | undefined;
+  hours: number;
+};
+
 export type CompactDailyBreakdownRow = {
   date: string;
   day: string;
@@ -74,4 +81,22 @@ export type CompactDailyBreakdownRow = {
   hours: number;
   projectLabel: string;
   receiptCount: number;
+};
+
+export type HeatmapDay = {
+  dateKey: string;
+  hours: number;
+  projectCount: number;
+  weekIndex: number;
+  dayIndex: number;
+  isFuture: boolean;
+};
+
+export type DashboardRecentEntry = {
+  id: string;
+  projectName: string;
+  projectColor: string | undefined;
+  hours: number;
+  date: string;
+  createdAt: string;
 };
