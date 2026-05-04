@@ -90,7 +90,7 @@ export default function DashboardHero({
         ref={heroRef}
         variant="outlined"
         sx={{
-          p: { xs: 2.5, md: 3.5 },
+          p: { xs: 2, md: 2.5 },
           ...dashboardGlassCardSx,
           position: "relative",
           overflow: "hidden",
@@ -112,7 +112,7 @@ export default function DashboardHero({
             direction="column"
             alignItems="center"
             justifyContent="center"
-            spacing={{ xs: 2.5, md: 3 }}
+            spacing={{ xs: 1.5, md: 2 }}
             sx={{ textAlign: "center" }}
           >
             <Box sx={{ width: "100%", maxWidth: 720, mx: "auto" }}>
@@ -129,7 +129,7 @@ export default function DashboardHero({
               <Typography
                 variant="h1"
                 sx={{
-                  fontSize: { xs: "2.1rem", md: "2.7rem" },
+                  fontSize: { xs: "2rem", md: "2.5rem" },
                   letterSpacing: "-0.04em",
                   color: "#f7f5ff",
                   textShadow: "0 10px 30px rgba(0, 0, 0, 0.28)",
@@ -147,7 +147,7 @@ export default function DashboardHero({
                 flexWrap="wrap"
                 useFlexGap
                 justifyContent="center"
-                sx={{ mt: 2 }}
+                sx={{ mt: 1 }}
               >
                 <Chip
                   label={`${recentLogCount} ${recentEntriesLabel}`}

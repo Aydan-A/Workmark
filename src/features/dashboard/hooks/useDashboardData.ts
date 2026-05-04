@@ -1,13 +1,31 @@
 import { useEffect, useMemo, useState } from "react";
 import type { User } from "firebase/auth";
-import { endOfWeek, format, startOfWeek } from "date-fns";
+import { endOfWeek, format, getDay, startOfWeek, subDays } from "date-fns";
 import { getEntryLoadErrorMessage, subscribeToEntries } from "../../entries/entry.api";
-import type { WorkEntry } from "../../entries/entry.types";
+import { subscribeToProjects } from "../../entries/project.api";
+import type {
+  DashboardRecentEntry,
+  HeatmapDay,
+  Project,
+  TopProjectStat,
+  WorkEntry,
+} from "../../entries/entry.types";
 import {
   buildRecentDashboardLogs,
+  buildTopProjectStats,
   buildWeeklyOverview,
+  calcStreakDays,
   getHoursForDate,
+  getTotalRemoteHours,
 } from "../../entries/entry.utils";
+import {
+  buildHeatmapGrid,
+  getLast7DaysHours,
+  getLast7DaysRemotePct,
+  getHeatmapTotalHours,
+  getStreakDots,
+  groupByWeekday,
+} from "../dashboard.utils";
 
 type UseDashboardDataOptions = {
   user: User | null;
@@ -16,19 +34,23 @@ type UseDashboardDataOptions = {
 
 function getFirstName(name: string) {
   const trimmed = name.trim();
-
   if (!trimmed) return "Aydan";
-
   return trimmed.split(/\s+/)[0] || "Aydan";
 }
 
 export function useDashboardData({ user, authLoading }: UseDashboardDataOptions) {
   const [recentEntries, setRecentEntries] = useState<WorkEntry[]>([]);
   const [weeklyEntries, setWeeklyEntries] = useState<WorkEntry[]>([]);
+  const [historyEntries, setHistoryEntries] = useState<WorkEntry[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [recentLoadError, setRecentLoadError] = useState<string | null>(null);
   const [weeklyLoadError, setWeeklyLoadError] = useState<string | null>(null);
+  const [historyLoadError, setHistoryLoadError] = useState<string | null>(null);
+  const [projectsLoadError, setProjectsLoadError] = useState<string | null>(null);
   const [isRecentLoading, setIsRecentLoading] = useState(false);
   const [isWeeklyLoading, setIsWeeklyLoading] = useState(false);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  const [isProjectsLoading, setIsProjectsLoading] = useState(false);
 
   const now = new Date();
   const todayLabel = format(now, "EEEE, MMMM d");
@@ -36,6 +58,10 @@ export function useDashboardData({ user, authLoading }: UseDashboardDataOptions)
   const referenceDate = useMemo(() => new Date(`${todayKey}T00:00:00`), [todayKey]);
   const weekStartKey = format(startOfWeek(referenceDate, { weekStartsOn: 1 }), "yyyy-MM-dd");
   const weekEndKey = format(endOfWeek(referenceDate, { weekStartsOn: 1 }), "yyyy-MM-dd");
+  const lastWeekStartKey = format(startOfWeek(subDays(referenceDate, 7), { weekStartsOn: 1 }), "yyyy-MM-dd");
+  const lastWeekEndKey = format(endOfWeek(subDays(referenceDate, 7), { weekStartsOn: 1 }), "yyyy-MM-dd");
+  // 90 days covers 12 heatmap weeks (84 days) plus streak buffer
+  const historyStartKey = format(subDays(referenceDate, 90), "yyyy-MM-dd");
 
   useEffect(() => {
     if (!user) {
@@ -44,22 +70,12 @@ export function useDashboardData({ user, authLoading }: UseDashboardDataOptions)
       setIsRecentLoading(false);
       return;
     }
-
     setIsRecentLoading(true);
-
     const unsubscribe = subscribeToEntries(
-      (entries) => {
-        setRecentEntries(entries);
-        setRecentLoadError(null);
-        setIsRecentLoading(false);
-      },
-      (error) => {
-        setRecentLoadError(getEntryLoadErrorMessage(error));
-        setIsRecentLoading(false);
-      },
-      { orderDirection: "desc", limitCount: 4 },
+      (entries) => { setRecentEntries(entries); setRecentLoadError(null); setIsRecentLoading(false); },
+      (error) => { setRecentLoadError(getEntryLoadErrorMessage(error)); setIsRecentLoading(false); },
+      { orderDirection: "desc", limitCount: 5 },
     );
-
     return unsubscribe;
   }, [user]);
 
@@ -70,29 +86,48 @@ export function useDashboardData({ user, authLoading }: UseDashboardDataOptions)
       setIsWeeklyLoading(false);
       return;
     }
-
     setIsWeeklyLoading(true);
-
     const unsubscribe = subscribeToEntries(
-      (entries) => {
-        setWeeklyEntries(entries);
-        setWeeklyLoadError(null);
-        setIsWeeklyLoading(false);
-      },
-      (error) => {
-        setWeeklyLoadError(getEntryLoadErrorMessage(error));
-        setIsWeeklyLoading(false);
-      },
-      {
-        startDate: weekStartKey,
-        endDate: weekEndKey,
-        orderDirection: "asc",
-      },
+      (entries) => { setWeeklyEntries(entries); setWeeklyLoadError(null); setIsWeeklyLoading(false); },
+      (error) => { setWeeklyLoadError(getEntryLoadErrorMessage(error)); setIsWeeklyLoading(false); },
+      { startDate: weekStartKey, endDate: weekEndKey, orderDirection: "asc" },
     );
-
     return unsubscribe;
   }, [user, weekEndKey, weekStartKey]);
 
+  // Covers last 90 days — drives heatmap, streak, last-week delta, sparklines.
+  useEffect(() => {
+    if (!user) {
+      setHistoryEntries([]);
+      setHistoryLoadError(null);
+      setIsHistoryLoading(false);
+      return;
+    }
+    setIsHistoryLoading(true);
+    const unsubscribe = subscribeToEntries(
+      (entries) => { setHistoryEntries(entries); setHistoryLoadError(null); setIsHistoryLoading(false); },
+      (error) => { setHistoryLoadError(getEntryLoadErrorMessage(error)); setIsHistoryLoading(false); },
+      { startDate: historyStartKey, endDate: todayKey, orderDirection: "asc" },
+    );
+    return unsubscribe;
+  }, [user, historyStartKey, todayKey]);
+
+  useEffect(() => {
+    if (!user) {
+      setProjects([]);
+      setProjectsLoadError(null);
+      setIsProjectsLoading(false);
+      return;
+    }
+    setIsProjectsLoading(true);
+    const unsubscribe = subscribeToProjects(
+      (list) => { setProjects(list); setProjectsLoadError(null); setIsProjectsLoading(false); },
+      (error) => { setProjectsLoadError(getEntryLoadErrorMessage(error)); setIsProjectsLoading(false); },
+    );
+    return unsubscribe;
+  }, [user]);
+
+  // ── Weekly overview ───────────────────────────────────────────────────────
   const recentLogs = useMemo(
     () => buildRecentDashboardLogs(recentEntries, referenceDate),
     [recentEntries, referenceDate],
@@ -102,18 +137,100 @@ export function useDashboardData({ user, authLoading }: UseDashboardDataOptions)
     [referenceDate, weeklyEntries],
   );
 
-  const weeklyTotal = weeklyOverview.reduce((sum, day) => sum + day.hours, 0);
+  const weeklyTotal = weeklyOverview.reduce((sum, d) => sum + d.hours, 0);
   const averagePerDay = weeklyTotal / weeklyOverview.length;
-  const activeDays = weeklyOverview.filter((day) => day.hours > 0).length;
+  const activeDays = weeklyOverview.filter((d) => d.hours > 0).length;
   const highestPoint = weeklyOverview.reduce(
     (best, item) => (item.hours > best.hours ? item : best),
     weeklyOverview[0],
   );
   const todayHours = getHoursForDate(weeklyEntries, todayKey);
+
+  const lastWeekEntries = useMemo(
+    () => historyEntries.filter((e) => e.date >= lastWeekStartKey && e.date <= lastWeekEndKey),
+    [historyEntries, lastWeekStartKey, lastWeekEndKey],
+  );
+  const lastWeekTotal = lastWeekEntries.reduce((sum, e) => sum + e.hours, 0);
+  const weeklyDelta = weeklyTotal - lastWeekTotal;
+
+  const remoteHours = getTotalRemoteHours(weeklyEntries);
+  const remotePct = weeklyTotal > 0 ? Math.round((remoteHours / weeklyTotal) * 100) : 0;
+
+  const streakDays = useMemo(
+    () => calcStreakDays(historyEntries, referenceDate),
+    [historyEntries, referenceDate],
+  );
+
+  // ── Project color map ─────────────────────────────────────────────────────
+  const projectColorMap = useMemo(
+    () => new Map(projects.map((p): [string, string | undefined] => [p.id, p.color])),
+    [projects],
+  );
+  const topProjects: TopProjectStat[] = useMemo(
+    () => buildTopProjectStats(weeklyEntries, projectColorMap, 3),
+    [weeklyEntries, projectColorMap],
+  );
+
+  // ── Heatmap ───────────────────────────────────────────────────────────────
+  const heatmapGrid: HeatmapDay[] = useMemo(
+    () => buildHeatmapGrid(historyEntries, referenceDate),
+    [historyEntries, referenceDate],
+  );
+  const heatmapTotalHours = useMemo(
+    () => getHeatmapTotalHours(historyEntries, referenceDate),
+    [historyEntries, referenceDate],
+  );
+
+  // ── Weekly rhythm chart ───────────────────────────────────────────────────
+  const hoursByWeekday = useMemo(
+    () => groupByWeekday(historyEntries, referenceDate, 4),
+    [historyEntries, referenceDate],
+  );
+  const todayWeekday = (() => {
+    const dow = getDay(referenceDate); // 0=Sun … 6=Sat
+    return dow === 0 ? 6 : dow - 1;   // Mon=0 … Sun=6
+  })();
+
+  // ── Sparklines ────────────────────────────────────────────────────────────
+  const last7DaysHours = useMemo(
+    () => getLast7DaysHours(historyEntries, referenceDate),
+    [historyEntries, referenceDate],
+  );
+  const last7DaysRemotePct = useMemo(
+    () => getLast7DaysRemotePct(historyEntries, referenceDate),
+    [historyEntries, referenceDate],
+  );
+  const last14DaysLogged = useMemo(
+    () => getStreakDots(historyEntries, referenceDate, 14),
+    [historyEntries, referenceDate],
+  );
+
+  // ── Recent activity (with project colors) ────────────────────────────────
+  const recentLogItems: DashboardRecentEntry[] = useMemo(
+    () =>
+      recentEntries.slice(0, 5).map((e) => ({
+        id: e.id,
+        projectName: e.projectName,
+        projectColor: projectColorMap.get(e.projectId),
+        hours: e.hours,
+        date: e.date,
+        createdAt: e.createdAt,
+      })),
+    [recentEntries, projectColorMap],
+  );
+
+  // ── Labels / errors / loading ─────────────────────────────────────────────
   const recentEntriesLabel = recentLogs.length === 1 ? "recent log" : "recent logs";
   const activeDaysLabel = activeDays === 1 ? "active day" : "active days";
-  const dashboardErrors = [...new Set([recentLoadError, weeklyLoadError].filter((error): error is string => Boolean(error)))];
-  const isDashboardLoading = authLoading || isRecentLoading || isWeeklyLoading;
+  const dashboardErrors = [
+    ...new Set(
+      [recentLoadError, weeklyLoadError, historyLoadError, projectsLoadError].filter(
+        (e): e is string => Boolean(e),
+      ),
+    ),
+  ];
+  const isDashboardLoading =
+    authLoading || isRecentLoading || isWeeklyLoading || isHistoryLoading || isProjectsLoading;
   const recentHelperText = !user
     ? "Sign in to view activity"
     : isDashboardLoading
@@ -130,13 +247,27 @@ export function useDashboardData({ user, authLoading }: UseDashboardDataOptions)
     averagePerDay,
     dashboardErrors,
     firstName,
+    heatmapGrid,
+    heatmapTotalHours,
+    historyEntries,
     highestPoint,
+    hoursByWeekday,
     isDashboardLoading,
+    last14DaysLogged,
+    last7DaysHours,
+    last7DaysRemotePct,
     recentEntriesLabel,
     recentHelperText,
+    recentLogItems,
     recentLogs,
+    remoteHours,
+    remotePct,
+    streakDays,
     todayHours,
     todayLabel,
+    todayWeekday,
+    topProjects,
+    weeklyDelta,
     weeklyOverview,
     weeklyTotal,
   };
