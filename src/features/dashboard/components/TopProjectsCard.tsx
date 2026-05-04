@@ -1,0 +1,138 @@
+import { Box, Divider, Paper, Skeleton, Stack, Typography } from "@mui/material";
+import { alpha } from "@mui/material/styles";
+import type { TopProjectStat } from "../../entries/entry.types";
+import { formatHM } from "../dashboard.utils";
+import {
+  dashboardGlassCardSx,
+  dashboardSectionCardPaddingSx,
+} from "../../../styles/dashboard";
+
+type TopProjectsCardProps = {
+  topProjects: TopProjectStat[];
+  isLoading: boolean;
+};
+
+// Assigned in order when project.color is undefined.
+const FALLBACK_PALETTE = ["#6c63ff", "#43a047", "#fb8c00", "#0288d1"];
+
+function resolveColor(project: TopProjectStat, index: number): string {
+  return project.color ?? FALLBACK_PALETTE[index % FALLBACK_PALETTE.length];
+}
+
+function RowSkeleton() {
+  return (
+    <Box sx={{ py: 1.75 }}>
+      <Stack direction="row" alignItems="center" spacing={1.5}>
+        <Skeleton variant="circular" width={10} height={10} sx={{ flexShrink: 0 }} />
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Skeleton variant="text" width="60%" height={20} />
+          <Skeleton variant="rectangular" width="100%" height={3} sx={{ mt: 0.75, borderRadius: 999 }} />
+        </Box>
+        <Skeleton variant="text" width={40} height={20} />
+      </Stack>
+    </Box>
+  );
+}
+
+export default function TopProjectsCard({ topProjects, isLoading }: TopProjectsCardProps) {
+  const maxHours = topProjects[0]?.hours ?? 1;
+
+  return (
+    <Paper
+      variant="outlined"
+      sx={{ ...dashboardGlassCardSx, ...dashboardSectionCardPaddingSx, height: "100%" }}
+    >
+      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+        <Typography
+          sx={{
+            fontSize: { xs: "1.1rem", md: "1.15rem" },
+            fontWeight: 700,
+            letterSpacing: "-0.02em",
+          }}
+        >
+          Top projects
+        </Typography>
+        <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, color: "text.disabled" }}>
+          This week
+        </Typography>
+      </Stack>
+
+      {isLoading ? (
+        <Stack divider={<Divider />} spacing={0}>
+          <RowSkeleton />
+          <RowSkeleton />
+          <RowSkeleton />
+        </Stack>
+      ) : topProjects.length === 0 ? (
+        <Typography sx={{ fontSize: "0.875rem", color: "text.secondary" }}>
+          No projects logged this week
+        </Typography>
+      ) : (
+        <Stack divider={<Divider />} spacing={0}>
+          {topProjects.map((project, index) => {
+            const color = resolveColor(project, index);
+            const barPct = (project.hours / maxHours) * 100;
+
+            return (
+              <Box key={project.id} sx={{ py: 1.75 }}>
+                <Stack direction="row" alignItems="center" spacing={1.5}>
+                  <Box
+                    sx={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: "50%",
+                      bgcolor: color,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography
+                      sx={{
+                        fontSize: "0.9375rem",
+                        fontWeight: 500,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      {project.name}
+                    </Typography>
+                    <Box
+                      sx={{
+                        mt: 0.75,
+                        height: 3,
+                        borderRadius: 999,
+                        bgcolor: alpha(color, 0.15),
+                        overflow: "hidden",
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: `${barPct}%`,
+                          height: "100%",
+                          bgcolor: color,
+                          borderRadius: 999,
+                        }}
+                      />
+                    </Box>
+                  </Box>
+                  <Typography
+                    sx={{
+                      fontSize: "0.9375rem",
+                      fontWeight: 700,
+                      fontVariantNumeric: "tabular-nums",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {formatHM(project.hours)}
+                  </Typography>
+                </Stack>
+              </Box>
+            );
+          })}
+        </Stack>
+      )}
+    </Paper>
+  );
+}

@@ -1,21 +1,41 @@
+export type Receipt = {
+  id: string;
+  storagePath: string;
+  fileName: string;
+  contentType: string;
+  sizeBytes: number;
+  uploadedAt: string;
+};
+
 export type WorkEntry = {
+  id: string;
   date: string;
-  totalHours: number;
-  remoteHours: number;
-  projects: string[];
-  project?: string | null;
-  description: string;
-  receiptFileNames: string[];
+  startTime: string;
+  endTime: string;
+  hours: number;
+  projectId: string;
+  projectName: string;
+  isRemote: boolean;
+  note?: string;
+  receipts?: Receipt[];
+  createdAt: string;
   updatedAt: string;
 };
 
-export type SaveWorkEntryInput = {
-  date: string;
-  totalHours: number;
-  remoteHours: number;
-  projects: string[];
-  description: string;
-  receiptFileNames: string[];
+export type SaveWorkEntryInput = Omit<WorkEntry, "id" | "createdAt" | "updatedAt">;
+
+export type Project = {
+  id: string;
+  name: string;
+  color?: string;
+  archived: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type SaveProjectInput = {
+  name: string;
+  color?: string;
 };
 
 export type DashboardLog = {
@@ -28,8 +48,11 @@ export type DashboardLog = {
 };
 
 export type WeeklyPoint = {
+  dateKey: string;
   day: string;
+  dateLabel: string;
   hours: number;
+  isToday: boolean;
 };
 
 export type WeeklyBusiestDay = {
@@ -44,6 +67,13 @@ export type WeeklyTopProject = {
   days: number;
 };
 
+export type TopProjectStat = {
+  id: string;
+  name: string;
+  color: string | undefined;
+  hours: number;
+};
+
 export type CompactDailyBreakdownRow = {
   date: string;
   day: string;
@@ -51,4 +81,22 @@ export type CompactDailyBreakdownRow = {
   hours: number;
   projectLabel: string;
   receiptCount: number;
+};
+
+export type HeatmapDay = {
+  dateKey: string;
+  hours: number;
+  projectCount: number;
+  weekIndex: number;
+  dayIndex: number;
+  isFuture: boolean;
+};
+
+export type DashboardRecentEntry = {
+  id: string;
+  projectName: string;
+  projectColor: string | undefined;
+  hours: number;
+  date: string;
+  createdAt: string;
 };
