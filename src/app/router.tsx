@@ -45,6 +45,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Home /> },
       { path: "today", element: <LogToday /> },
+      { path: "day/:date", element: <LogToday /> },
       { path: "weekly", element: <WeeklyLog /> },
       { path: "calendar", element: <Calendar /> },
       { path: "profile", element: <Profile /> },
