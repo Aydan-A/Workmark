@@ -14,6 +14,7 @@ export type UserProfileDocument = {
   phone?: string;
   timezone?: string;
   language?: string;
+  managerEmail?: string;
   updatedAt?: string;
 };
 
@@ -72,6 +73,20 @@ export async function saveUserProfile(input: UserProfileDocument): Promise<void>
       phone: normalizeOptionalField(input.phone),
       timezone: normalizeOptionalField(input.timezone),
       language: normalizeOptionalField(input.language),
+      updatedAt: new Date().toISOString(),
+    },
+    { merge: true },
+  );
+}
+
+export async function saveManagerEmail(managerEmail: string): Promise<void> {
+  const uid = assertAuthenticatedUserId();
+  const profileRef = doc(db, "users", uid);
+
+  await setDoc(
+    profileRef,
+    {
+      managerEmail: managerEmail.trim(),
       updatedAt: new Date().toISOString(),
     },
     { merge: true },

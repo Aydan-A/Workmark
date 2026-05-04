@@ -1,16 +1,18 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { FirebaseError } from "firebase/app";
 import { deleteUser } from "firebase/auth";
 import {
   BusinessCenterOutlined,
   CameraAltOutlined,
-  ChevronRightRounded,
   EditOutlined,
-  NotificationsOutlined,
+  ExpandMoreRounded,
   PersonOutlineRounded,
   VerifiedRounded,
 } from "@mui/icons-material";
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Avatar,
   Box,
   Button,
@@ -27,10 +29,10 @@ import {
 } from "@mui/material";
 import { alpha, useTheme } from "@mui/material/styles";
 import { format, subDays } from "date-fns";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { getEntryLoadErrorMessage, subscribeToEntries } from "../features/entries/entry.api";
 import type { WorkEntry } from "../features/entries/entry.types";
-import { syncCurrentUserIdentity } from "../features/profile/profile.api";
+import { saveManagerEmail, subscribeToUserProfile, syncCurrentUserIdentity } from "../features/profile/profile.api";
 import { getAccountUpdateErrorMessage, logout, updateAccountDisplayName, updateAccountEmail } from "../firebase/auth";
 import { useAuth } from "../hooks/useAuth";
 
@@ -128,63 +130,6 @@ function AccountRow({ label, value, onEdit }: AccountRowProps) {
 
 type EditableAccountField = "fullName" | "email";
 
-type PreferenceItemProps = {
-  icon: ReactNode;
-  label: string;
-  helperText: string;
-  to: string;
-};
-
-function PreferenceItem({ icon, label, helperText, to }: PreferenceItemProps) {
-  return (
-    <Box
-      component={RouterLink}
-      to={to}
-      sx={(theme) => ({
-        display: "flex",
-        alignItems: "center",
-        gap: 1.5,
-        px: 1.75,
-        py: 1.55,
-        textDecoration: "none",
-        color: "inherit",
-        borderRadius: "18px",
-        border: `1px solid ${alpha(theme.palette.common.white, 0.65)}`,
-        bgcolor: alpha(theme.palette.common.white, 0.26),
-        transition: "background-color 160ms ease, transform 160ms ease",
-        "&:hover": {
-          bgcolor: alpha(theme.palette.common.white, 0.52),
-        },
-      })}
-    >
-      <Box
-        sx={(theme) => ({
-          width: 42,
-          height: 42,
-          display: "grid",
-          placeItems: "center",
-          borderRadius: "14px",
-          bgcolor: alpha(theme.palette.primary.main, 0.1),
-          color: "primary.main",
-          flexShrink: 0,
-        })}
-      >
-        {icon}
-      </Box>
-
-      <Box sx={{ minWidth: 0, flex: 1 }}>
-        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "text.primary", mb: 0.25 }}>
-          {label}
-        </Typography>
-        <Typography variant="body2" sx={{ color: "text.secondary" }}>
-          {helperText}
-        </Typography>
-      </Box>
-
-      <ChevronRightRounded sx={{ color: "text.secondary", flexShrink: 0 }} />
-    </Box>
-  );
-}
 
 export default function Profile() {
   const theme = useTheme();
@@ -204,6 +149,18 @@ export default function Profile() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [accountOverrides, setAccountOverrides] = useState<{ fullName?: string; email?: string }>({});
   const avatarObjectUrlRef = useRef<string | null>(null);
+  const [profileDisplayNameDraft, setProfileDisplayNameDraft] = useState(
+    () => user?.displayName?.trim() ?? "",
+  );
+  const [profileEmailDraft, setProfileEmailDraft] = useState(
+    () => user?.email?.trim() ?? "",
+  );
+  const [isSavingProfileForm, setIsSavingProfileForm] = useState(false);
+  const [profileFormError, setProfileFormError] = useState<string | null>(null);
+  const [managerEmailDraft, setManagerEmailDraft] = useState("");
+  const [isSavingManagerEmail, setIsSavingManagerEmail] = useState(false);
+  const [managerEmailError, setManagerEmailError] = useState<string | null>(null);
+  const managerEmailLoadedRef = useRef(false);
   const profileName = accountOverrides.fullName?.trim() || user?.displayName?.trim() || "Alex Johnson";
   const profileEmail = accountOverrides.email?.trim() || user?.email?.trim() || "alex.johnson@example.com";
 
@@ -241,6 +198,25 @@ export default function Profile() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!user) {
+      managerEmailLoadedRef.current = false;
+      return;
+    }
+
+    return subscribeToUserProfile(
+      (profile) => {
+        if (!managerEmailLoadedRef.current) {
+          setManagerEmailDraft(profile?.managerEmail ?? "");
+          managerEmailLoadedRef.current = true;
+        }
+      },
+      (error) => {
+        console.error("Failed to load user profile:", error);
+      },
+    );
+  }, [user]);
 
   const memberSince = useMemo(() => {
     const creationTime = user?.metadata.creationTime;
@@ -298,27 +274,6 @@ export default function Profile() {
   const accountRows = [
     { key: "fullName" as const, label: "Full name", value: fieldDefinitions.fullName.displayValue },
     { key: "email" as const, label: "Email", value: fieldDefinitions.email.displayValue },
-  ];
-
-  const preferenceItems = [
-    {
-      label: "Profile",
-      helperText: "Name, avatar, and email.",
-      icon: <PersonOutlineRounded fontSize="small" />,
-      to: "/preferences/profile",
-    },
-    {
-      label: "Team",
-      helperText: "Manager and remote hour approvals.",
-      icon: <BusinessCenterOutlined fontSize="small" />,
-      to: "/preferences/team",
-    },
-    {
-      label: "Notifications",
-      helperText: "Basic notification toggles.",
-      icon: <NotificationsOutlined fontSize="small" />,
-      to: "/preferences/notifications",
-    },
   ];
 
   const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -380,6 +335,61 @@ export default function Profile() {
       setFieldError(getAccountUpdateErrorMessage(error));
     } finally {
       setIsSavingField(false);
+    }
+  };
+
+  const handleSaveProfileForm = async () => {
+    if (!user || isSavingProfileForm) return;
+
+    const newName = profileDisplayNameDraft.trim();
+    const newEmail = profileEmailDraft.trim();
+
+    if (!newName) {
+      setProfileFormError("Display name cannot be empty.");
+      return;
+    }
+    if (!newEmail) {
+      setProfileFormError("Email cannot be empty.");
+      return;
+    }
+
+    setIsSavingProfileForm(true);
+    setProfileFormError(null);
+
+    try {
+      const nameChanged = newName !== (user.displayName?.trim() ?? "");
+      const emailChanged = newEmail !== (user.email?.trim() ?? "");
+
+      if (nameChanged) {
+        await updateAccountDisplayName(newName);
+        setAccountOverrides((current) => ({ ...current, fullName: newName }));
+      }
+      if (emailChanged) {
+        await updateAccountEmail(newEmail);
+        setAccountOverrides((current) => ({ ...current, email: newEmail }));
+      }
+      if (nameChanged || emailChanged) {
+        await syncCurrentUserIdentity(user);
+      }
+    } catch (error) {
+      setProfileFormError(getAccountUpdateErrorMessage(error));
+    } finally {
+      setIsSavingProfileForm(false);
+    }
+  };
+
+  const handleSaveManagerEmail = async () => {
+    if (isSavingManagerEmail) return;
+
+    setIsSavingManagerEmail(true);
+    setManagerEmailError(null);
+
+    try {
+      await saveManagerEmail(managerEmailDraft);
+    } catch {
+      setManagerEmailError("Failed to save manager email. Please try again.");
+    } finally {
+      setIsSavingManagerEmail(false);
     }
   };
 
@@ -487,8 +497,22 @@ export default function Profile() {
             </Box>
 
             <Box sx={{ minWidth: 0 }}>
-              <Typography variant="h2" sx={{ mb: 0.8 }}>
+              <Typography
+                variant="h2"
+                sx={{
+                  mb: 0.4,
+                  fontWeight: 800,
+                  color: "text.primary",
+                  fontSize: { xs: "1.85rem", sm: "2.25rem" },
+                  letterSpacing: "-0.02em",
+                  lineHeight: 1.15,
+                }}
+              >
                 {profileName}
+              </Typography>
+
+              <Typography variant="body2" sx={{ color: "text.secondary", mb: 0.75, fontWeight: 500 }}>
+                Member since {memberSince} · Personal workspace
               </Typography>
 
               <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
@@ -509,27 +533,10 @@ export default function Profile() {
                   }}
                 />
               </Stack>
-
-              <Typography variant="body2" sx={{ color: "text.secondary", mt: 0.85, maxWidth: 520 }}>
-                Account details, profile settings, and personal preferences for your workspace.
-              </Typography>
             </Box>
           </Stack>
 
           <Box sx={{ width: "100%", maxWidth: { xs: "100%", lg: 420 } }}>
-            <Button
-              variant="contained"
-              startIcon={<EditOutlined />}
-              onClick={() => openFieldEditor("fullName")}
-              sx={{
-                alignSelf: "flex-end",
-                ml: { xs: 0, lg: "auto" },
-                display: "flex",
-                mb: 1.35,
-              }}
-            >
-              Edit profile
-            </Button>
 
             <Box
               sx={{
@@ -604,16 +611,204 @@ export default function Profile() {
           <Typography variant="subtitle1" sx={{ color: "text.secondary", mb: 1.75 }}>
             Preferences
           </Typography>
-          <Stack spacing={1.15}>
-            {preferenceItems.map((item) => (
-              <PreferenceItem
-                key={item.label}
-                icon={item.icon}
-                label={item.label}
-                helperText={item.helperText}
-                to={item.to}
-              />
-            ))}
+          <Stack spacing={1.5}>
+            {/* Profile accordion */}
+            <Accordion
+              disableGutters
+              elevation={0}
+              sx={(theme) => ({
+                borderRadius: "18px !important",
+                border: `1px solid ${alpha(theme.palette.common.white, 0.65)}`,
+                bgcolor: alpha(theme.palette.common.white, 0.26),
+                "&:before": { display: "none" },
+              })}
+            >
+              <AccordionSummary
+                expandIcon={<ExpandMoreRounded sx={{ color: "text.secondary" }} />}
+                sx={{
+                  px: 1.75,
+                  minHeight: 0,
+                  "& .MuiAccordionSummary-content": { my: 1.75 },
+                }}
+              >
+                <Stack direction="row" alignItems="center" spacing={1.5}>
+                  <Box
+                    sx={(theme) => ({
+                      width: 42,
+                      height: 42,
+                      display: "grid",
+                      placeItems: "center",
+                      borderRadius: "14px",
+                      bgcolor: alpha(theme.palette.primary.main, 0.1),
+                      color: "primary.main",
+                      flexShrink: 0,
+                    })}
+                  >
+                    <PersonOutlineRounded fontSize="small" />
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "text.primary", mb: 0.25 }}>
+                      Profile
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                      Name, avatar, and email.
+                    </Typography>
+                  </Box>
+                </Stack>
+              </AccordionSummary>
+              <AccordionDetails sx={{ px: 1.75, pb: 2, pt: 0 }}>
+                <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
+                  <Box
+                    component="label"
+                    sx={{
+                      position: "relative",
+                      display: "inline-flex",
+                      borderRadius: "16px",
+                      cursor: "pointer",
+                      "&:hover .pref-avatar-overlay, &:focus-within .pref-avatar-overlay": {
+                        opacity: 1,
+                      },
+                    }}
+                  >
+                    <input hidden accept="image/*" type="file" onChange={handleAvatarChange} />
+                    <Avatar
+                      src={avatarPreviewUrl || user?.photoURL || undefined}
+                      sx={{
+                        width: 56,
+                        height: 56,
+                        bgcolor: "primary.main",
+                        fontSize: "1rem",
+                        fontWeight: 700,
+                      }}
+                    >
+                      {getInitials(profileName)}
+                    </Avatar>
+                    <Box
+                      className="pref-avatar-overlay"
+                      sx={{
+                        position: "absolute",
+                        inset: 0,
+                        display: "grid",
+                        placeItems: "center",
+                        borderRadius: "16px",
+                        bgcolor: "rgba(31,35,64,0.52)",
+                        color: "#fff",
+                        opacity: 0,
+                        transition: "opacity 160ms ease",
+                      }}
+                    >
+                      <CameraAltOutlined sx={{ fontSize: 18 }} />
+                    </Box>
+                  </Box>
+                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                    Click to upload a profile photo
+                  </Typography>
+                </Stack>
+
+                <Stack spacing={1.25}>
+                  <TextField
+                    label="Name"
+                    fullWidth
+                    size="small"
+                    value={profileDisplayNameDraft}
+                    onChange={(event) => setProfileDisplayNameDraft(event.target.value)}
+                  />
+                  <TextField
+                    label="Email"
+                    fullWidth
+                    size="small"
+                    type="email"
+                    value={profileEmailDraft}
+                    onChange={(event) => setProfileEmailDraft(event.target.value)}
+                  />
+                  {profileFormError ? (
+                    <Typography variant="caption" sx={{ color: "error.main" }}>
+                      {profileFormError}
+                    </Typography>
+                  ) : null}
+                  <Button
+                    variant="contained"
+                    onClick={handleSaveProfileForm}
+                    disabled={isSavingProfileForm}
+                    sx={{ alignSelf: "flex-end" }}
+                  >
+                    {isSavingProfileForm ? "Saving..." : "Save profile"}
+                  </Button>
+                </Stack>
+              </AccordionDetails>
+            </Accordion>
+
+            {/* Team accordion */}
+            <Accordion
+              disableGutters
+              elevation={0}
+              sx={(theme) => ({
+                borderRadius: "18px !important",
+                border: `1px solid ${alpha(theme.palette.common.white, 0.65)}`,
+                bgcolor: alpha(theme.palette.common.white, 0.26),
+                "&:before": { display: "none" },
+              })}
+            >
+              <AccordionSummary
+                expandIcon={<ExpandMoreRounded sx={{ color: "text.secondary" }} />}
+                sx={{
+                  px: 1.75,
+                  minHeight: 0,
+                  "& .MuiAccordionSummary-content": { my: 1.75 },
+                }}
+              >
+                <Stack direction="row" alignItems="center" spacing={1.5}>
+                  <Box
+                    sx={(theme) => ({
+                      width: 42,
+                      height: 42,
+                      display: "grid",
+                      placeItems: "center",
+                      borderRadius: "14px",
+                      bgcolor: alpha(theme.palette.primary.main, 0.1),
+                      color: "primary.main",
+                      flexShrink: 0,
+                    })}
+                  >
+                    <BusinessCenterOutlined fontSize="small" />
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "text.primary", mb: 0.25 }}>
+                      Team
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                      Manager
+                    </Typography>
+                  </Box>
+                </Stack>
+              </AccordionSummary>
+              <AccordionDetails sx={{ px: 1.75, pb: 2, pt: 0 }}>
+                <Stack spacing={1.25}>
+                  <TextField
+                    label="Manager email"
+                    fullWidth
+                    size="small"
+                    type="email"
+                    value={managerEmailDraft}
+                    onChange={(event) => setManagerEmailDraft(event.target.value)}
+                    placeholder="manager@company.com"
+                  />
+                  {managerEmailError ? (
+                    <Typography variant="caption" sx={{ color: "error.main" }}>
+                      {managerEmailError}
+                    </Typography>
+                  ) : null}
+                  <Button
+                    variant="contained"
+                    onClick={handleSaveManagerEmail}
+                    disabled={isSavingManagerEmail}
+                    sx={{ alignSelf: "flex-end" }}
+                  >
+                    {isSavingManagerEmail ? "Saving..." : "Save"}
+                  </Button>
+                </Stack>
+              </AccordionDetails>
+            </Accordion>
           </Stack>
         </Paper>
 
@@ -674,11 +869,28 @@ export default function Profile() {
       <Dialog
         open={Boolean(activeField)}
         onClose={closeFieldEditor}
-        PaperProps={{
-          sx: {
-            borderRadius: "24px",
-            border: `1px solid ${alpha(theme.palette.common.white, 0.9)}`,
-            minWidth: { xs: 0, sm: 440 },
+        slotProps={{
+          paper: {
+            elevation: 0,
+            sx: {
+              borderRadius: "24px",
+              minWidth: { xs: 0, sm: 440 },
+              bgcolor: "rgba(255, 255, 255, 0.35)",
+              backgroundImage:
+                "linear-gradient(135deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.2) 100%)",
+              backdropFilter: "blur(28px) saturate(200%)",
+              WebkitBackdropFilter: "blur(28px) saturate(200%)",
+              border: "1px solid rgba(255, 255, 255, 0.55)",
+              boxShadow:
+                "0 16px 48px rgba(80, 70, 180, 0.22), inset 0 1px 0 rgba(255,255,255,0.6)",
+            },
+          },
+          backdrop: {
+            sx: {
+              backgroundColor: "rgba(20, 22, 50, 0.18)",
+              backdropFilter: "blur(10px)",
+              WebkitBackdropFilter: "blur(10px)",
+            },
           },
         }}
       >
@@ -716,11 +928,28 @@ export default function Profile() {
           if (isDeletingAccount) return;
           setIsDeleteDialogOpen(false);
         }}
-        PaperProps={{
-          sx: {
-            borderRadius: "24px",
-            border: `1px solid ${alpha(theme.palette.common.white, 0.9)}`,
-            minWidth: { xs: 0, sm: 420 },
+        slotProps={{
+          paper: {
+            elevation: 0,
+            sx: {
+              borderRadius: "24px",
+              minWidth: { xs: 0, sm: 420 },
+              bgcolor: "rgba(255, 255, 255, 0.35)",
+              backgroundImage:
+                "linear-gradient(135deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.2) 100%)",
+              backdropFilter: "blur(28px) saturate(200%)",
+              WebkitBackdropFilter: "blur(28px) saturate(200%)",
+              border: "1px solid rgba(255, 255, 255, 0.55)",
+              boxShadow:
+                "0 16px 48px rgba(80, 70, 180, 0.22), inset 0 1px 0 rgba(255,255,255,0.6)",
+            },
+          },
+          backdrop: {
+            sx: {
+              backgroundColor: "rgba(20, 22, 50, 0.18)",
+              backdropFilter: "blur(10px)",
+              WebkitBackdropFilter: "blur(10px)",
+            },
           },
         }}
       >
