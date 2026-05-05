@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { addDays, format, subDays } from "date-fns";
-import { useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../../hooks/useAuth";
 import {
   computeHours,
@@ -13,10 +13,8 @@ import {
 } from "../entry.api";
 import { subscribeToProjects } from "../project.api";
 import { deleteReceiptFile, movePendingReceipts } from "../receipt.api";
-import { checkTimeOverlap, getTotalRemoteHours, parseDateKey } from "../entry.utils";
+import { DATE_KEY_PATTERN, checkTimeOverlap, getTotalRemoteHours, parseDateKey } from "../entry.utils";
 import type { Project, Receipt, SaveWorkEntryInput, WorkEntry } from "../entry.types";
-
-const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 export type ModalState =
   | { mode: "add"; entry?: undefined }
@@ -34,12 +32,13 @@ export type EntryFormData = {
 
 export function useLogToday() {
   const { user } = useAuth();
+  const params = useParams<{ date?: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const todayKey = format(new Date(), "yyyy-MM-dd");
-  const queryDate = searchParams.get("date");
+  const candidateDate = params.date ?? searchParams.get("date");
   const initialDate =
-    queryDate && DATE_KEY_PATTERN.test(queryDate) ? queryDate : todayKey;
+    candidateDate && DATE_KEY_PATTERN.test(candidateDate) ? candidateDate : todayKey;
 
   const [selectedDate, setSelectedDate] = useState(initialDate);
   const [entries, setEntries] = useState<WorkEntry[]>([]);
@@ -54,9 +53,10 @@ export function useLogToday() {
 
   const goToDate = (date: string) => {
     setSelectedDate(date);
+    const currentQuery = searchParams.get("date");
     if (date === todayKey) {
-      setSearchParams({}, { replace: true });
-    } else {
+      if (currentQuery !== null) setSearchParams({}, { replace: true });
+    } else if (currentQuery !== date) {
       setSearchParams({ date }, { replace: true });
     }
   };

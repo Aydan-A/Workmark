@@ -3,7 +3,7 @@ import { alpha, useTheme } from "@mui/material/styles";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import type { CalendarDay } from "../calendar.utils";
-import { formatHours } from "../../../utils/formatters";
+import { formatHoursDecimal } from "../../../utils/formatters";
 
 type Props = {
   day: CalendarDay;
@@ -86,7 +86,7 @@ export function CalendarCell({ day }: Props) {
               : theme.palette.primary.main,
           }}
         >
-          {formatHours(day.hours)}h
+          {formatHoursDecimal(day.hours)}h
         </Typography>
       )}
     </Box>

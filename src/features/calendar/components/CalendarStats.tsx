@@ -1,7 +1,7 @@
 import { Box, Paper, Stack, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import type { WeeklyTopProject } from "../../entries/entry.types";
-import { formatHours } from "../../../utils/formatters";
+import { formatHoursDecimal } from "../../../utils/formatters";
 
 type Props = {
   monthTotalHours: number;
@@ -42,8 +42,8 @@ export function CalendarStats({ monthTotalHours, remoteHours, loggedDays, topPro
 
   return (
     <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mt: 2.5 }}>
-      <StatCard label="Month Total" value={`${formatHours(monthTotalHours)}h`} />
-      <StatCard label="Remote" value={`${formatHours(remoteHours)}h`} />
+      <StatCard label="Month Total" value={`${formatHoursDecimal(monthTotalHours)}h`} />
+      <StatCard label="Remote" value={`${formatHoursDecimal(remoteHours)}h`} />
       <StatCard label="Logged Days" value={String(loggedDays)} />
 
       <Paper variant="outlined" sx={{ p: 2.25, flex: 1, minWidth: 0 }}>

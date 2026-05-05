@@ -1,5 +1,5 @@
 import { Paper, Stack, Typography } from "@mui/material";
-import { formatHours } from "../../../utils/formatters";
+import { formatHoursDecimal } from "../../../utils/formatters";
 
 type Props = {
   daysLogged: number;
@@ -27,11 +27,11 @@ export function CalendarStats({ daysLogged, daysInMonth, totalHours, remoteHours
       </Paper>
       <Paper variant="outlined" sx={statPaperSx}>
         <Typography variant="subtitle2" sx={{ color: "#6b7280" }}>Total hours</Typography>
-        <Typography variant="h4" sx={{ mt: 0.25 }}>{formatHours(totalHours)}h</Typography>
+        <Typography variant="h4" sx={{ mt: 0.25 }}>{formatHoursDecimal(totalHours)}h</Typography>
       </Paper>
       <Paper variant="outlined" sx={statPaperSx}>
         <Typography variant="subtitle2" sx={{ color: "#6b7280" }}>Remote hours</Typography>
-        <Typography variant="h4" sx={{ mt: 0.25 }}>{formatHours(remoteHours)}h</Typography>
+        <Typography variant="h4" sx={{ mt: 0.25 }}>{formatHoursDecimal(remoteHours)}h</Typography>
       </Paper>
     </Stack>
   );

@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import { differenceInCalendarDays, format } from "date-fns";
 import type { WorkEntry } from "../../entries/entry.types";
-import { formatHours, parseDateKey } from "../../entries/entry.utils";
+import { parseDateKey } from "../../entries/entry.utils";
+import { formatHoursDuration } from "../../../utils/formatters";
 import type { ProjectBreakdown } from "../summary.utils";
 
 export type SummaryStats = {
@@ -54,7 +55,7 @@ export function useSummaryData(
       .map((p) => ({
         name: p.name,
         hours: p.hours,
-        formattedHours: formatHours(p.hours),
+        formattedHours: formatHoursDuration(p.hours),
         notes: p.notes,
       }));
 
@@ -73,7 +74,7 @@ export function useSummaryData(
 
     return {
       totalHours,
-      formattedTotalHours: formatHours(totalHours),
+      formattedTotalHours: formatHoursDuration(totalHours),
       projectCount: projectBreakdowns.length,
       avgHoursPerDay,
       topProject,

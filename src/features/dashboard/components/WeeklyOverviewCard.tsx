@@ -13,7 +13,7 @@ import {
   dashboardGlassCardSx,
   dashboardSectionCardPaddingSx,
 } from "../../../styles/dashboard";
-import { formatHours } from "../../../utils/formatters";
+import { formatHoursDecimal } from "../../../utils/formatters";
 
 type SummaryChipButtonProps = {
   label: string;
@@ -177,8 +177,8 @@ export default function WeeklyOverviewCard({
       {/* Summary chips */}
       <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap", mb: 2.25 }}>
         <SummaryChipButton
-          label={`${formatHours(totalHours)} hrs total`}
-          ariaLabel={`View total hours for this period: ${formatHours(totalHours)} hours`}
+          label={`${formatHoursDecimal(totalHours)} hrs total`}
+          ariaLabel={`View total hours for this period: ${formatHoursDecimal(totalHours)} hours`}
           onClick={onTotalHoursClick}
         />
         <SummaryChipButton
@@ -188,7 +188,7 @@ export default function WeeklyOverviewCard({
         />
         <SummaryChipButton
           label={`${peakDay.day} peak`}
-          ariaLabel={`Select peak day ${peakDay.day} with ${formatHours(peakDay.hours)} hours`}
+          ariaLabel={`Select peak day ${peakDay.day} with ${formatHoursDecimal(peakDay.hours)} hours`}
           onClick={handlePeakDayClick}
         />
       </Box>
@@ -231,7 +231,7 @@ export default function WeeklyOverviewCard({
                 key={day.dateKey}
                 type="button"
                 onClick={() => handleBarClick(day)}
-                aria-label={`View ${day.day}, ${day.dateLabel} — ${day.hours > 0 ? `${formatHours(day.hours)}h logged` : "0h logged"}`}
+                aria-label={`View ${day.day}, ${day.dateLabel} — ${day.hours > 0 ? `${formatHoursDecimal(day.hours)}h logged` : "0h logged"}`}
                 aria-pressed={isSelected}
                 sx={{
                   display: "flex",
@@ -264,7 +264,7 @@ export default function WeeklyOverviewCard({
                     fontWeight: day.hours > 0 ? 600 : 500,
                   }}
                 >
-                  {day.hours > 0 ? `${formatHours(day.hours)}h` : ""}
+                  {day.hours > 0 ? `${formatHoursDecimal(day.hours)}h` : ""}
                 </Typography>
 
                 <Box
@@ -406,7 +406,7 @@ export default function WeeklyOverviewCard({
               }}
             >
               {hasSelectedDayHours
-                ? `${formatHours(selectedDay.hours)} hrs logged`
+                ? `${formatHoursDecimal(selectedDay.hours)} hrs logged`
                 : "No entry logged"}
             </Typography>
             <Typography
@@ -443,7 +443,7 @@ export default function WeeklyOverviewCard({
                 color: "#1A1A2E",
               }}
             >
-              {formatHours(averagePerDay)} hrs
+              {formatHoursDecimal(averagePerDay)} hrs
             </Typography>
             <Typography
               variant="body2"

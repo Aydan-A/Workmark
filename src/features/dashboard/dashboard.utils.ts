@@ -1,9 +1,10 @@
 import { addDays, format, getDay, startOfWeek } from "date-fns";
-import { formatHours, parseDateKey } from "../entries/entry.utils";
+import { parseDateKey } from "../entries/entry.utils";
+import { formatHoursDuration } from "../../utils/formatters";
 import type { HeatmapDay, WorkEntry } from "../entries/entry.types";
 
 export function formatHM(hours: number): string {
-  return formatHours(hours);
+  return formatHoursDuration(hours);
 }
 
 export function formatPct(pct: number): string {

@@ -3,7 +3,7 @@ import { TrendingUpRounded } from "@mui/icons-material";
 import { Box, Button, Chip, Paper, Stack, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { dashboardGlassCardSx } from "../../../styles/dashboard";
-import { formatHours } from "../../../utils/formatters";
+import { formatHoursDecimal } from "../../../utils/formatters";
 
 type VantaInstance = {
   destroy: () => void;
@@ -160,7 +160,7 @@ export default function DashboardHero({
                   }}
                 />
                 <Chip
-                  label={`${formatHours(averagePerDay)} hrs avg / day`}
+                  label={`${formatHoursDecimal(averagePerDay)} hrs avg / day`}
                   size="small"
                   variant="outlined"
                   sx={{

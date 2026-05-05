@@ -64,9 +64,20 @@ export async function deleteReceiptFile(storagePath: string): Promise<void> {
   }
 }
 
-export async function deleteEntryReceipts(uid: string, entryId: string): Promise<void> {
+export async function deleteEntryReceipts(
+  uid: string,
+  entryId: string,
+  options: { strict?: boolean } = {},
+): Promise<void> {
+  const folderRef = ref(storage, `users/${uid}/receipts/${entryId}`);
+
+  if (options.strict) {
+    const { items } = await listAll(folderRef);
+    await Promise.all(items.map((item) => deleteObject(item)));
+    return;
+  }
+
   try {
-    const folderRef = ref(storage, `users/${uid}/receipts/${entryId}`);
     const { items } = await listAll(folderRef);
     await Promise.allSettled(items.map((item) => deleteObject(item)));
   } catch {

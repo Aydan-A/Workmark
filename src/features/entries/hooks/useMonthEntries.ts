@@ -6,7 +6,7 @@ import type { DateClickArg } from "@fullcalendar/interaction";
 import { useAuth } from "../../../hooks/useAuth";
 import { getEntryLoadErrorMessage, subscribeToMonthEntries } from "../entry.api";
 import { getEntryPrimaryLabel } from "../entry.utils";
-import { formatHours } from "../../../utils/formatters";
+import { formatHoursDecimal } from "../../../utils/formatters";
 import type { WorkEntry } from "../entry.types";
 
 export function useMonthEntries() {
@@ -55,7 +55,7 @@ export function useMonthEntries() {
     () =>
       Array.from(entriesByDate.entries()).map(([date, summary]) => ({
         id: date,
-        title: `${formatHours(summary.totalHours)}h`,
+        title: `${formatHoursDecimal(summary.totalHours)}h`,
         start: date,
         allDay: true,
         backgroundColor: "#6366f1",

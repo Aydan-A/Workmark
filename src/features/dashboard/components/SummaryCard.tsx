@@ -14,7 +14,7 @@ import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { format } from "date-fns";
 import type { WorkEntry } from "../../entries/entry.types";
-import { formatHours } from "../../entries/entry.utils";
+import { formatHoursDuration } from "../../../utils/formatters";
 import { breakdownToText } from "../summary.utils";
 import { useSummaryData } from "../hooks/useSummaryData";
 import {
@@ -197,7 +197,7 @@ export default function SummaryCard({ historyEntries, isLoading }: Props) {
     doc.setFontSize(10);
     doc.setTextColor(111, 118, 143);
     doc.text(
-      `Total: ${stats.formattedTotalHours}  |  Projects: ${stats.projectCount}  |  Avg/day: ${formatHours(stats.avgHoursPerDay)}`,
+      `Total: ${stats.formattedTotalHours}  |  Projects: ${stats.projectCount}  |  Avg/day: ${formatHoursDuration(stats.avgHoursPerDay)}`,
       margin,
       y,
     );
@@ -256,7 +256,7 @@ export default function SummaryCard({ historyEntries, isLoading }: Props) {
         />
         <StatPill
           label="Avg / day"
-          value={isLoading ? null : formatHours(stats.avgHoursPerDay)}
+          value={isLoading ? null : formatHoursDuration(stats.avgHoursPerDay)}
         />
       </Stack>
 

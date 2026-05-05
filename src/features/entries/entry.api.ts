@@ -25,9 +25,9 @@ import {
 } from "date-fns";
 import { assertAuthenticatedUserId } from "../../firebase/auth";
 import { db } from "../../firebase/client";
+import { DATE_KEY_PATTERN } from "./entry.utils";
 import type { SaveWorkEntryInput, WorkEntry } from "./entry.types";
 
-const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_PATTERN = /^\d{2}:\d{2}$/;
 const MAX_SHORT_TEXT_LENGTH = 120;
 const MAX_NOTE_LENGTH = 2000;

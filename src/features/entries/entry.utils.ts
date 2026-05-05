@@ -16,17 +16,10 @@ import type {
   WorkEntry,
 } from "./entry.types";
 
+export const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
 export function parseDateKey(dateKey: string): Date {
   return parse(dateKey, "yyyy-MM-dd", new Date());
-}
-
-export function formatHours(hours: number): string {
-  const totalMins = Math.round(hours * 60);
-  const h = Math.floor(totalMins / 60);
-  const m = totalMins % 60;
-  if (h === 0) return `${m}m`;
-  if (m === 0) return `${h}h`;
-  return `${h}h ${m}m`;
 }
 
 export function getEntryPrimaryLabel(entry: WorkEntry): string {

@@ -1,5 +1,5 @@
 import { Box, Paper, Typography } from "@mui/material";
-import { formatHours } from "../entry.utils";
+import { formatHoursDuration } from "../../../utils/formatters";
 
 type Props = {
   totalHours: number;
@@ -36,9 +36,9 @@ export function DaySummaryRow({ totalHours, remoteHours, officeHours }: Props) {
         gap: 4,
       }}
     >
-      <Stat label="Total" value={formatHours(totalHours)} />
-      <Stat label="Remote" value={formatHours(remoteHours)} />
-      <Stat label="Office" value={formatHours(officeHours)} />
+      <Stat label="Total" value={formatHoursDuration(totalHours)} />
+      <Stat label="Remote" value={formatHoursDuration(remoteHours)} />
+      <Stat label="Office" value={formatHoursDuration(officeHours)} />
     </Paper>
   );
 }

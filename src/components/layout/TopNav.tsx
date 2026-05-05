@@ -9,6 +9,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import { NavLink, useNavigate } from "react-router-dom";
 import { logout } from "../../firebase/auth";
 import { useAuth } from "../../hooks/useAuth";
+import { getInitials } from "../../utils/formatters";
 
 const navButtonSx = {
   textTransform: "none",
@@ -27,15 +28,6 @@ const navItems = [
   { to: "/weekly", label: "Weekly Log", icon: <TimelineRoundedIcon /> },
   { to: "/calendar", label: "Calendar", icon: <DateRangeRoundedIcon /> },
 ];
-
-function getInitials(name: string) {
-  const trimmed = name.trim();
-
-  if (!trimmed) return "AJ";
-
-  const parts = trimmed.split(/\s+/).slice(0, 2);
-  return parts.map((part) => part[0]?.toUpperCase() ?? "").join("") || "AJ";
-}
 
 export default function TopNav() {
   const navigate = useNavigate();

@@ -32,18 +32,10 @@ import { format, subDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { getEntryLoadErrorMessage, subscribeToEntries } from "../features/entries/entry.api";
 import type { WorkEntry } from "../features/entries/entry.types";
-import { saveManagerEmail, subscribeToUserProfile, syncCurrentUserIdentity } from "../features/profile/profile.api";
+import { purgeUserData, saveManagerEmail, subscribeToUserProfile, syncCurrentUserIdentity } from "../features/profile/profile.api";
 import { getAccountUpdateErrorMessage, logout, updateAccountDisplayName, updateAccountEmail } from "../firebase/auth";
 import { useAuth } from "../hooks/useAuth";
-
-function getInitials(name: string) {
-  const trimmed = name.trim();
-
-  if (!trimmed) return "AJ";
-
-  const parts = trimmed.split(/\s+/).slice(0, 2);
-  return parts.map((part) => part[0]?.toUpperCase() ?? "").join("") || "AJ";
-}
+import { getInitials } from "../utils/formatters";
 
 function calculateCurrentStreak(entries: WorkEntry[], referenceDate: Date = new Date()) {
   const loggedDates = new Set(entries.map((entry) => entry.date));
@@ -415,11 +407,14 @@ export default function Profile() {
     setDeleteError(null);
 
     try {
+      await purgeUserData(user.uid);
       await deleteUser(user);
       navigate("/login", { replace: true });
     } catch (error) {
       if (error instanceof FirebaseError && error.code === "auth/requires-recent-login") {
         setDeleteError("For security, sign in again before deleting your account.");
+      } else if (error instanceof Error) {
+        setDeleteError(`Could not delete your account: ${error.message}`);
       } else {
         setDeleteError("Could not delete your account. Please try again.");
       }

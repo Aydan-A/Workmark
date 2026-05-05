@@ -4,7 +4,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import type { Receipt, WorkEntry } from "../entry.types";
-import { formatHours } from "../entry.utils";
+import { formatHoursDuration } from "../../../utils/formatters";
 import { getReceiptDownloadUrl } from "../receipt.api";
 
 type Props = {
@@ -42,7 +42,7 @@ export function EntryCard({ entry, onEdit, onDelete }: Props) {
             {entry.startTime} – {entry.endTime}
           </Typography>
           <Typography variant="caption" sx={{ color: "text.secondary", display: "block" }}>
-            {formatHours(entry.hours)}
+            {formatHoursDuration(entry.hours)}
           </Typography>
         </Box>
 
