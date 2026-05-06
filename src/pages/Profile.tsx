@@ -863,34 +863,37 @@ export default function Profile() {
                   </Button>
 
                   {savedManagerEmail ? (
-                    <Box sx={{ mt: 0.5 }}>
+                    <Box sx={{ mt: 1, mx: 0, px: 0 }}>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          display: "block",
+                          mb: 0.75,
+                          color: "text.secondary",
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.16em",
+                        }}
+                      >
+                        Your manager
+                      </Typography>
                       <Stack
                         direction="row"
                         alignItems="center"
                         justifyContent="space-between"
                         spacing={1}
                       >
-                        <Box sx={{ minWidth: 0 }}>
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              display: "block",
-                              color: "text.secondary",
-                              fontWeight: 700,
-                              textTransform: "uppercase",
-                              letterSpacing: "0.16em",
-                              mb: 0.25,
-                            }}
-                          >
-                            Your manager
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            sx={{ color: "text.primary", fontWeight: 500, wordBreak: "break-word" }}
-                          >
-                            {savedManagerEmail}
-                          </Typography>
-                        </Box>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: "text.primary",
+                            fontWeight: 500,
+                            wordBreak: "break-word",
+                            minWidth: 0,
+                          }}
+                        >
+                          {savedManagerEmail}
+                        </Typography>
                         <Stack direction="row" spacing={0.5} sx={{ flexShrink: 0 }}>
                           <Button
                             size="small"
@@ -916,7 +919,7 @@ export default function Profile() {
                     </Box>
                   ) : null}
 
-                  <Box sx={{ mt: 1 }}>
+                  <Box sx={{ mt: 1, mx: 0, px: 0 }}>
                     <Typography
                       variant="caption"
                       sx={{
