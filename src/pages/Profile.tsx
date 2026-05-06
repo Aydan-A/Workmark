@@ -32,7 +32,15 @@ import { format, subDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { getEntryLoadErrorMessage, subscribeToEntries } from "../features/entries/entry.api";
 import type { WorkEntry } from "../features/entries/entry.types";
-import { purgeUserData, saveManagerEmail, subscribeToUserProfile, syncCurrentUserIdentity } from "../features/profile/profile.api";
+import {
+  purgeUserData,
+  saveManagerEmail,
+  sendManagerNotificationEmail,
+  subscribeToManagedUsers,
+  subscribeToUserProfile,
+  syncCurrentUserIdentity,
+  type ManagedUser,
+} from "../features/profile/profile.api";
 import { getAccountUpdateErrorMessage, logout, updateAccountDisplayName, updateAccountEmail } from "../firebase/auth";
 import { useAuth } from "../hooks/useAuth";
 import { getInitials } from "../utils/formatters";
@@ -153,6 +161,7 @@ export default function Profile() {
   const [isSavingManagerEmail, setIsSavingManagerEmail] = useState(false);
   const [managerEmailError, setManagerEmailError] = useState<string | null>(null);
   const managerEmailLoadedRef = useRef(false);
+  const [reportingUsers, setReportingUsers] = useState<ManagedUser[]>([]);
   const profileName = accountOverrides.fullName?.trim() || user?.displayName?.trim() || "Alex Johnson";
   const profileEmail = accountOverrides.email?.trim() || user?.email?.trim() || "alex.johnson@example.com";
 
@@ -190,6 +199,20 @@ export default function Profile() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    const email = user?.email?.trim();
+    if (!email) {
+      setReportingUsers([]);
+      return;
+    }
+
+    return subscribeToManagedUsers(
+      email,
+      (users) => setReportingUsers(users),
+      (error) => console.error("Failed to load reporting users:", error),
+    );
+  }, [user?.email]);
 
   useEffect(() => {
     if (!user) {
@@ -373,13 +396,22 @@ export default function Profile() {
   const handleSaveManagerEmail = async () => {
     if (isSavingManagerEmail) return;
 
+    const trimmed = managerEmailDraft.trim();
+
     setIsSavingManagerEmail(true);
     setManagerEmailError(null);
 
     try {
-      await saveManagerEmail(managerEmailDraft);
-    } catch {
-      setManagerEmailError("Failed to save manager email. Please try again.");
+      await saveManagerEmail(trimmed);
+      if (trimmed) {
+        sendManagerNotificationEmail(trimmed, profileName);
+      }
+    } catch (error) {
+      console.error("Failed to save manager email:", error);
+      const detail = error instanceof Error ? error.message : "";
+      setManagerEmailError(
+        detail ? `Failed to save manager email: ${detail}` : "Failed to save manager email. Please try again.",
+      );
     } finally {
       setIsSavingManagerEmail(false);
     }
@@ -801,6 +833,39 @@ export default function Profile() {
                   >
                     {isSavingManagerEmail ? "Saving..." : "Save"}
                   </Button>
+
+                  <Box sx={{ mt: 1 }}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        display: "block",
+                        mb: 0.75,
+                        color: "text.secondary",
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.16em",
+                      }}
+                    >
+                      People reporting to you
+                    </Typography>
+                    {reportingUsers.length === 0 ? (
+                      <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                        No one has added you as their manager yet.
+                      </Typography>
+                    ) : (
+                      <Stack spacing={0.5}>
+                        {reportingUsers.map((reporter) => (
+                          <Typography
+                            key={reporter.uid}
+                            variant="body2"
+                            sx={{ color: "text.primary", fontWeight: 500 }}
+                          >
+                            {reporter.fullName}
+                          </Typography>
+                        ))}
+                      </Stack>
+                    )}
+                  </Box>
                 </Stack>
               </AccordionDetails>
             </Accordion>

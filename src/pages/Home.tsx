@@ -3,8 +3,10 @@ import DashboardHero from "../features/dashboard/components/DashboardHero";
 import TopProjectsCard from "../features/dashboard/components/TopProjectsCard";
 import WeeklyStatsCard from "../features/dashboard/components/WeeklyStatsCard";
 import SummaryCard from "../features/dashboard/components/SummaryCard";
+import ManagedTeamSection from "../features/dashboard/components/ManagedTeamSection";
 import { useAuth } from "../hooks/useAuth";
 import { useDashboardData } from "../features/dashboard/hooks/useDashboardData";
+import { useManagedTeam } from "../features/dashboard/hooks/useManagedTeam";
 
 const ROW_GAP = 3;
 
@@ -29,6 +31,7 @@ export default function Home() {
     weeklyDelta,
     weeklyTotal,
   } = useDashboardData({ user, authLoading });
+  const { team } = useManagedTeam(user);
 
   return (
     <>
@@ -66,6 +69,8 @@ export default function Home() {
       <Box sx={{ mt: ROW_GAP }}>
         <SummaryCard historyEntries={historyEntries} isLoading={isDashboardLoading} />
       </Box>
+
+      <ManagedTeamSection team={team} />
     </>
   );
 }
