@@ -158,10 +158,11 @@ export default function Profile() {
   const [isSavingProfileForm, setIsSavingProfileForm] = useState(false);
   const [profileFormError, setProfileFormError] = useState<string | null>(null);
   const [managerEmailDraft, setManagerEmailDraft] = useState("");
+  const [savedManagerEmail, setSavedManagerEmail] = useState("");
   const [isSavingManagerEmail, setIsSavingManagerEmail] = useState(false);
+  const [isRemovingManagerEmail, setIsRemovingManagerEmail] = useState(false);
   const [managerEmailError, setManagerEmailError] = useState<string | null>(null);
   const [managerEmailSaved, setManagerEmailSaved] = useState(false);
-  const managerEmailUserEditedRef = useRef(false);
   const [reportingUsers, setReportingUsers] = useState<ManagedUser[]>([]);
   const profileName = accountOverrides.fullName?.trim() || user?.displayName?.trim() || "Alex Johnson";
   const profileEmail = accountOverrides.email?.trim() || user?.email?.trim() || "alex.johnson@example.com";
@@ -217,16 +218,13 @@ export default function Profile() {
 
   useEffect(() => {
     if (!user) {
-      managerEmailUserEditedRef.current = false;
+      setSavedManagerEmail("");
       return;
     }
 
     return subscribeToUserProfile(
       (profile) => {
-        const next = profile?.managerEmail ?? "";
-        if (!managerEmailUserEditedRef.current) {
-          setManagerEmailDraft(next);
-        }
+        setSavedManagerEmail(profile?.managerEmail ?? "");
       },
       (error) => {
         console.error("Failed to load user profile:", error);
@@ -407,7 +405,7 @@ export default function Profile() {
 
     try {
       await saveManagerEmail(trimmed);
-      managerEmailUserEditedRef.current = false;
+      setManagerEmailDraft("");
       setManagerEmailSaved(true);
     } catch (error) {
       console.error("Failed to save manager email:", error);
@@ -417,6 +415,26 @@ export default function Profile() {
       );
     } finally {
       setIsSavingManagerEmail(false);
+    }
+  };
+
+  const handleRemoveManagerEmail = async () => {
+    if (isRemovingManagerEmail) return;
+
+    setIsRemovingManagerEmail(true);
+    setManagerEmailError(null);
+    setManagerEmailSaved(false);
+
+    try {
+      await saveManagerEmail("");
+    } catch (error) {
+      console.error("Failed to remove manager email:", error);
+      const detail = error instanceof Error ? error.message : "";
+      setManagerEmailError(
+        detail ? `Failed to remove manager: ${detail}` : "Failed to remove manager. Please try again.",
+      );
+    } finally {
+      setIsRemovingManagerEmail(false);
     }
   };
 
@@ -823,9 +841,8 @@ export default function Profile() {
                     onChange={(event) => {
                       setManagerEmailDraft(event.target.value);
                       setManagerEmailSaved(false);
-                      managerEmailUserEditedRef.current = true;
                     }}
-                    placeholder="manager@company.com"
+                    placeholder={savedManagerEmail ? "Replace with another email" : "manager@company.com"}
                   />
                   {managerEmailError ? (
                     <Typography variant="caption" sx={{ color: "error.main" }}>
@@ -851,11 +868,61 @@ export default function Profile() {
                     <Button
                       variant="contained"
                       onClick={handleSaveManagerEmail}
-                      disabled={isSavingManagerEmail}
+                      disabled={isSavingManagerEmail || !managerEmailDraft.trim()}
                     >
-                      {isSavingManagerEmail ? "Saving..." : "Save"}
+                      {isSavingManagerEmail ? "Saving..." : savedManagerEmail ? "Update" : "Save"}
                     </Button>
                   </Stack>
+
+                  {savedManagerEmail ? (
+                    <Box
+                      sx={(theme) => ({
+                        mt: 0.5,
+                        p: 1.25,
+                        borderRadius: "12px",
+                        border: `1px solid ${alpha(theme.palette.common.white, 0.7)}`,
+                        bgcolor: alpha(theme.palette.common.white, 0.32),
+                      })}
+                    >
+                      <Stack
+                        direction="row"
+                        alignItems="center"
+                        justifyContent="space-between"
+                        spacing={1}
+                      >
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              display: "block",
+                              color: "text.secondary",
+                              fontWeight: 700,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.16em",
+                              mb: 0.25,
+                            }}
+                          >
+                            Your manager
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{ color: "text.primary", fontWeight: 500, wordBreak: "break-word" }}
+                          >
+                            {savedManagerEmail}
+                          </Typography>
+                        </Box>
+                        <Button
+                          size="small"
+                          color="inherit"
+                          onClick={handleRemoveManagerEmail}
+                          disabled={isRemovingManagerEmail}
+                          sx={{ color: "text.secondary", flexShrink: 0 }}
+                        >
+                          {isRemovingManagerEmail ? "Removing..." : "Remove"}
+                        </Button>
+                      </Stack>
+                    </Box>
+                  ) : null}
 
                   <Box sx={{ mt: 1 }}>
                     <Typography
