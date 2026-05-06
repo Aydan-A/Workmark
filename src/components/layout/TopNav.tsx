@@ -105,7 +105,7 @@ export default function TopNav() {
                 whiteSpace: "nowrap",
               }}
             >
-              Worklog
+              Workmark
             </Typography>
           </Box>
         </NavLink>

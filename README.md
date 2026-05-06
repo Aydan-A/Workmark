@@ -1,4 +1,4 @@
-# Daily Work Log
+# Workmark
 
 A React and TypeScript app scaffold for tracking daily work entries, viewing weekly summaries, and exporting logs.
 

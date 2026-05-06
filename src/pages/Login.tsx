@@ -139,7 +139,7 @@ export default function Login() {
 
         {/* Title */}
         <Typography variant="h3" align="center" sx={{ fontWeight: 600 }}>
-          Daily Work Log
+          Workmark
         </Typography>
         <Typography variant="body2" align="center" sx={{ color: "#6b7280", mt: 0.5, mb: 3 }}>
           {mode === "signIn" ? "Sign in to your account" : "Create your account"}
