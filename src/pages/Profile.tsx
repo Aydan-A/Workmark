@@ -161,7 +161,7 @@ export default function Profile() {
   const [isSavingManagerEmail, setIsSavingManagerEmail] = useState(false);
   const [managerEmailError, setManagerEmailError] = useState<string | null>(null);
   const [managerEmailSaved, setManagerEmailSaved] = useState(false);
-  const managerEmailLoadedRef = useRef(false);
+  const managerEmailUserEditedRef = useRef(false);
   const [reportingUsers, setReportingUsers] = useState<ManagedUser[]>([]);
   const profileName = accountOverrides.fullName?.trim() || user?.displayName?.trim() || "Alex Johnson";
   const profileEmail = accountOverrides.email?.trim() || user?.email?.trim() || "alex.johnson@example.com";
@@ -217,15 +217,15 @@ export default function Profile() {
 
   useEffect(() => {
     if (!user) {
-      managerEmailLoadedRef.current = false;
+      managerEmailUserEditedRef.current = false;
       return;
     }
 
     return subscribeToUserProfile(
       (profile) => {
-        if (!managerEmailLoadedRef.current) {
-          setManagerEmailDraft(profile?.managerEmail ?? "");
-          managerEmailLoadedRef.current = true;
+        const next = profile?.managerEmail ?? "";
+        if (!managerEmailUserEditedRef.current) {
+          setManagerEmailDraft(next);
         }
       },
       (error) => {
@@ -405,6 +405,7 @@ export default function Profile() {
 
     try {
       await saveManagerEmail(trimmed);
+      managerEmailUserEditedRef.current = false;
       setManagerEmailSaved(true);
     } catch (error) {
       console.error("Failed to save manager email:", error);
@@ -820,6 +821,7 @@ export default function Profile() {
                     onChange={(event) => {
                       setManagerEmailDraft(event.target.value);
                       setManagerEmailSaved(false);
+                      managerEmailUserEditedRef.current = true;
                     }}
                     placeholder="manager@company.com"
                   />
