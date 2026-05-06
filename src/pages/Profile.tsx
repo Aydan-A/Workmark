@@ -403,9 +403,6 @@ export default function Profile() {
 
     try {
       await saveManagerEmail(trimmed);
-      if (trimmed) {
-        sendManagerNotificationEmail(trimmed, profileName);
-      }
     } catch (error) {
       console.error("Failed to save manager email:", error);
       const detail = error instanceof Error ? error.message : "";
@@ -825,14 +822,26 @@ export default function Profile() {
                       {managerEmailError}
                     </Typography>
                   ) : null}
-                  <Button
-                    variant="contained"
-                    onClick={handleSaveManagerEmail}
-                    disabled={isSavingManagerEmail}
-                    sx={{ alignSelf: "flex-end" }}
-                  >
-                    {isSavingManagerEmail ? "Saving..." : "Save"}
-                  </Button>
+                  <Stack direction="row" spacing={1} sx={{ alignSelf: "flex-end" }}>
+                    <Button
+                      variant="outlined"
+                      color="inherit"
+                      disabled={!managerEmailDraft.trim()}
+                      onClick={() =>
+                        sendManagerNotificationEmail(managerEmailDraft, profileName)
+                      }
+                      sx={{ color: "text.primary" }}
+                    >
+                      Notify manager
+                    </Button>
+                    <Button
+                      variant="contained"
+                      onClick={handleSaveManagerEmail}
+                      disabled={isSavingManagerEmail}
+                    >
+                      {isSavingManagerEmail ? "Saving..." : "Save"}
+                    </Button>
+                  </Stack>
 
                   <Box sx={{ mt: 1 }}>
                     <Typography
