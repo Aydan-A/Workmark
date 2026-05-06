@@ -230,6 +230,8 @@ export default function Profile() {
       },
       (error) => {
         console.error("Failed to load user profile:", error);
+        const detail = error instanceof Error ? error.message : String(error);
+        setManagerEmailError(`Failed to load manager email: ${detail}`);
       },
     );
   }, [user]);
