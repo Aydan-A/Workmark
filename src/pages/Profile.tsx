@@ -160,6 +160,7 @@ export default function Profile() {
   const [managerEmailDraft, setManagerEmailDraft] = useState("");
   const [isSavingManagerEmail, setIsSavingManagerEmail] = useState(false);
   const [managerEmailError, setManagerEmailError] = useState<string | null>(null);
+  const [managerEmailSaved, setManagerEmailSaved] = useState(false);
   const managerEmailLoadedRef = useRef(false);
   const [reportingUsers, setReportingUsers] = useState<ManagedUser[]>([]);
   const profileName = accountOverrides.fullName?.trim() || user?.displayName?.trim() || "Alex Johnson";
@@ -400,9 +401,11 @@ export default function Profile() {
 
     setIsSavingManagerEmail(true);
     setManagerEmailError(null);
+    setManagerEmailSaved(false);
 
     try {
       await saveManagerEmail(trimmed);
+      setManagerEmailSaved(true);
     } catch (error) {
       console.error("Failed to save manager email:", error);
       const detail = error instanceof Error ? error.message : "";
@@ -814,12 +817,19 @@ export default function Profile() {
                     size="small"
                     type="email"
                     value={managerEmailDraft}
-                    onChange={(event) => setManagerEmailDraft(event.target.value)}
+                    onChange={(event) => {
+                      setManagerEmailDraft(event.target.value);
+                      setManagerEmailSaved(false);
+                    }}
                     placeholder="manager@company.com"
                   />
                   {managerEmailError ? (
                     <Typography variant="caption" sx={{ color: "error.main" }}>
                       {managerEmailError}
+                    </Typography>
+                  ) : managerEmailSaved ? (
+                    <Typography variant="caption" sx={{ color: "success.main" }}>
+                      Manager saved.
                     </Typography>
                   ) : null}
                   <Stack direction="row" spacing={1} sx={{ alignSelf: "flex-end" }}>
