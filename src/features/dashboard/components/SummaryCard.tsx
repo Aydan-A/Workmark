@@ -28,6 +28,7 @@ import RangeSelectorTabs from "./RangeSelectorTabs";
 type Props = {
   historyEntries: WorkEntry[];
   isLoading: boolean;
+  readOnly?: boolean;
 };
 
 function StatPill({ label, value }: { label: string; value: string | null }) {
@@ -75,7 +76,7 @@ function StatPill({ label, value }: { label: string; value: string | null }) {
   );
 }
 
-export default function SummaryCard({ historyEntries, isLoading }: Props) {
+export default function SummaryCard({ historyEntries, isLoading, readOnly = false }: Props) {
   const [activeTab, setActiveTab] = useState<SummaryTab>("this-week");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
@@ -278,19 +279,21 @@ export default function SummaryCard({ historyEntries, isLoading }: Props) {
         >
           Breakdown
         </Typography>
-        <IconButton
-          size="small"
-          onClick={handleRegenerate}
-          disabled={isLoading || summaryLoading || !hasCustomDates}
-          title="Regenerate"
-          sx={{
-            color: "primary.main",
-            opacity: 0.7,
-            "&:hover": { opacity: 1, bgcolor: "rgba(112, 87, 246, 0.08)" },
-          }}
-        >
-          <RefreshIcon sx={{ fontSize: "1rem" }} />
-        </IconButton>
+        {!readOnly && (
+          <IconButton
+            size="small"
+            onClick={handleRegenerate}
+            disabled={isLoading || summaryLoading || !hasCustomDates}
+            title="Regenerate"
+            sx={{
+              color: "primary.main",
+              opacity: 0.7,
+              "&:hover": { opacity: 1, bgcolor: "rgba(112, 87, 246, 0.08)" },
+            }}
+          >
+            <RefreshIcon sx={{ fontSize: "1rem" }} />
+          </IconButton>
+        )}
       </Stack>
 
       {/* Editable breakdown */}
@@ -333,6 +336,7 @@ export default function SummaryCard({ historyEntries, isLoading }: Props) {
             ref={textareaRef}
             value={editableContent}
             onChange={(e) => setEditableContent(e.target.value)}
+            readOnly={readOnly}
             rows={8}
             style={{
               width: "100%",
