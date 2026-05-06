@@ -853,26 +853,14 @@ export default function Profile() {
                       Manager saved.
                     </Typography>
                   ) : null}
-                  <Stack direction="row" spacing={1} sx={{ alignSelf: "flex-end" }}>
-                    <Button
-                      variant="outlined"
-                      color="inherit"
-                      disabled={!managerEmailDraft.trim()}
-                      onClick={() =>
-                        sendManagerNotificationEmail(managerEmailDraft, profileName)
-                      }
-                      sx={{ color: "text.primary" }}
-                    >
-                      Notify manager
-                    </Button>
-                    <Button
-                      variant="contained"
-                      onClick={handleSaveManagerEmail}
-                      disabled={isSavingManagerEmail || !managerEmailDraft.trim()}
-                    >
-                      {isSavingManagerEmail ? "Saving..." : savedManagerEmail ? "Update" : "Save"}
-                    </Button>
-                  </Stack>
+                  <Button
+                    variant="contained"
+                    onClick={handleSaveManagerEmail}
+                    disabled={isSavingManagerEmail || !managerEmailDraft.trim()}
+                    sx={{ alignSelf: "flex-end" }}
+                  >
+                    {isSavingManagerEmail ? "Saving..." : savedManagerEmail ? "Update" : "Save"}
+                  </Button>
 
                   {savedManagerEmail ? (
                     <Box
@@ -911,15 +899,27 @@ export default function Profile() {
                             {savedManagerEmail}
                           </Typography>
                         </Box>
-                        <Button
-                          size="small"
-                          color="inherit"
-                          onClick={handleRemoveManagerEmail}
-                          disabled={isRemovingManagerEmail}
-                          sx={{ color: "text.secondary", flexShrink: 0 }}
-                        >
-                          {isRemovingManagerEmail ? "Removing..." : "Remove"}
-                        </Button>
+                        <Stack direction="row" spacing={0.5} sx={{ flexShrink: 0 }}>
+                          <Button
+                            size="small"
+                            color="inherit"
+                            onClick={() =>
+                              sendManagerNotificationEmail(savedManagerEmail, profileName)
+                            }
+                            sx={{ color: "text.primary" }}
+                          >
+                            Notify
+                          </Button>
+                          <Button
+                            size="small"
+                            color="inherit"
+                            onClick={handleRemoveManagerEmail}
+                            disabled={isRemovingManagerEmail}
+                            sx={{ color: "text.secondary" }}
+                          >
+                            {isRemovingManagerEmail ? "Removing..." : "Remove"}
+                          </Button>
+                        </Stack>
                       </Stack>
                     </Box>
                   ) : null}
