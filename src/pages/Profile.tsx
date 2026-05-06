@@ -863,15 +863,7 @@ export default function Profile() {
                   </Button>
 
                   {savedManagerEmail ? (
-                    <Box
-                      sx={(theme) => ({
-                        mt: 0.5,
-                        p: 1.25,
-                        borderRadius: "12px",
-                        border: `1px solid ${alpha(theme.palette.common.white, 0.7)}`,
-                        bgcolor: alpha(theme.palette.common.white, 0.32),
-                      })}
-                    >
+                    <Box sx={{ mt: 0.5 }}>
                       <Stack
                         direction="row"
                         alignItems="center"
