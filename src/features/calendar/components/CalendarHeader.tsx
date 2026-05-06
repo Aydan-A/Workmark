@@ -1,8 +1,6 @@
-import { useState } from "react";
-import { Box, Button, IconButton, Menu, MenuItem, Stack, Typography } from "@mui/material";
+import { Box, Button, IconButton, Stack, Typography } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { format } from "date-fns";
 
 type Props = {
@@ -13,8 +11,6 @@ type Props = {
 };
 
 export function CalendarHeader({ visibleMonth, onPrev, onNext, onToday }: Props) {
-  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
-
   return (
     <Stack direction="row" justifyContent="space-between" alignItems="center">
       <Box>
@@ -90,26 +86,6 @@ export function CalendarHeader({ visibleMonth, onPrev, onNext, onToday }: Props)
             <ChevronRightIcon fontSize="small" />
           </IconButton>
         </Box>
-
-        <IconButton
-          size="small"
-          aria-label="More options"
-          onClick={(e) => setMenuAnchor(e.currentTarget)}
-        >
-          <MoreVertIcon fontSize="small" />
-        </IconButton>
-
-        <Menu
-          anchorEl={menuAnchor}
-          open={Boolean(menuAnchor)}
-          onClose={() => setMenuAnchor(null)}
-          transformOrigin={{ horizontal: "right", vertical: "top" }}
-          anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-        >
-          <MenuItem disabled sx={{ fontSize: "0.875rem" }}>
-            Export CSV
-          </MenuItem>
-        </Menu>
       </Stack>
     </Stack>
   );
