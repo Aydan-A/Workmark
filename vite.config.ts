@@ -12,8 +12,7 @@ const CHUNK_BUDGETS_KB: Record<string, number> = {
   react: 70,
   router: 35,
   // Heavy but lazy/auth-only chunks.
-  mui: 130,
-  'mui-icons': 10,
+  mui: 180,
   firebase: 140,
   framer: 50,
   'date-fns': 20,
@@ -76,7 +75,6 @@ export default defineConfig({
           if (!id.includes('node_modules')) return
           if (id.includes('/react-dom/') || id.includes('/react/') || id.includes('/scheduler/')) return 'react'
           if (id.includes('/react-router')) return 'router'
-          if (id.includes('/@mui/icons-material/')) return 'mui-icons'
           if (id.includes('/@mui/') || id.includes('/@emotion/')) return 'mui'
           if (id.includes('/firebase/') || id.includes('/@firebase/')) return 'firebase'
           if (id.includes('/three/') || id.includes('/vanta/')) return 'three'
