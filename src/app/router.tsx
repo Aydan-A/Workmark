@@ -1,21 +1,36 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
-import App from "./App";
-import Login from "../pages/Login";
-import Home from "../pages/Home";
-import LogToday from "../pages/LogToday";
-import WeeklyLog from "../pages/WeeklyLog";
-import Calendar from "../pages/Calendar";
-import Profile from "../pages/Profile";
-import PreferenceSectionPlaceholder from "../pages/PreferenceSectionPlaceholder";
+import { lazy, Suspense } from "react";
+import { createBrowserRouter, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import FullScreenLoader from "../components/common/FullScreenLoader";
 
-function RequireAuth({ children }: { children: React.ReactNode }) {
+const App = lazy(() => import("./App"));
+const Login = lazy(() => import("../pages/Login"));
+const Landing = lazy(() => import("../pages/landing/Landing"));
+const Home = lazy(() => import("../pages/Home"));
+const LogToday = lazy(() => import("../pages/LogToday"));
+const WeeklyLog = lazy(() => import("../pages/WeeklyLog"));
+const Calendar = lazy(() => import("../pages/Calendar"));
+const Profile = lazy(() => import("../pages/Profile"));
+const PreferenceSectionPlaceholder = lazy(
+  () => import("../pages/PreferenceSectionPlaceholder"),
+);
+
+function withSuspense(node: React.ReactNode) {
+  return <Suspense fallback={<FullScreenLoader />}>{node}</Suspense>;
+}
+
+function RootGate() {
   const { user, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) return <FullScreenLoader />;
 
-  return user ? <>{children}</> : <Navigate to="/login" replace />;
+  if (!user) {
+    if (location.pathname === "/") return withSuspense(<Landing />);
+    return <Navigate to="/login" replace />;
+  }
+
+  return withSuspense(<App />);
 }
 
 function RequireGuest({ children }: { children: React.ReactNode }) {
@@ -31,40 +46,36 @@ export const router = createBrowserRouter([
     path: "/login",
     element: (
       <RequireGuest>
-        <Login />
+        {withSuspense(<Login />)}
       </RequireGuest>
     ),
   },
   {
     path: "/",
-    element: (
-      <RequireAuth>
-        <App />
-      </RequireAuth>
-    ),
+    element: <RootGate />,
     children: [
-      { index: true, element: <Home /> },
-      { path: "today", element: <LogToday /> },
-      { path: "day/:date", element: <LogToday /> },
-      { path: "weekly", element: <WeeklyLog /> },
-      { path: "calendar", element: <Calendar /> },
-      { path: "profile", element: <Profile /> },
+      { index: true, element: withSuspense(<Home />) },
+      { path: "today", element: withSuspense(<LogToday />) },
+      { path: "day/:date", element: withSuspense(<LogToday />) },
+      { path: "weekly", element: withSuspense(<WeeklyLog />) },
+      { path: "calendar", element: withSuspense(<Calendar />) },
+      { path: "profile", element: withSuspense(<Profile />) },
       {
         path: "preferences/profile",
-        element: (
+        element: withSuspense(
           <PreferenceSectionPlaceholder
             title="Profile"
             subtitle="This section will handle name, avatar, and email settings."
-          />
+          />,
         ),
       },
       {
         path: "preferences/notifications",
-        element: (
+        element: withSuspense(
           <PreferenceSectionPlaceholder
             title="Notifications"
             subtitle="This section will handle the basic notification toggles."
-          />
+          />,
         ),
       },
     ],

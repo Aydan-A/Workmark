@@ -1,38 +1,42 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { FirebaseError } from "firebase/app";
 import { deleteUser } from "firebase/auth";
-import {
-  BusinessCenterOutlined,
-  CameraAltOutlined,
-  EditOutlined,
-  ExpandMoreRounded,
-  PersonOutlineRounded,
-  VerifiedRounded,
-} from "@mui/icons-material";
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Avatar,
-  Box,
-  Button,
-  Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Paper,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
+import BusinessCenterOutlined from "@mui/icons-material/BusinessCenterOutlined";
+import CameraAltOutlined from "@mui/icons-material/CameraAltOutlined";
+import EditOutlined from "@mui/icons-material/EditOutlined";
+import ExpandMoreRounded from "@mui/icons-material/ExpandMoreRounded";
+import PersonOutlineRounded from "@mui/icons-material/PersonOutlineRounded";
+import VerifiedRounded from "@mui/icons-material/VerifiedRounded";
+import Accordion from "@mui/material/Accordion";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import Avatar from "@mui/material/Avatar";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogTitle from "@mui/material/DialogTitle";
+import Paper from "@mui/material/Paper";
+import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import { alpha, useTheme } from "@mui/material/styles";
 import { format, subDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
-import { getEntryLoadErrorMessage, subscribeToEntries } from "../features/entries/entry.api";
+import { useEntriesQuery } from "../features/entries/useEntriesQuery";
 import type { WorkEntry } from "../features/entries/entry.types";
-import { purgeUserData, saveManagerEmail, subscribeToUserProfile, syncCurrentUserIdentity } from "../features/profile/profile.api";
+import {
+  purgeUserData,
+  saveManagerEmail,
+  sendManagerNotificationEmail,
+  subscribeToManagedUsers,
+  subscribeToUserProfile,
+  syncCurrentUserIdentity,
+  type ManagedUser,
+} from "../features/profile/profile.api";
 import { getAccountUpdateErrorMessage, logout, updateAccountDisplayName, updateAccountEmail } from "../firebase/auth";
 import { useAuth } from "../hooks/useAuth";
 import { getInitials } from "../utils/formatters";
@@ -127,9 +131,23 @@ export default function Profile() {
   const theme = useTheme();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [entries, setEntries] = useState<WorkEntry[]>([]);
-  const [statsLoadError, setStatsLoadError] = useState<string | null>(null);
-  const [isStatsLoading, setIsStatsLoading] = useState(false);
+  // Stats only need the current month for "logs this month" plus a small buffer
+  // for streak computation — no need to stream the entire history.
+  const statsRangeStart = useMemo(() => {
+    const today = new Date();
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    return format(subDays(monthStart, 60), "yyyy-MM-dd");
+  }, []);
+  const statsRangeEnd = useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
+  const {
+    entries,
+    error: statsLoadError,
+    isLoading: isStatsLoading,
+  } = useEntriesQuery(
+    user?.uid ?? null,
+    { startDate: statsRangeStart, endDate: statsRangeEnd, orderDirection: "asc" },
+    Boolean(user),
+  );
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
   const [isSignOutLoading, setIsSignOutLoading] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -150,37 +168,19 @@ export default function Profile() {
   const [isSavingProfileForm, setIsSavingProfileForm] = useState(false);
   const [profileFormError, setProfileFormError] = useState<string | null>(null);
   const [managerEmailDraft, setManagerEmailDraft] = useState("");
+  const [savedManagerEmail, setSavedManagerEmail] = useState("");
   const [isSavingManagerEmail, setIsSavingManagerEmail] = useState(false);
+  const [isRemovingManagerEmail, setIsRemovingManagerEmail] = useState(false);
   const [managerEmailError, setManagerEmailError] = useState<string | null>(null);
-  const managerEmailLoadedRef = useRef(false);
+  const [managerEmailSaved, setManagerEmailSaved] = useState(false);
+  const [reportingUsers, setReportingUsers] = useState<ManagedUser[]>([]);
   const profileName = accountOverrides.fullName?.trim() || user?.displayName?.trim() || "Alex Johnson";
   const profileEmail = accountOverrides.email?.trim() || user?.email?.trim() || "alex.johnson@example.com";
 
   useEffect(() => {
     if (!user) {
-      setEntries([]);
-      setStatsLoadError(null);
-      setIsStatsLoading(false);
       setAccountOverrides({});
-      return;
     }
-
-    setIsStatsLoading(true);
-
-    const unsubscribe = subscribeToEntries(
-      (nextEntries) => {
-        setEntries(nextEntries);
-        setStatsLoadError(null);
-        setIsStatsLoading(false);
-      },
-      (error) => {
-        setStatsLoadError(getEntryLoadErrorMessage(error));
-        setIsStatsLoading(false);
-      },
-      { orderDirection: "asc" },
-    );
-
-    return unsubscribe;
   }, [user]);
 
   useEffect(() => {
@@ -192,20 +192,33 @@ export default function Profile() {
   }, []);
 
   useEffect(() => {
+    const email = user?.email?.trim();
+    if (!email) {
+      setReportingUsers([]);
+      return;
+    }
+
+    return subscribeToManagedUsers(
+      email,
+      (users) => setReportingUsers(users),
+      (error) => console.error("Failed to load reporting users:", error),
+    );
+  }, [user?.email]);
+
+  useEffect(() => {
     if (!user) {
-      managerEmailLoadedRef.current = false;
+      setSavedManagerEmail("");
       return;
     }
 
     return subscribeToUserProfile(
       (profile) => {
-        if (!managerEmailLoadedRef.current) {
-          setManagerEmailDraft(profile?.managerEmail ?? "");
-          managerEmailLoadedRef.current = true;
-        }
+        setSavedManagerEmail(profile?.managerEmail ?? "");
       },
       (error) => {
         console.error("Failed to load user profile:", error);
+        const detail = error instanceof Error ? error.message : String(error);
+        setManagerEmailError(`Failed to load manager email: ${detail}`);
       },
     );
   }, [user]);
@@ -373,15 +386,44 @@ export default function Profile() {
   const handleSaveManagerEmail = async () => {
     if (isSavingManagerEmail) return;
 
+    const trimmed = managerEmailDraft.trim();
+
     setIsSavingManagerEmail(true);
     setManagerEmailError(null);
+    setManagerEmailSaved(false);
 
     try {
-      await saveManagerEmail(managerEmailDraft);
-    } catch {
-      setManagerEmailError("Failed to save manager email. Please try again.");
+      await saveManagerEmail(trimmed);
+      setManagerEmailDraft("");
+      setManagerEmailSaved(true);
+    } catch (error) {
+      console.error("Failed to save manager email:", error);
+      const detail = error instanceof Error ? error.message : "";
+      setManagerEmailError(
+        detail ? `Failed to save manager email: ${detail}` : "Failed to save manager email. Please try again.",
+      );
     } finally {
       setIsSavingManagerEmail(false);
+    }
+  };
+
+  const handleRemoveManagerEmail = async () => {
+    if (isRemovingManagerEmail) return;
+
+    setIsRemovingManagerEmail(true);
+    setManagerEmailError(null);
+    setManagerEmailSaved(false);
+
+    try {
+      await saveManagerEmail("");
+    } catch (error) {
+      console.error("Failed to remove manager email:", error);
+      const detail = error instanceof Error ? error.message : "";
+      setManagerEmailError(
+        detail ? `Failed to remove manager: ${detail}` : "Failed to remove manager. Please try again.",
+      );
+    } finally {
+      setIsRemovingManagerEmail(false);
     }
   };
 
@@ -785,22 +827,119 @@ export default function Profile() {
                     size="small"
                     type="email"
                     value={managerEmailDraft}
-                    onChange={(event) => setManagerEmailDraft(event.target.value)}
-                    placeholder="manager@company.com"
+                    onChange={(event) => {
+                      setManagerEmailDraft(event.target.value);
+                      setManagerEmailSaved(false);
+                    }}
+                    placeholder={savedManagerEmail ? "Replace with another email" : "manager@company.com"}
                   />
                   {managerEmailError ? (
                     <Typography variant="caption" sx={{ color: "error.main" }}>
                       {managerEmailError}
                     </Typography>
+                  ) : managerEmailSaved ? (
+                    <Typography variant="caption" sx={{ color: "success.main" }}>
+                      Manager saved.
+                    </Typography>
                   ) : null}
                   <Button
                     variant="contained"
                     onClick={handleSaveManagerEmail}
-                    disabled={isSavingManagerEmail}
+                    disabled={isSavingManagerEmail || !managerEmailDraft.trim()}
                     sx={{ alignSelf: "flex-end" }}
                   >
-                    {isSavingManagerEmail ? "Saving..." : "Save"}
+                    {isSavingManagerEmail ? "Saving..." : savedManagerEmail ? "Update" : "Save"}
                   </Button>
+
+                  {savedManagerEmail ? (
+                    <Box sx={{ mt: 1, mx: 0, px: 0 }}>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          display: "block",
+                          mb: 0.75,
+                          color: "text.secondary",
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.16em",
+                        }}
+                      >
+                        Your manager
+                      </Typography>
+                      <Stack
+                        direction="row"
+                        alignItems="center"
+                        justifyContent="space-between"
+                        spacing={1}
+                      >
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: "text.primary",
+                            fontWeight: 500,
+                            wordBreak: "break-word",
+                            minWidth: 0,
+                          }}
+                        >
+                          {savedManagerEmail}
+                        </Typography>
+                        <Stack direction="row" spacing={0.5} sx={{ flexShrink: 0 }}>
+                          <Button
+                            size="small"
+                            color="inherit"
+                            onClick={() =>
+                              sendManagerNotificationEmail(savedManagerEmail, profileName)
+                            }
+                            sx={{ color: "text.primary" }}
+                          >
+                            Notify
+                          </Button>
+                          <Button
+                            size="small"
+                            color="inherit"
+                            onClick={handleRemoveManagerEmail}
+                            disabled={isRemovingManagerEmail}
+                            sx={{ color: "text.secondary" }}
+                          >
+                            {isRemovingManagerEmail ? "Removing..." : "Remove"}
+                          </Button>
+                        </Stack>
+                      </Stack>
+                    </Box>
+                  ) : null}
+
+                  <Box sx={{ mt: 1, mx: 0, px: 0 }}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        display: "block",
+                        mb: 0.75,
+                        color: "text.secondary",
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.16em",
+                      }}
+                    >
+                      People reporting to you
+                    </Typography>
+                    {reportingUsers.length === 0 ? (
+                      <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                        No one has added you as their manager yet.
+                      </Typography>
+                    ) : (
+                      <Stack spacing={0.5}>
+                        {reportingUsers.map((reporter) => (
+                          <Typography
+                            key={reporter.uid}
+                            variant="body2"
+                            sx={{ color: "text.primary", fontWeight: 500 }}
+                          >
+                            {reporter.fullName}
+                          </Typography>
+                        ))}
+                      </Stack>
+                    )}
+                  </Box>
                 </Stack>
               </AccordionDetails>
             </Accordion>

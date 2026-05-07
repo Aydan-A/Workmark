@@ -1,12 +1,10 @@
 import { useState } from "react";
-import {
-  Autocomplete,
-  Box,
-  CircularProgress,
-  TextField,
-  Typography,
-  createFilterOptions,
-} from "@mui/material";
+import Autocomplete from "@mui/material/Autocomplete";
+import Box from "@mui/material/Box";
+import CircularProgress from "@mui/material/CircularProgress";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+import { createFilterOptions } from "@mui/material/Autocomplete";
 import { createProject } from "../project.api";
 import type { Project } from "../entry.types";
 

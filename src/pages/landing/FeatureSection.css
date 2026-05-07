@@ -1,0 +1,396 @@
+/* Light bento section. Sits below the dark Hero — the contrast is intentional. */
+
+.bento-section {
+  --ink: #0d0f1a;
+  --ink-muted: rgba(13, 15, 26, 0.6);
+  --ink-faint: rgba(13, 15, 26, 0.4);
+  --line: rgba(13, 15, 26, 0.08);
+  --line-strong: rgba(13, 15, 26, 0.14);
+  --blue: #3b3fd8;
+  --card: #ffffff;
+  --bg: #fafbfc;
+
+  background: var(--bg);
+  color: var(--ink);
+  padding: 120px 6vw 140px;
+  font-family: "Syne", system-ui, sans-serif;
+}
+
+/* --- Head --- */
+
+.bento-head {
+  max-width: 720px;
+  margin: 0 auto 64px;
+  text-align: center;
+}
+
+.bento-eyebrow {
+  color: var(--blue);
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.bento-title {
+  font-size: clamp(40px, 5vw, 64px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin: 0 0 18px;
+}
+
+.bento-sub {
+  color: var(--ink-muted);
+  font-size: 18px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* --- Grid --- */
+
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.bento-cell {
+  min-height: 320px;
+}
+
+.bento-span-1 { grid-column: span 1; }
+.bento-span-2 { grid-column: span 2; }
+
+@media (max-width: 980px) {
+  .bento-grid { grid-template-columns: 1fr; }
+  .bento-span-1, .bento-span-2 { grid-column: span 1; }
+}
+
+/* --- Card shell --- */
+
+.bento-card {
+  position: relative;
+  height: 100%;
+  border-radius: 24px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset;
+}
+
+.bento-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--line-strong);
+  box-shadow:
+    0 24px 60px rgba(13, 15, 26, 0.08),
+    0 4px 16px rgba(13, 15, 26, 0.04);
+}
+
+.bento-card-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.bento-card-content {
+  position: relative;
+  z-index: 1;
+  padding: 24px 24px 12px;
+  pointer-events: none;
+}
+
+.bento-card-icon {
+  font-size: 24px !important;
+  color: var(--ink) !important;
+  margin-bottom: 10px;
+  transition: transform 0.3s ease;
+}
+
+.bento-card:hover .bento-card-icon {
+  transform: translateY(-2px);
+}
+
+.bento-card-title {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0 0 6px;
+  color: var(--ink);
+}
+
+.bento-card-desc {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-muted);
+  margin: 0;
+  max-width: 90%;
+}
+
+.bento-card-cta {
+  position: relative;
+  z-index: 2;
+  padding: 0 24px 20px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.bento-card:hover .bento-card-cta {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.bento-card-cta a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--blue);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* Subtle radial spotlight on hover */
+.bento-card-hover {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    600px circle at var(--mx, 50%) var(--my, 0%),
+    rgba(59, 63, 216, 0.08),
+    transparent 40%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.bento-card:hover .bento-card-hover {
+  opacity: 1;
+}
+
+/* --- Card 1: animated entries --- */
+
+.bento-entries {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 18%, #000 60%, transparent 100%);
+          mask-image: linear-gradient(to bottom, transparent 0%, #000 18%, #000 60%, transparent 100%);
+}
+
+.bento-entry {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f5f5f8;
+  border: 1px solid var(--line);
+  font-size: 12px;
+}
+
+.bento-entry-in {
+  animation: bento-entry-in 0.35s ease-out both;
+}
+
+@keyframes bento-entry-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bento-entry-in { animation: none; }
+}
+
+.bento-entry-time {
+  color: var(--blue);
+  font-weight: 600;
+  min-width: 42px;
+  font-variant-numeric: tabular-nums;
+}
+
+.bento-entry-text {
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+/* --- Card 2: mini calendar --- */
+
+.bento-calendar {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%) scale(0.92);
+  transform-origin: top center;
+  width: 220px;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba(13, 15, 26, 0.08);
+  -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
+          mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
+  transition: transform 0.3s ease;
+}
+
+.bento-card:hover .bento-calendar {
+  transform: translateX(-50%) scale(0.98);
+}
+
+.bento-calendar-head,
+.bento-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.bento-calendar-head {
+  margin-bottom: 6px;
+}
+
+.bento-calendar-head span {
+  text-align: center;
+  font-size: 10px;
+  color: var(--ink-faint);
+  font-weight: 600;
+}
+
+.bento-calendar-cell {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  color: var(--ink-muted);
+  border-radius: 6px;
+}
+
+.bento-calendar-cell.is-blank { visibility: hidden; }
+
+.bento-calendar-cell.is-logged {
+  background: rgba(59, 63, 216, 0.12);
+  color: var(--blue);
+  font-weight: 600;
+}
+
+.bento-calendar-cell.is-today {
+  background: var(--blue);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* --- Card 3: receipts marquee --- */
+
+.bento-marquee {
+  position: absolute;
+  inset: 18px 0 auto 0;
+  height: 140px;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+          mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+}
+
+.bento-marquee-track {
+  display: flex;
+  gap: 12px;
+  width: max-content;
+  padding-left: 18px;
+  animation: bento-marquee-scroll 22s linear infinite;
+  will-change: transform;
+}
+
+@keyframes bento-marquee-scroll {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bento-marquee-track { animation: none; }
+}
+
+.bento-receipt {
+  flex: 0 0 150px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(13, 15, 26, 0.04);
+  filter: blur(0.6px);
+  transition: filter 0.25s ease;
+}
+
+.bento-card:hover .bento-receipt {
+  filter: blur(0);
+}
+
+.bento-receipt figcaption {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.bento-receipt blockquote {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--ink-muted);
+}
+
+/* --- Card 4: weekly stats --- */
+
+.bento-stats {
+  position: absolute;
+  inset: 18px 18px auto 18px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent 100%);
+          mask-image: linear-gradient(to bottom, #000 70%, transparent 100%);
+}
+
+.bento-stat {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.bento-stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.bento-stat-label {
+  font-size: 11px;
+  color: var(--ink-faint);
+  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.bento-spark {
+  grid-column: 1 / -1;
+  height: 60px;
+  margin-top: 4px;
+}
+
+.bento-spark svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}

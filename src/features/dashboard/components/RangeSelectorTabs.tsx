@@ -1,4 +1,7 @@
-import { Box, ButtonBase, Stack, Typography } from "@mui/material";
+import Box from "@mui/material/Box";
+import ButtonBase from "@mui/material/ButtonBase";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import type { SummaryTab } from "../rangeSelector.utils";
 
 const TAB_LABELS: { tab: SummaryTab; label: string }[] = [

@@ -1,6 +1,12 @@
 import type { ReactNode } from "react";
-import { BoltRounded, HomeWorkRounded, TrendingUpRounded } from "@mui/icons-material";
-import { Box, Paper, Skeleton, Stack, Typography } from "@mui/material";
+import BoltRounded from "@mui/icons-material/BoltRounded";
+import HomeWorkRounded from "@mui/icons-material/HomeWorkRounded";
+import TrendingUpRounded from "@mui/icons-material/TrendingUpRounded";
+import Box from "@mui/material/Box";
+import Paper from "@mui/material/Paper";
+import Skeleton from "@mui/material/Skeleton";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import { dashboardGlassCardSx } from "../../../styles/dashboard";
 import { formatHM, formatPct } from "../dashboard.utils";
 import { SparklineBars, SparklineDots, SparklineLine } from "./Sparkline";

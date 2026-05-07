@@ -1,4 +1,9 @@
-import { Alert, Box, Divider, Paper, Skeleton, Typography } from "@mui/material";
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Divider from "@mui/material/Divider";
+import Paper from "@mui/material/Paper";
+import Skeleton from "@mui/material/Skeleton";
+import Typography from "@mui/material/Typography";
 import { CalendarCell } from "./CalendarCell";
 import type { CalendarDay } from "../calendar.utils";
 

@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
-import { Alert, Box, Stack } from "@mui/material";
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import WeeklyOverviewCard from "../features/dashboard/components/WeeklyOverviewCard";

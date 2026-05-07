@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import type { User } from "firebase/auth";
 import { endOfWeek, format, getDay, startOfWeek, subDays } from "date-fns";
-import { getEntryLoadErrorMessage, subscribeToEntries } from "../../entries/entry.api";
+import { useEntriesQuery } from "../../entries/useEntriesQuery";
+import { getEntryLoadErrorMessage } from "../../entries/entry.api";
 import { subscribeToProjects } from "../../entries/project.api";
 import type {
   DashboardRecentEntry,
   HeatmapDay,
   Project,
   TopProjectStat,
-  WorkEntry,
 } from "../../entries/entry.types";
 import {
   buildRecentDashboardLogs,
@@ -39,17 +39,8 @@ function getFirstName(name: string) {
 }
 
 export function useDashboardData({ user, authLoading }: UseDashboardDataOptions) {
-  const [recentEntries, setRecentEntries] = useState<WorkEntry[]>([]);
-  const [weeklyEntries, setWeeklyEntries] = useState<WorkEntry[]>([]);
-  const [historyEntries, setHistoryEntries] = useState<WorkEntry[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [recentLoadError, setRecentLoadError] = useState<string | null>(null);
-  const [weeklyLoadError, setWeeklyLoadError] = useState<string | null>(null);
-  const [historyLoadError, setHistoryLoadError] = useState<string | null>(null);
   const [projectsLoadError, setProjectsLoadError] = useState<string | null>(null);
-  const [isRecentLoading, setIsRecentLoading] = useState(false);
-  const [isWeeklyLoading, setIsWeeklyLoading] = useState(false);
-  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
   const [isProjectsLoading, setIsProjectsLoading] = useState(false);
 
   const now = new Date();
@@ -63,54 +54,34 @@ export function useDashboardData({ user, authLoading }: UseDashboardDataOptions)
   // 90 days covers 12 heatmap weeks (84 days) plus streak buffer
   const historyStartKey = format(subDays(referenceDate, 90), "yyyy-MM-dd");
 
-  useEffect(() => {
-    if (!user) {
-      setRecentEntries([]);
-      setRecentLoadError(null);
-      setIsRecentLoading(false);
-      return;
-    }
-    setIsRecentLoading(true);
-    const unsubscribe = subscribeToEntries(
-      (entries) => { setRecentEntries(entries); setRecentLoadError(null); setIsRecentLoading(false); },
-      (error) => { setRecentLoadError(getEntryLoadErrorMessage(error)); setIsRecentLoading(false); },
-      { orderDirection: "desc", limitCount: 5 },
-    );
-    return unsubscribe;
-  }, [user]);
+  const uid = user?.uid ?? null;
 
-  useEffect(() => {
-    if (!user) {
-      setWeeklyEntries([]);
-      setWeeklyLoadError(null);
-      setIsWeeklyLoading(false);
-      return;
-    }
-    setIsWeeklyLoading(true);
-    const unsubscribe = subscribeToEntries(
-      (entries) => { setWeeklyEntries(entries); setWeeklyLoadError(null); setIsWeeklyLoading(false); },
-      (error) => { setWeeklyLoadError(getEntryLoadErrorMessage(error)); setIsWeeklyLoading(false); },
-      { startDate: weekStartKey, endDate: weekEndKey, orderDirection: "asc" },
-    );
-    return unsubscribe;
-  }, [user, weekEndKey, weekStartKey]);
-
+  const recentQuery = useEntriesQuery(
+    uid,
+    { orderDirection: "desc", limitCount: 5 },
+    Boolean(user),
+  );
+  const weeklyQuery = useEntriesQuery(
+    uid,
+    { startDate: weekStartKey, endDate: weekEndKey, orderDirection: "asc" },
+    Boolean(user),
+  );
   // Covers last 90 days — drives heatmap, streak, last-week delta, sparklines.
-  useEffect(() => {
-    if (!user) {
-      setHistoryEntries([]);
-      setHistoryLoadError(null);
-      setIsHistoryLoading(false);
-      return;
-    }
-    setIsHistoryLoading(true);
-    const unsubscribe = subscribeToEntries(
-      (entries) => { setHistoryEntries(entries); setHistoryLoadError(null); setIsHistoryLoading(false); },
-      (error) => { setHistoryLoadError(getEntryLoadErrorMessage(error)); setIsHistoryLoading(false); },
-      { startDate: historyStartKey, endDate: todayKey, orderDirection: "asc" },
-    );
-    return unsubscribe;
-  }, [user, historyStartKey, todayKey]);
+  const historyQuery = useEntriesQuery(
+    uid,
+    { startDate: historyStartKey, endDate: todayKey, orderDirection: "asc" },
+    Boolean(user),
+  );
+
+  const recentEntries = recentQuery.entries;
+  const weeklyEntries = weeklyQuery.entries;
+  const historyEntries = historyQuery.entries;
+  const recentLoadError = recentQuery.error;
+  const weeklyLoadError = weeklyQuery.error;
+  const historyLoadError = historyQuery.error;
+  const isRecentLoading = recentQuery.isLoading;
+  const isWeeklyLoading = weeklyQuery.isLoading;
+  const isHistoryLoading = historyQuery.isLoading;
 
   useEffect(() => {
     if (!user) {

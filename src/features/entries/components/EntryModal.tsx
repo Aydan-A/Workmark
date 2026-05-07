@@ -1,24 +1,30 @@
-import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Alert,
-  Box,
-  Button,
-  Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Drawer,
-  FormControlLabel,
-  IconButton,
-  Stack,
-  Switch,
-  TextField,
-  Typography,
-  useMediaQuery,
-  useTheme,
-} from "@mui/material";
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+  type FocusEvent as ReactFocusEvent,
+  type Ref,
+} from "react";
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogTitle from "@mui/material/DialogTitle";
+import Drawer from "@mui/material/Drawer";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import IconButton from "@mui/material/IconButton";
+import Stack from "@mui/material/Stack";
+import Switch from "@mui/material/Switch";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { useTheme } from "@mui/material/styles";
 import CloseIcon from "@mui/icons-material/Close";
 import { computeHours } from "../entry.api";
 import { deleteReceiptFile } from "../receipt.api";
@@ -70,93 +76,65 @@ function FieldLabel({ label, suffix }: { label: string; suffix?: string }) {
   );
 }
 
-export function EntryModal({
-  open,
+type EntryFormHandle = {
+  hasUnsavedWork: () => boolean;
+  cleanup: () => void;
+};
+
+type EntryFormProps = {
+  mode: "add" | "edit";
+  initialEntry?: WorkEntry;
+  defaultStartTime: string;
+  defaultIsRemote: boolean;
+  projects: Project[];
+  onSave: (data: EntryFormData) => Promise<void>;
+  onRequestClose: () => void;
+  isSaving: boolean;
+  saveError: string | null;
+  handleRef: Ref<EntryFormHandle>;
+};
+
+function EntryForm({
   mode,
   initialEntry,
   defaultStartTime,
   defaultIsRemote,
   projects,
   onSave,
-  onClose,
+  onRequestClose,
   isSaving,
   saveError,
-}: Props) {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  handleRef,
+}: EntryFormProps) {
   const { user } = useAuth();
 
-  const [startTime, setStartTime] = useState(defaultStartTime);
-  const [endTime, setEndTime] = useState(addOneHour(defaultStartTime));
-  const [project, setProject] = useState<EntryFormData["project"] | null>(null);
-  const [note, setNote] = useState("");
-  const [isRemote, setIsRemote] = useState(defaultIsRemote);
-  const [receipts, setReceipts] = useState<Receipt[]>([]);
+  const [startTime, setStartTime] = useState(
+    mode === "edit" && initialEntry ? initialEntry.startTime : defaultStartTime,
+  );
+  const [endTime, setEndTime] = useState(
+    mode === "edit" && initialEntry ? initialEntry.endTime : addOneHour(defaultStartTime),
+  );
+  const [project, setProject] = useState<EntryFormData["project"] | null>(
+    mode === "edit" && initialEntry
+      ? { id: initialEntry.projectId, name: initialEntry.projectName }
+      : null,
+  );
+  const [note, setNote] = useState(
+    mode === "edit" && initialEntry ? (initialEntry.note ?? "") : "",
+  );
+  const [isRemote, setIsRemote] = useState(
+    mode === "edit" && initialEntry ? initialEntry.isRemote : defaultIsRemote,
+  );
+  const [receipts, setReceipts] = useState<Receipt[]>(
+    mode === "edit" && initialEntry ? (initialEntry.receipts ?? []) : [],
+  );
   const [removedPaths, setRemovedPaths] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [timeError, setTimeError] = useState<string | null>(null);
   const [projectError, setProjectError] = useState<string | null>(null);
-  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
 
   // Tracks storage paths uploaded in this modal session for cancel-cleanup.
   const uploadedPathsRef = useRef<Set<string>>(new Set());
-
-  useEffect(() => {
-    if (!open) return;
-    if (mode === "edit" && initialEntry) {
-      setStartTime(initialEntry.startTime);
-      setEndTime(initialEntry.endTime);
-      setProject({ id: initialEntry.projectId, name: initialEntry.projectName });
-      setNote(initialEntry.note ?? "");
-      setIsRemote(initialEntry.isRemote);
-      setReceipts(initialEntry.receipts ?? []);
-    } else {
-      setStartTime(defaultStartTime);
-      setEndTime(addOneHour(defaultStartTime));
-      setProject(null);
-      setNote("");
-      setIsRemote(defaultIsRemote);
-      setReceipts([]);
-    }
-    setRemovedPaths([]);
-    uploadedPathsRef.current.clear();
-    setTimeError(null);
-    setProjectError(null);
-    setShowDiscardConfirm(false);
-  }, [open, mode, initialEntry, defaultStartTime, defaultIsRemote]);
-
-  // Called by ReceiptUploadField whenever the committed receipts list changes.
-  const handleReceiptsChange = (next: Receipt[]) => {
-    // Detect newly added receipts (upload just completed).
-    next
-      .filter((r) => !receipts.some((e) => e.id === r.id))
-      .forEach((r) => uploadedPathsRef.current.add(r.storagePath));
-
-    // Detect removed receipts and handle appropriately.
-    receipts
-      .filter((r) => !next.some((n) => n.id === r.id))
-      .forEach((r) => {
-        if (uploadedPathsRef.current.has(r.storagePath)) {
-          // Newly uploaded this session → delete from Storage immediately.
-          void deleteReceiptFile(r.storagePath);
-          uploadedPathsRef.current.delete(r.storagePath);
-        } else {
-          // Pre-existing receipt in edit mode → queue for deletion on Save.
-          setRemovedPaths((prev) => [...prev, r.storagePath]);
-        }
-      });
-
-    setReceipts(next);
-  };
-
-  const durationLabel = useMemo(() => {
-    try {
-      const h = computeHours(startTime, endTime);
-      return Number.isInteger(h) ? `${h}h` : `${h.toFixed(1)}h`;
-    } catch {
-      return null;
-    }
-  }, [startTime, endTime]);
 
   const isDirty = useMemo(() => {
     if (mode !== "edit" || !initialEntry) return false;
@@ -172,25 +150,45 @@ export function EntryModal({
     );
   }, [mode, initialEntry, startTime, endTime, project, note, isRemote, receipts]);
 
-  const cleanupAndClose = () => {
-    // Delete any files uploaded during this session that were never saved.
-    uploadedPathsRef.current.forEach((path) => void deleteReceiptFile(path));
-    uploadedPathsRef.current.clear();
-    onClose();
+  useImperativeHandle(
+    handleRef,
+    () => ({
+      hasUnsavedWork: () => isDirty || uploadedPathsRef.current.size > 0,
+      cleanup: () => {
+        uploadedPathsRef.current.forEach((path) => void deleteReceiptFile(path));
+        uploadedPathsRef.current.clear();
+      },
+    }),
+    [isDirty],
+  );
+
+  const handleReceiptsChange = (next: Receipt[]) => {
+    next
+      .filter((r) => !receipts.some((e) => e.id === r.id))
+      .forEach((r) => uploadedPathsRef.current.add(r.storagePath));
+
+    receipts
+      .filter((r) => !next.some((n) => n.id === r.id))
+      .forEach((r) => {
+        if (uploadedPathsRef.current.has(r.storagePath)) {
+          void deleteReceiptFile(r.storagePath);
+          uploadedPathsRef.current.delete(r.storagePath);
+        } else {
+          setRemovedPaths((prev) => [...prev, r.storagePath]);
+        }
+      });
+
+    setReceipts(next);
   };
 
-  const handleClose = () => {
-    if (isDirty || uploadedPathsRef.current.size > 0) {
-      setShowDiscardConfirm(true);
-    } else {
-      onClose();
+  const durationLabel = useMemo(() => {
+    try {
+      const h = computeHours(startTime, endTime);
+      return Number.isInteger(h) ? `${h}h` : `${h.toFixed(1)}h`;
+    } catch {
+      return null;
     }
-  };
-
-  const handleDiscard = () => {
-    setShowDiscardConfirm(false);
-    cleanupAndClose();
-  };
+  }, [startTime, endTime]);
 
   const handleSubmit = async () => {
     let valid = true;
@@ -219,7 +217,7 @@ export function EntryModal({
     });
   };
 
-  const content = (
+  return (
     <Box sx={{ p: { xs: 2.5, sm: 3 }, bgcolor: "rgba(255,255,255,0.92)" }}>
       <Box
         sx={{
@@ -232,7 +230,7 @@ export function EntryModal({
         <Typography variant="h6" sx={{ fontWeight: 700 }}>
           {mode === "edit" ? "Edit entry" : "New entry"}
         </Typography>
-        <IconButton size="small" onClick={handleClose} aria-label="Close">
+        <IconButton size="small" onClick={onRequestClose} aria-label="Close">
           <CloseIcon fontSize="small" />
         </IconButton>
       </Box>
@@ -249,7 +247,10 @@ export function EntryModal({
                 slotProps={{
                   htmlInput: {
                     step: 60,
-                    onClick: (e: React.MouseEvent<HTMLInputElement>) => {
+                    onClick: (e: ReactMouseEvent<HTMLInputElement>) => {
+                      try { e.currentTarget.showPicker(); } catch { /* unsupported */ }
+                    },
+                    onFocus: (e: ReactFocusEvent<HTMLInputElement>) => {
                       try { e.currentTarget.showPicker(); } catch { /* unsupported */ }
                     },
                   },
@@ -267,7 +268,10 @@ export function EntryModal({
                 slotProps={{
                   htmlInput: {
                     step: 60,
-                    onClick: (e: React.MouseEvent<HTMLInputElement>) => {
+                    onClick: (e: ReactMouseEvent<HTMLInputElement>) => {
+                      try { e.currentTarget.showPicker(); } catch { /* unsupported */ }
+                    },
+                    onFocus: (e: ReactFocusEvent<HTMLInputElement>) => {
                       try { e.currentTarget.showPicker(); } catch { /* unsupported */ }
                     },
                   },
@@ -360,7 +364,7 @@ export function EntryModal({
         >
           <Button
             variant="outlined"
-            onClick={handleClose}
+            onClick={onRequestClose}
             disabled={isSaving}
             sx={{ width: { xs: "100%", sm: "auto" } }}
           >
@@ -377,6 +381,58 @@ export function EntryModal({
         </Box>
       </Stack>
     </Box>
+  );
+}
+
+export function EntryModal({
+  open,
+  mode,
+  initialEntry,
+  defaultStartTime,
+  defaultIsRemote,
+  projects,
+  onSave,
+  onClose,
+  isSaving,
+  saveError,
+}: Props) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const formRef = useRef<EntryFormHandle>(null);
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+
+  // Keying the form on session forces a clean remount whenever the modal
+  // opens or switches between add/edit/entry — resets state and refs naturally.
+  const sessionKey = `${mode}:${initialEntry?.id ?? "new"}`;
+
+  const handleClose = () => {
+    if (formRef.current?.hasUnsavedWork()) {
+      setShowDiscardConfirm(true);
+    } else {
+      onClose();
+    }
+  };
+
+  const handleDiscard = () => {
+    setShowDiscardConfirm(false);
+    formRef.current?.cleanup();
+    onClose();
+  };
+
+  const formContent = (
+    <EntryForm
+      key={sessionKey}
+      handleRef={formRef}
+      mode={mode}
+      initialEntry={initialEntry}
+      defaultStartTime={defaultStartTime}
+      defaultIsRemote={defaultIsRemote}
+      projects={projects}
+      onSave={onSave}
+      onRequestClose={handleClose}
+      isSaving={isSaving}
+      saveError={saveError}
+    />
   );
 
   const discardDialog = (
@@ -419,7 +475,7 @@ export function EntryModal({
             },
           }}
         >
-          {content}
+          {formContent}
         </Drawer>
         {discardDialog}
       </>
@@ -435,7 +491,7 @@ export function EntryModal({
         fullWidth
         slotProps={{ paper: { sx: { bgcolor: "rgba(255,255,255,0.92)" } } }}
       >
-        {content}
+        {formContent}
       </Dialog>
       {discardDialog}
     </>

@@ -54,7 +54,11 @@ async function initializeOptionalAppCheck() {
 }
 
 // App Check is defense-in-depth against automated abuse; rules are still the primary access control.
-void initializeOptionalAppCheck();
+// Skip init on the anonymous landing route — no Firestore/Storage calls happen there, so there's
+// nothing to attest, and reCAPTCHA's script is the heaviest part of cold-start on `/`.
+if (typeof window !== "undefined" && window.location.pathname !== "/") {
+  void initializeOptionalAppCheck();
+}
 
 // Firebase services used across the app
 export const auth = getAuth(firebaseApp);

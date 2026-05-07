@@ -1,13 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  Box,
-  Button,
-  IconButton,
-  Paper,
-  Skeleton,
-  Stack,
-  Typography,
-} from "@mui/material";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import IconButton from "@mui/material/IconButton";
+import Paper from "@mui/material/Paper";
+import Skeleton from "@mui/material/Skeleton";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import EmailIcon from "@mui/icons-material/Email";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
@@ -28,6 +26,7 @@ import RangeSelectorTabs from "./RangeSelectorTabs";
 type Props = {
   historyEntries: WorkEntry[];
   isLoading: boolean;
+  readOnly?: boolean;
 };
 
 function StatPill({ label, value }: { label: string; value: string | null }) {
@@ -75,7 +74,7 @@ function StatPill({ label, value }: { label: string; value: string | null }) {
   );
 }
 
-export default function SummaryCard({ historyEntries, isLoading }: Props) {
+export default function SummaryCard({ historyEntries, isLoading, readOnly = false }: Props) {
   const [activeTab, setActiveTab] = useState<SummaryTab>("this-week");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
@@ -278,19 +277,21 @@ export default function SummaryCard({ historyEntries, isLoading }: Props) {
         >
           Breakdown
         </Typography>
-        <IconButton
-          size="small"
-          onClick={handleRegenerate}
-          disabled={isLoading || summaryLoading || !hasCustomDates}
-          title="Regenerate"
-          sx={{
-            color: "primary.main",
-            opacity: 0.7,
-            "&:hover": { opacity: 1, bgcolor: "rgba(112, 87, 246, 0.08)" },
-          }}
-        >
-          <RefreshIcon sx={{ fontSize: "1rem" }} />
-        </IconButton>
+        {!readOnly && (
+          <IconButton
+            size="small"
+            onClick={handleRegenerate}
+            disabled={isLoading || summaryLoading || !hasCustomDates}
+            title="Regenerate"
+            sx={{
+              color: "primary.main",
+              opacity: 0.7,
+              "&:hover": { opacity: 1, bgcolor: "rgba(112, 87, 246, 0.08)" },
+            }}
+          >
+            <RefreshIcon sx={{ fontSize: "1rem" }} />
+          </IconButton>
+        )}
       </Stack>
 
       {/* Editable breakdown */}
@@ -333,6 +334,7 @@ export default function SummaryCard({ historyEntries, isLoading }: Props) {
             ref={textareaRef}
             value={editableContent}
             onChange={(e) => setEditableContent(e.target.value)}
+            readOnly={readOnly}
             rows={8}
             style={{
               width: "100%",

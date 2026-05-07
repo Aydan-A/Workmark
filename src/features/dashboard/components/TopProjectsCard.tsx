@@ -1,4 +1,9 @@
-import { Box, Divider, Paper, Skeleton, Stack, Typography } from "@mui/material";
+import Box from "@mui/material/Box";
+import Divider from "@mui/material/Divider";
+import Paper from "@mui/material/Paper";
+import Skeleton from "@mui/material/Skeleton";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import { alpha } from "@mui/material/styles";
 import type { TopProjectStat } from "../../entries/entry.types";
 import { formatHM } from "../dashboard.utils";

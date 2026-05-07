@@ -1,6 +1,9 @@
 import type { ReactNode } from "react";
 import { motion } from "framer-motion";
-import { ButtonBase, Paper, Box, Typography } from "@mui/material";
+import ButtonBase from "@mui/material/ButtonBase";
+import Paper from "@mui/material/Paper";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 import { alpha } from "@mui/material/styles";
 import {
   dashboardFocusVisibleSx,

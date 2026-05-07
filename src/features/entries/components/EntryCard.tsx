@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { Box, Chip, IconButton, Paper, Tooltip, Typography } from "@mui/material";
+import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
+import IconButton from "@mui/material/IconButton";
+import Paper from "@mui/material/Paper";
+import Tooltip from "@mui/material/Tooltip";
+import Typography from "@mui/material/Typography";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";

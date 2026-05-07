@@ -5,7 +5,9 @@ import {
   doc,
   getDocs,
   onSnapshot,
+  query,
   setDoc,
+  where,
   writeBatch,
   type QuerySnapshot,
   type Unsubscribe,
@@ -136,9 +138,69 @@ export async function saveManagerEmail(managerEmail: string): Promise<void> {
   await setDoc(
     profileRef,
     {
-      managerEmail: managerEmail.trim(),
+      managerEmail: managerEmail.trim().toLowerCase(),
       updatedAt: new Date().toISOString(),
     },
     { merge: true },
   );
+}
+
+export type ManagedUser = {
+  uid: string;
+  fullName: string;
+  email: string;
+};
+
+export function subscribeToManagedUsers(
+  currentUserEmail: string,
+  onData: (users: ManagedUser[]) => void,
+  onError?: (error: unknown) => void,
+): Unsubscribe {
+  const normalized = currentUserEmail.trim().toLowerCase();
+
+  if (!normalized) {
+    onData([]);
+    return () => undefined;
+  }
+
+  const usersRef = collection(db, "users");
+  const usersQuery = query(usersRef, where("managerEmail", "==", normalized));
+
+  return onSnapshot(
+    usersQuery,
+    (snapshot) => {
+      const users = snapshot.docs.map((docSnap) => {
+        const data = docSnap.data() as UserProfileDocument;
+        return {
+          uid: docSnap.id,
+          fullName: data.fullName?.trim() || data.email?.trim() || "Unknown",
+          email: data.email?.trim() ?? "",
+        };
+      });
+      onData(users);
+    },
+    (error) => {
+      onError?.(error);
+    },
+  );
+}
+
+export function sendManagerNotificationEmail(
+  managerEmail: string,
+  reporterFullName: string,
+): void {
+  const recipient = managerEmail.trim();
+  if (!recipient) return;
+
+  const reporter = reporterFullName.trim() || "A Workmark user";
+  const subject = encodeURIComponent(`${reporter} added you as their manager on Workmark`);
+  const body = encodeURIComponent(
+    `${reporter} has added you as their manager on Workmark. Log in to view their work summary.`,
+  );
+
+  const mailtoUrl = `mailto:${encodeURIComponent(recipient)}?subject=${subject}&body=${body}`;
+
+  if (typeof window !== "undefined") {
+    window.location.href = mailtoUrl;
+  }
 }
