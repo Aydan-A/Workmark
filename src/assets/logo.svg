@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <radialGradient id="bg" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(410 360) rotate(48) scale(560)">
+      <stop offset="0" stop-color="#5C66FF"/>
+      <stop offset="0.55" stop-color="#3D45F4"/>
+      <stop offset="1" stop-color="#2730D9"/>
+    </radialGradient>
+  </defs>
+
+  <!-- transparent background by default -->
+  <circle cx="512" cy="512" r="285" fill="url(#bg)"/>
+
+  <!-- compact briefcase icon -->
+  <rect x="350" y="435" width="324" height="216" rx="22" ry="22"
+        stroke="#FFFFFF" stroke-width="18" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M458 435V383C458 371.954 466.954 363 478 363H546C557.046 363 566 371.954 566 383V435"
+        stroke="#FFFFFF" stroke-width="18" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

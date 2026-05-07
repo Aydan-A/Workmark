@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import Box from "@mui/material/Box";
 import { useCalendarData } from "../features/calendar/hooks/useCalendarData";
 import { CalendarHeader } from "../features/calendar/components/CalendarHeader";
 import { CalendarStats } from "../features/calendar/components/CalendarStats";

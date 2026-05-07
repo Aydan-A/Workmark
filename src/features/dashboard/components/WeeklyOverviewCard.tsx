@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import {
-  Box,
-  ButtonBase,
-  Paper,
-  Typography,
-} from "@mui/material";
+import Box from "@mui/material/Box";
+import ButtonBase from "@mui/material/ButtonBase";
+import Paper from "@mui/material/Paper";
+import Typography from "@mui/material/Typography";
 import type { WeeklyPoint } from "../../entries/entry.types";
 import {
   dashboardCardTitleSx,

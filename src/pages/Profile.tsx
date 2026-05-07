@@ -1,36 +1,32 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { FirebaseError } from "firebase/app";
 import { deleteUser } from "firebase/auth";
-import {
-  BusinessCenterOutlined,
-  CameraAltOutlined,
-  EditOutlined,
-  ExpandMoreRounded,
-  PersonOutlineRounded,
-  VerifiedRounded,
-} from "@mui/icons-material";
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Avatar,
-  Box,
-  Button,
-  Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Paper,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
+import BusinessCenterOutlined from "@mui/icons-material/BusinessCenterOutlined";
+import CameraAltOutlined from "@mui/icons-material/CameraAltOutlined";
+import EditOutlined from "@mui/icons-material/EditOutlined";
+import ExpandMoreRounded from "@mui/icons-material/ExpandMoreRounded";
+import PersonOutlineRounded from "@mui/icons-material/PersonOutlineRounded";
+import VerifiedRounded from "@mui/icons-material/VerifiedRounded";
+import Accordion from "@mui/material/Accordion";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import Avatar from "@mui/material/Avatar";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogTitle from "@mui/material/DialogTitle";
+import Paper from "@mui/material/Paper";
+import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import { alpha, useTheme } from "@mui/material/styles";
 import { format, subDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
-import { getEntryLoadErrorMessage, subscribeToEntries } from "../features/entries/entry.api";
+import { useEntriesQuery } from "../features/entries/useEntriesQuery";
 import type { WorkEntry } from "../features/entries/entry.types";
 import {
   purgeUserData,
@@ -135,9 +131,23 @@ export default function Profile() {
   const theme = useTheme();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [entries, setEntries] = useState<WorkEntry[]>([]);
-  const [statsLoadError, setStatsLoadError] = useState<string | null>(null);
-  const [isStatsLoading, setIsStatsLoading] = useState(false);
+  // Stats only need the current month for "logs this month" plus a small buffer
+  // for streak computation — no need to stream the entire history.
+  const statsRangeStart = useMemo(() => {
+    const today = new Date();
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    return format(subDays(monthStart, 60), "yyyy-MM-dd");
+  }, []);
+  const statsRangeEnd = useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
+  const {
+    entries,
+    error: statsLoadError,
+    isLoading: isStatsLoading,
+  } = useEntriesQuery(
+    user?.uid ?? null,
+    { startDate: statsRangeStart, endDate: statsRangeEnd, orderDirection: "asc" },
+    Boolean(user),
+  );
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
   const [isSignOutLoading, setIsSignOutLoading] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -169,29 +179,8 @@ export default function Profile() {
 
   useEffect(() => {
     if (!user) {
-      setEntries([]);
-      setStatsLoadError(null);
-      setIsStatsLoading(false);
       setAccountOverrides({});
-      return;
     }
-
-    setIsStatsLoading(true);
-
-    const unsubscribe = subscribeToEntries(
-      (nextEntries) => {
-        setEntries(nextEntries);
-        setStatsLoadError(null);
-        setIsStatsLoading(false);
-      },
-      (error) => {
-        setStatsLoadError(getEntryLoadErrorMessage(error));
-        setIsStatsLoading(false);
-      },
-      { orderDirection: "asc" },
-    );
-
-    return unsubscribe;
   }, [user]);
 
   useEffect(() => {

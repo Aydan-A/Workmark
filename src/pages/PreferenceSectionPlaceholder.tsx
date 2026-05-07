@@ -1,5 +1,9 @@
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
-import { Box, Button, Paper, Stack, Typography } from "@mui/material";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Paper from "@mui/material/Paper";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import { Link as RouterLink } from "react-router-dom";
 
 type PreferenceSectionPlaceholderProps = {

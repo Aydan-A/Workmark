@@ -1,4 +1,6 @@
-import { Paper, Stack, Typography } from "@mui/material";
+import Paper from "@mui/material/Paper";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import { formatHoursDecimal } from "../../../utils/formatters";
 
 type Props = {

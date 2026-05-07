@@ -1,6 +1,11 @@
-import { useEffect, useRef } from "react";
-import { TrendingUpRounded } from "@mui/icons-material";
-import { Box, Button, Chip, Paper, Stack, Typography } from "@mui/material";
+import { useEffect, useRef, useState } from "react";
+import TrendingUpRounded from "@mui/icons-material/TrendingUpRounded";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
+import Paper from "@mui/material/Paper";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import { Link as RouterLink } from "react-router-dom";
 import { dashboardGlassCardSx } from "../../../styles/dashboard";
 import { formatHoursDecimal } from "../../../utils/formatters";
@@ -28,8 +33,30 @@ export default function DashboardHero({
 }: DashboardHeroProps) {
   const heroRef = useRef<HTMLDivElement | null>(null);
   const heroVantaRef = useRef<VantaInstance | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
+    if (!heroRef.current) return;
+    if (typeof IntersectionObserver === "undefined") {
+      setIsVisible(true);
+      return;
+    }
+    const el = heroRef.current;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setIsVisible(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!isVisible) return;
     let cancelled = false;
 
     async function initializeHeroBackground() {
@@ -63,7 +90,7 @@ export default function DashboardHero({
       heroVantaRef.current?.destroy();
       heroVantaRef.current = null;
     };
-  }, []);
+  }, [isVisible]);
 
   return (
     <Box

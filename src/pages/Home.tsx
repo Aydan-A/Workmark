@@ -1,6 +1,10 @@
-import { useEffect, useState } from "react";
-import { Box, Grid, Tab, Tabs } from "@mui/material";
-import DashboardHero from "../features/dashboard/components/DashboardHero";
+import { lazy, Suspense, useEffect, useState } from "react";
+import Box from "@mui/material/Box";
+import Grid from "@mui/material/Grid";
+import Tab from "@mui/material/Tab";
+import Tabs from "@mui/material/Tabs";
+
+const DashboardHero = lazy(() => import("../features/dashboard/components/DashboardHero"));
 import TopProjectsCard from "../features/dashboard/components/TopProjectsCard";
 import WeeklyStatsCard from "../features/dashboard/components/WeeklyStatsCard";
 import SummaryCard from "../features/dashboard/components/SummaryCard";
@@ -55,14 +59,16 @@ export default function Home() {
   return (
     <>
       {/* Row 0 — Hero */}
-      <DashboardHero
-        averagePerDay={averagePerDay}
-        firstName={firstName}
-        peakDayLabel={highestPoint.day}
-        recentEntriesLabel={recentEntriesLabel}
-        recentLogCount={recentLogs.length}
-        todayLabel={todayLabel}
-      />
+      <Suspense fallback={<Box sx={{ minHeight: 200, mb: 3 }} />}>
+        <DashboardHero
+          averagePerDay={averagePerDay}
+          firstName={firstName}
+          peakDayLabel={highestPoint.day}
+          recentEntriesLabel={recentEntriesLabel}
+          recentLogCount={recentLogs.length}
+          todayLabel={todayLabel}
+        />
+      </Suspense>
 
       {isManager && (
         <Box sx={{ mb: 3, borderBottom: 1, borderColor: "divider" }}>

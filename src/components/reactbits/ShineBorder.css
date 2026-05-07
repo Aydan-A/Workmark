@@ -1,0 +1,42 @@
+/* Animatable angle CSS prop — required for transitioning the conic-gradient. */
+@property --shine-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.shine-border {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: var(--shine-border-width, 1px);
+  pointer-events: none;
+  z-index: 1;
+
+  background: conic-gradient(
+    from var(--shine-angle),
+    transparent 0deg,
+    var(--shine-colors) 60deg 300deg,
+    transparent 360deg
+  );
+
+  /* Mask-composite trick: keeps only the border ring visible. */
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+          mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+
+  animation: shine-rotate var(--shine-duration, 14s) linear infinite;
+}
+
+@keyframes shine-rotate {
+  to { --shine-angle: 360deg; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shine-border { animation: none; }
+}

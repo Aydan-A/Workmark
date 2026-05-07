@@ -1,5 +1,8 @@
 import { useMemo, useState } from "react";
-import { Avatar, Box, Button, Typography } from "@mui/material";
+import Avatar from "@mui/material/Avatar";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
 import { alpha } from "@mui/material/styles";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import EditCalendarRoundedIcon from "@mui/icons-material/EditCalendarRounded";
