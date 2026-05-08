@@ -39,8 +39,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         sx={{
           position: "relative",
           zIndex: 1,
-          pt: { xs: 12, md: 13 },
-          pb: { xs: 3, md: 4 },
+          pt: { xs: 3, sm: 12, md: 13 },
+          pb: { xs: "calc(96px + env(safe-area-inset-bottom))", sm: 3, md: 4 },
           display: "flex",
           justifyContent: "center",
         }}

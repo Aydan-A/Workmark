@@ -18,12 +18,15 @@ const navButtonSx = {
   textTransform: "none",
   fontWeight: 600,
   borderRadius: 999,
-  px: 2,
+  px: { xs: 1, sm: 2 },
   py: 0.75,
   fontFamily: "'Plus Jakarta Sans', sans-serif",
   letterSpacing: "-0.01em",
   minWidth: 0,
   transition: "background-color 140ms ease, color 140ms ease",
+  "& .MuiButton-startIcon": {
+    margin: { xs: 0, sm: "0 8px 0 -4px" },
+  },
 };
 
 const navItems = [
@@ -57,9 +60,10 @@ export default function TopNav() {
     <Box
       sx={{
         position: "fixed",
-        top: 16,
-        left: 16,
-        right: 16,
+        top: { xs: "auto", sm: 16 },
+        bottom: { xs: "max(12px, env(safe-area-inset-bottom))", sm: "auto" },
+        left: { xs: 12, sm: 16 },
+        right: { xs: 12, sm: 16 },
         zIndex: 1200,
         display: "flex",
         justifyContent: "center",
@@ -131,6 +135,8 @@ export default function TopNav() {
             <NavLink key={item.to} to={item.to} style={{ textDecoration: "none" }}>
               {({ isActive }) => (
                 <Button
+                  startIcon={item.icon}
+                  aria-label={item.label}
                   sx={{
                     ...navButtonSx,
                     color: isActive ? "#FFFFFF" : "#8B8B9E",
@@ -140,7 +146,12 @@ export default function TopNav() {
                     },
                   }}
                 >
-                  {item.label}
+                  <Box
+                    component="span"
+                    sx={{ display: { xs: "none", sm: "inline" } }}
+                  >
+                    {item.label}
+                  </Box>
                 </Button>
               )}
             </NavLink>
@@ -168,9 +179,10 @@ export default function TopNav() {
             onClick={handleSignOut}
             disabled={isSigningOut}
             startIcon={<LogoutIcon fontSize="small" />}
+            aria-label="Sign out"
             sx={{
               minWidth: 0,
-              px: { xs: 1.1, sm: 1.35 },
+              px: { xs: 1, sm: 1.35 },
               py: 0.75,
               borderRadius: 999,
               color: "#8B8B9E",
@@ -179,9 +191,14 @@ export default function TopNav() {
               "&:hover": {
                 bgcolor: "rgba(108,99,255,0.08)",
               },
+              "& .MuiButton-startIcon": {
+                margin: { xs: 0, sm: "0 8px 0 -4px" },
+              },
             }}
           >
-            Exit
+            <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+              Exit
+            </Box>
           </Button>
         </Box>
       </Box>
