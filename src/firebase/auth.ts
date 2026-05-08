@@ -8,13 +8,15 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  updateEmail,
+  sendEmailVerification,
+  sendPasswordResetEmail,
   updateProfile,
+  verifyBeforeUpdateEmail,
   type User,
 } from "firebase/auth";
 import { auth } from "./client";
 
-type AuthAction = "signIn" | "signUp" | "google";
+type AuthAction = "signIn" | "signUp" | "google" | "reset";
 
 // Sign in with email/password
 export async function signIn(email: string, password: string) {
@@ -29,7 +31,19 @@ export async function signUp(email: string, password: string, fullName?: string)
     await updateProfile(userCredential.user, { displayName: fullName.trim() });
   }
 
+  // Best-effort verification email; don't block sign-up if delivery fails.
+  try {
+    await sendEmailVerification(userCredential.user);
+  } catch (error) {
+    console.warn("Failed to send verification email:", error);
+  }
+
   return userCredential;
+}
+
+// Send a password-reset email. Safe to call without a signed-in user.
+export async function sendPasswordReset(email: string) {
+  return sendPasswordResetEmail(auth, email.trim());
 }
 
 // Sign in or create account with Google
@@ -54,6 +68,9 @@ export async function updateAccountDisplayName(nextDisplayName: string) {
   await updateProfile(user, { displayName: nextDisplayName.trim() });
 }
 
+// Sends a verification link to the new address. Firebase only swaps the email
+// after the user clicks the link, and notifies the original address so they
+// can revoke the change if it wasn't them.
 export async function updateAccountEmail(nextEmail: string) {
   const user = auth.currentUser;
 
@@ -61,7 +78,7 @@ export async function updateAccountEmail(nextEmail: string) {
     throw new Error("You must be signed in to update your email.");
   }
 
-  await updateEmail(user, nextEmail.trim());
+  await verifyBeforeUpdateEmail(user, nextEmail.trim());
 }
 
 export function assertAuthenticatedUserId(): string {
@@ -84,7 +101,9 @@ export function getAuthErrorMessage(error: unknown, action: AuthAction = "signIn
       ? "Sign up failed. Please try again."
       : action === "google"
         ? "Google sign-in failed. Please try again."
-        : "Sign in failed. Please try again.";
+        : action === "reset"
+          ? "Could not send the reset email. Please try again."
+          : "Sign in failed. Please try again.";
 
   if (!(error instanceof FirebaseError)) {
     return fallbackMessage;
