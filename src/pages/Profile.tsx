@@ -156,6 +156,8 @@ export default function Profile() {
   const [fieldDraft, setFieldDraft] = useState("");
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [isSavingField, setIsSavingField] = useState(false);
+  const [fieldNotice, setFieldNotice] = useState<string | null>(null);
+  const [profileFormNotice, setProfileFormNotice] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [accountOverrides, setAccountOverrides] = useState<{ fullName?: string; email?: string }>({});
   const avatarObjectUrlRef = useRef<string | null>(null);
@@ -262,7 +264,8 @@ export default function Profile() {
     },
     email: {
       dialogTitle: "Edit email",
-      helperText: "Changing your email may require a recent sign-in.",
+      helperText:
+        "We'll send a verification link to the new address. Your email will only change after you click it. Your current address will also receive a notification so you can revoke the change if needed.",
       placeholder: "name@example.com",
       inputType: "email",
       value: accountOverrides.email?.trim() || user?.email?.trim() || "",
@@ -300,6 +303,7 @@ export default function Profile() {
     setActiveField(field);
     setFieldDraft(fieldDefinitions[field].value);
     setFieldError(null);
+    setFieldNotice(null);
   };
 
   const closeFieldEditor = () => {
@@ -307,6 +311,7 @@ export default function Profile() {
     setActiveField(null);
     setFieldDraft("");
     setFieldError(null);
+    setFieldNotice(null);
   };
 
   const handleSaveField = async () => {
@@ -321,20 +326,24 @@ export default function Profile() {
 
     setIsSavingField(true);
     setFieldError(null);
+    setFieldNotice(null);
 
     try {
       if (activeField === "fullName") {
         await updateAccountDisplayName(nextValue);
         await syncCurrentUserIdentity(user);
         setAccountOverrides((current) => ({ ...current, fullName: nextValue }));
+        setActiveField(null);
+        setFieldDraft("");
       } else {
         await updateAccountEmail(nextValue);
-        await syncCurrentUserIdentity(user);
-        setAccountOverrides((current) => ({ ...current, email: nextValue }));
+        // Email change is pending until the user clicks the verification link
+        // sent to the new address — don't update local state yet.
+        setFieldNotice(
+          `We sent a verification link to ${nextValue}. Click it to finish updating your email. We've also notified ${user.email ?? "your current address"} so you can revoke the change.`,
+        );
+        setFieldDraft("");
       }
-
-      setActiveField(null);
-      setFieldDraft("");
       setFieldError(null);
     } catch (error) {
       setFieldError(getAccountUpdateErrorMessage(error));
@@ -360,6 +369,7 @@ export default function Profile() {
 
     setIsSavingProfileForm(true);
     setProfileFormError(null);
+    setProfileFormNotice(null);
 
     try {
       const nameChanged = newName !== (user.displayName?.trim() ?? "");
@@ -368,13 +378,15 @@ export default function Profile() {
       if (nameChanged) {
         await updateAccountDisplayName(newName);
         setAccountOverrides((current) => ({ ...current, fullName: newName }));
+        await syncCurrentUserIdentity(user);
       }
       if (emailChanged) {
         await updateAccountEmail(newEmail);
-        setAccountOverrides((current) => ({ ...current, email: newEmail }));
-      }
-      if (nameChanged || emailChanged) {
-        await syncCurrentUserIdentity(user);
+        // Pending verification — don't override local email until it actually changes.
+        setProfileEmailDraft(user.email?.trim() ?? "");
+        setProfileFormNotice(
+          `We sent a verification link to ${newEmail}. Click it to finish updating your email. We've also notified ${user.email ?? "your current address"} so you can revoke the change.`,
+        );
       }
     } catch (error) {
       setProfileFormError(getAccountUpdateErrorMessage(error));
@@ -762,6 +774,10 @@ export default function Profile() {
                     <Typography variant="caption" sx={{ color: "error.main" }}>
                       {profileFormError}
                     </Typography>
+                  ) : profileFormNotice ? (
+                    <Typography variant="caption" sx={{ color: "success.main" }}>
+                      {profileFormNotice}
+                    </Typography>
                   ) : null}
                   <Button
                     variant="contained"
@@ -1035,24 +1051,38 @@ export default function Profile() {
           <DialogContentText sx={{ color: "text.secondary", mb: 2 }}>
             {activeField ? fieldDefinitions[activeField].helperText : ""}
           </DialogContentText>
-          <TextField
-            autoFocus
-            fullWidth
-            type={activeField ? fieldDefinitions[activeField].inputType ?? "text" : "text"}
-            value={fieldDraft}
-            onChange={(event) => setFieldDraft(event.target.value)}
-            placeholder={activeField ? fieldDefinitions[activeField].placeholder : ""}
-            error={Boolean(fieldError)}
-            helperText={fieldError || " "}
-          />
+          {fieldNotice ? (
+            <Typography variant="body2" sx={{ color: "success.main", mt: 0.5 }}>
+              {fieldNotice}
+            </Typography>
+          ) : (
+            <TextField
+              autoFocus
+              fullWidth
+              type={activeField ? fieldDefinitions[activeField].inputType ?? "text" : "text"}
+              value={fieldDraft}
+              onChange={(event) => setFieldDraft(event.target.value)}
+              placeholder={activeField ? fieldDefinitions[activeField].placeholder : ""}
+              error={Boolean(fieldError)}
+              helperText={fieldError || " "}
+            />
+          )}
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2.4 }}>
-          <Button color="inherit" onClick={closeFieldEditor} disabled={isSavingField} sx={{ color: "text.secondary" }}>
-            Cancel
-          </Button>
-          <Button variant="contained" onClick={handleSaveField} disabled={isSavingField}>
-            {isSavingField ? "Saving..." : "Save changes"}
-          </Button>
+          {fieldNotice ? (
+            <Button variant="contained" onClick={closeFieldEditor}>
+              Done
+            </Button>
+          ) : (
+            <>
+              <Button color="inherit" onClick={closeFieldEditor} disabled={isSavingField} sx={{ color: "text.secondary" }}>
+                Cancel
+              </Button>
+              <Button variant="contained" onClick={handleSaveField} disabled={isSavingField}>
+                {isSavingField ? "Saving..." : "Save changes"}
+              </Button>
+            </>
+          )}
         </DialogActions>
       </Dialog>
 

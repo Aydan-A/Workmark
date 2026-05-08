@@ -9,6 +9,11 @@ import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
 import Alert from "@mui/material/Alert";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogActions from "@mui/material/DialogActions";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import GoogleIcon from "@mui/icons-material/Google";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -16,7 +21,7 @@ import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
 import BoltIcon from "@mui/icons-material/Bolt";
 import { useNavigate } from "react-router-dom";
-import { signIn, signUp, signInWithGoogle, getAuthErrorMessage } from "../firebase/auth";
+import { signIn, signUp, signInWithGoogle, sendPasswordReset, getAuthErrorMessage } from "../firebase/auth";
 import ShineBorder from "../components/reactbits/ShineBorder";
 import "./Login.css";
 
@@ -66,6 +71,40 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [submitMethod, setSubmitMethod] = useState<"password" | "google" | null>(null);
   const isSubmitting = submitMethod !== null;
+
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetError, setResetError] = useState<string | null>(null);
+  const [resetStatus, setResetStatus] = useState<"idle" | "sending" | "sent">("idle");
+
+  const openResetDialog = () => {
+    setResetEmail(email.trim());
+    setResetError(null);
+    setResetStatus("idle");
+    setResetOpen(true);
+  };
+
+  const closeResetDialog = () => {
+    if (resetStatus === "sending") return;
+    setResetOpen(false);
+  };
+
+  const handleSendReset = async () => {
+    const target = resetEmail.trim();
+    if (!target) {
+      setResetError("Please enter your email address.");
+      return;
+    }
+    try {
+      setResetStatus("sending");
+      setResetError(null);
+      await sendPasswordReset(target);
+      setResetStatus("sent");
+    } catch (err) {
+      setResetStatus("idle");
+      setResetError(getAuthErrorMessage(err, "reset"));
+    }
+  };
 
   // Disable submit until basic fields exist.
   const canSubmit = useMemo(() => {
@@ -345,6 +384,20 @@ export default function Login() {
               />
             </Box>
 
+            {mode === "signIn" && (
+              <Box sx={{ display: "flex", justifyContent: "flex-end", mt: -1 }}>
+                <Link
+                  component="button"
+                  type="button"
+                  onClick={openResetDialog}
+                  underline="hover"
+                  sx={{ fontSize: 13, fontWeight: 500, color: BLUE }}
+                >
+                  Forgot password?
+                </Link>
+              </Box>
+            )}
+
             {mode === "signUp" && (
               <Box>
                 <Typography variant="subtitle2" sx={{ mb: 0.75, color: INK, fontWeight: 500 }}>
@@ -465,6 +518,87 @@ export default function Login() {
         </Paper>
         </Box>
       </Box>
+
+      <Dialog
+        open={resetOpen}
+        onClose={closeResetDialog}
+        slotProps={{
+          paper: {
+            elevation: 0,
+            sx: {
+              borderRadius: "24px",
+              minWidth: { xs: 0, sm: 440 },
+              bgcolor: "rgba(255, 255, 255, 0.35)",
+              backgroundImage:
+                "linear-gradient(135deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.2) 100%)",
+              backdropFilter: "blur(28px) saturate(200%)",
+              WebkitBackdropFilter: "blur(28px) saturate(200%)",
+              border: "1px solid rgba(255, 255, 255, 0.55)",
+              boxShadow:
+                "0 16px 48px rgba(80, 70, 180, 0.22), inset 0 1px 0 rgba(255,255,255,0.6)",
+            },
+          },
+          backdrop: {
+            sx: {
+              backgroundColor: "rgba(20, 22, 50, 0.18)",
+              backdropFilter: "blur(10px)",
+              WebkitBackdropFilter: "blur(10px)",
+            },
+          },
+        }}
+      >
+        <DialogTitle sx={{ pb: 1 }}>Reset your password</DialogTitle>
+        <DialogContent sx={{ pt: "8px !important" }}>
+          {resetStatus === "sent" ? (
+            <DialogContentText sx={{ color: INK }}>
+              If an account exists for <b>{resetEmail.trim()}</b>, a reset link is on its way.
+              Check your inbox (and spam folder) to finish setting a new password.
+            </DialogContentText>
+          ) : (
+            <>
+              <DialogContentText sx={{ color: MUTED, mb: 2 }}>
+                Enter the email address linked to your account and we'll send you a link to reset your password.
+              </DialogContentText>
+              <TextField
+                autoFocus
+                fullWidth
+                type="email"
+                placeholder="you@example.com"
+                value={resetEmail}
+                onChange={(e) => {
+                  setResetEmail(e.target.value);
+                  setResetError(null);
+                }}
+                error={Boolean(resetError)}
+                helperText={resetError || " "}
+                autoComplete="email"
+                sx={fieldSx}
+              />
+            </>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2.4 }}>
+          {resetStatus === "sent" ? (
+            <Button variant="contained" onClick={() => setResetOpen(false)}>
+              Done
+            </Button>
+          ) : (
+            <>
+              <Button
+                color="inherit"
+                onClick={closeResetDialog}
+                disabled={resetStatus === "sending"}
+                sx={{ color: "text.secondary" }}
+              >
+                Cancel
+              </Button>
+              <Button variant="contained" onClick={handleSendReset} disabled={resetStatus === "sending"}>
+                {resetStatus === "sending" ? "Sending..." : "Send reset link"}
+              </Button>
+            </>
+          )}
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
