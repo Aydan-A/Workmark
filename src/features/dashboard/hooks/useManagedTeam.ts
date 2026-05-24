@@ -23,15 +23,22 @@ export function useManagedTeam(user: User | null) {
   const [managed, setManaged] = useState<ManagedUser[]>([]);
   const [entriesByUid, setEntriesByUid] = useState<Record<string, WorkEntry[]>>({});
 
-  const today = new Date();
-  const weekStartKey = format(startOfWeek(today, { weekStartsOn: 1 }), "yyyy-MM-dd");
-  const weekEndKey = format(endOfWeek(today, { weekStartsOn: 1 }), "yyyy-MM-dd");
+  // Derive stable date keys once per render from a single now; downstream memos
+  // and effects key off these strings rather than a live Date identity.
+  const todayKey = format(new Date(), "yyyy-MM-dd");
+  const weekStartKey = format(startOfWeek(new Date(todayKey), { weekStartsOn: 1 }), "yyyy-MM-dd");
+  const weekEndKey = format(endOfWeek(new Date(todayKey), { weekStartsOn: 1 }), "yyyy-MM-dd");
 
   useEffect(() => {
     const email = user?.email?.trim();
     if (!email) {
-      setManaged([]);
-      setEntriesByUid({});
+      /* eslint-disable react-hooks/set-state-in-effect --
+         Intentional reset of stale managed-team data when there's no signed-in
+         user. Guarded with functional updaters so an already-empty state is a
+         no-op (no extra render); the disable is just for the syntactic rule. */
+      setManaged((prev) => (prev.length === 0 ? prev : []));
+      setEntriesByUid((prev) => (Object.keys(prev).length === 0 ? prev : {}));
+      /* eslint-enable react-hooks/set-state-in-effect */
       return;
     }
 
@@ -44,7 +51,8 @@ export function useManagedTeam(user: User | null) {
 
   useEffect(() => {
     if (managed.length === 0) {
-      setEntriesByUid({});
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- guarded reset of stale entries when there are no managed users (no-op if already empty)
+      setEntriesByUid((prev) => (Object.keys(prev).length === 0 ? prev : {}));
       return;
     }
 
@@ -65,7 +73,7 @@ export function useManagedTeam(user: User | null) {
     };
   }, [managed, weekStartKey, weekEndKey]);
 
-  const referenceDate = useMemo(() => new Date(`${format(today, "yyyy-MM-dd")}T00:00:00`), [today]);
+  const referenceDate = useMemo(() => new Date(`${todayKey}T00:00:00`), [todayKey]);
 
   const team: ManagedTeamMember[] = useMemo(() => {
     return managed.map((u) => {
