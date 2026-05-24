@@ -120,7 +120,6 @@ export default function SummaryCard({ historyEntries, isLoading, readOnly = fals
     }, 350);
     return () => clearTimeout(timeout);
     // summaryRevision triggers manual regeneration without changing other deps
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stats.projectBreakdowns, hasCustomDates, summaryRevision]);
 
   const handleRegenerate = () => setSummaryRevision((r) => r + 1);
