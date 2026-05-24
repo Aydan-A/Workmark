@@ -52,9 +52,13 @@ export function ReceiptUploadField({ value, entryId, uid, onChange, onUploading,
   }, [uploadItems, onUploading]);
 
   useEffect(() => {
+    // Capture the ref Maps now; their identity is stable for the component's
+    // lifetime, so the cleanup closes over the same live Maps it would at unmount.
+    const tasks = tasksRef.current;
+    const previewUrlMap = previewUrlsRef.current;
     return () => {
-      tasksRef.current.forEach((task) => task.cancel());
-      previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+      tasks.forEach((task) => task.cancel());
+      previewUrlMap.forEach((url) => URL.revokeObjectURL(url));
     };
   }, []);
 
