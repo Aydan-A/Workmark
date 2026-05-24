@@ -193,10 +193,6 @@ export function findTopProject(entries: WorkEntry[]): WeeklyTopProject | null {
   return topProject;
 }
 
-export function getSafeReceiptCountTotal(_entries: WorkEntry[]): number {
-  return 0;
-}
-
 export function buildCompactDailyBreakdownRows(entries: WorkEntry[]): CompactDailyBreakdownRow[] {
   const entriesByDate = new Map<string, WorkEntry[]>();
 
