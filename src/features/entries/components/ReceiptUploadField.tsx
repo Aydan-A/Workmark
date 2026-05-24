@@ -33,6 +33,10 @@ export function ReceiptUploadField({ value, entryId, uid, onChange, onUploading,
   const [uploadItems, setUploadItems] = useState<UploadItem[]>([]);
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  // Reactive copy of previewUrlsRef, read during render. The ref remains the
+  // source of truth for object-URL cleanup (it survives across renders and is
+  // accessible from unmount). State mirrors it so thumbnails update reactively.
+  const [previewUrls, setPreviewUrls] = useState<Map<string, string>>(new Map());
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const tasksRef = useRef<Map<string, UploadTask>>(new Map());
@@ -120,7 +124,10 @@ export function ReceiptUploadField({ value, entryId, uid, onChange, onUploading,
           ...partialReceipt,
           uploadedAt: new Date().toISOString(),
         };
-        if (previewUrl) previewUrlsRef.current.set(receipt.id, previewUrl);
+        if (previewUrl) {
+          previewUrlsRef.current.set(receipt.id, previewUrl);
+          setPreviewUrls((prev) => new Map(prev).set(receipt.id, previewUrl));
+        }
         setUploadItems((prev) => prev.filter((u) => u.localId !== localId));
         // Update valueRef immediately to prevent stale-closure race when multiple
         // uploads complete in the same tick.
@@ -159,6 +166,11 @@ export function ReceiptUploadField({ value, entryId, uid, onChange, onUploading,
     if (previewUrlsRef.current.has(receipt.id)) {
       URL.revokeObjectURL(previewUrlsRef.current.get(receipt.id)!);
       previewUrlsRef.current.delete(receipt.id);
+      setPreviewUrls((prev) => {
+        const next = new Map(prev);
+        next.delete(receipt.id);
+        return next;
+      });
     }
     const next = valueRef.current.filter((r) => r.id !== receipt.id);
     valueRef.current = next;
@@ -220,7 +232,7 @@ export function ReceiptUploadField({ value, entryId, uid, onChange, onUploading,
             <ReceiptThumb
               key={receipt.id}
               receipt={receipt}
-              previewUrl={previewUrlsRef.current.get(receipt.id) ?? null}
+              previewUrl={previewUrls.get(receipt.id) ?? null}
               onRemove={() => handleRemoveReceipt(receipt)}
               disabled={disabled}
             />
