@@ -7,6 +7,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import type { DatesSetArg, EventClickArg, EventInput } from "@fullcalendar/core";
 import type { DateClickArg } from "@fullcalendar/interaction";
+import { GREY, INK, WHITE, brandPurpleAlpha, whiteAlpha } from "../../../styles/colors";
 
 type Props = {
   loadError: string | null;
@@ -19,23 +20,23 @@ type Props = {
 const calendarPaperSx = {
   mt: 2,
   borderRadius: "24px",
-  borderColor: "rgba(255,255,255,0.8)",
+  borderColor: "glass.border",
   p: 2,
   "& .fc": { fontFamily: "inherit" },
   "& .fc .fc-toolbar.fc-header-toolbar": { mb: 1.5 },
-  "& .fc .fc-toolbar-title": { fontSize: "1.4rem", fontWeight: 700, color: "#111827" },
+  "& .fc .fc-toolbar-title": { fontSize: "1.4rem", fontWeight: 700, color: INK.strong },
   "& .fc .fc-button": {
     borderRadius: 2,
     textTransform: "none",
-    borderColor: "#d1d5db",
-    backgroundColor: "white",
-    color: "#111827",
+    borderColor: GREY[200],
+    backgroundColor: WHITE,
+    color: INK.strong,
     boxShadow: "none",
   },
-  "& .fc .fc-button:hover": { backgroundColor: "#f3f4f6" },
-  "& .fc .fc-daygrid-day-number": { color: "#475569", fontWeight: 600 },
-  "& .fc .fc-col-header-cell-cushion": { color: "#94a3b8", fontWeight: 700, textDecoration: "none" },
-  "& .fc .fc-day-today": { backgroundColor: "rgba(79, 70, 229, 0.06)" },
+  "& .fc .fc-button:hover": { backgroundColor: GREY[150] },
+  "& .fc .fc-daygrid-day-number": { color: GREY[650], fontWeight: 600 },
+  "& .fc .fc-col-header-cell-cushion": { color: GREY[400], fontWeight: 700, textDecoration: "none" },
+  "& .fc .fc-day-today": { backgroundColor: brandPurpleAlpha(0.06) },
   "& .fc .fc-event": { borderRadius: 8, padding: "2px 6px" },
 };
 
@@ -59,7 +60,7 @@ export function CalendarGrid({ loadError, calendarEvents, onDatesSet, onDateClic
             <Typography variant="caption" sx={{ fontWeight: 700, lineHeight: 1.1, color: "inherit" }}>
               {eventInfo.event.title}
             </Typography>
-            <Typography variant="caption" sx={{ display: "block", lineHeight: 1.1, color: "rgba(255,255,255,0.9)" }}>
+            <Typography variant="caption" sx={{ display: "block", lineHeight: 1.1, color: whiteAlpha(0.9) }}>
               {String(eventInfo.event.extendedProps.label ?? "")}
             </Typography>
           </Box>

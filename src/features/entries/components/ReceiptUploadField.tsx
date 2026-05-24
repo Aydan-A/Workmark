@@ -263,7 +263,7 @@ export function ReceiptUploadField({ value, entryId, uid, onChange, onUploading,
                     bottom: 0,
                     left: 0,
                     right: 0,
-                    bgcolor: "rgba(0,0,0,0.35)",
+                    bgcolor: "scrim.light",
                     px: 0.5,
                     pb: 0.5,
                     pt: 0.25,
@@ -286,9 +286,9 @@ export function ReceiptUploadField({ value, entryId, uid, onChange, onUploading,
                   top: 0,
                   right: 0,
                   p: 0.25,
-                  bgcolor: "rgba(0,0,0,0.45)",
-                  color: "#fff",
-                  "&:hover": { bgcolor: "rgba(0,0,0,0.65)" },
+                  bgcolor: "scrim.medium",
+                  color: "common.white",
+                  "&:hover": { bgcolor: "scrim.heavy" },
                 }}
               >
                 <CloseIcon sx={{ fontSize: 14 }} />
@@ -380,9 +380,9 @@ function ReceiptThumb({
             top: 0,
             right: 0,
             p: 0.25,
-            bgcolor: "rgba(0,0,0,0.45)",
-            color: "#fff",
-            "&:hover": { bgcolor: "rgba(0,0,0,0.65)" },
+            bgcolor: "scrim.medium",
+            color: "common.white",
+            "&:hover": { bgcolor: "scrim.heavy" },
           }}
         >
           <CloseIcon sx={{ fontSize: 14 }} />

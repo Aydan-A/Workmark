@@ -3,6 +3,7 @@ import ButtonBase from "@mui/material/ButtonBase";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { SummaryTab } from "../rangeSelector.utils";
+import { INK, brandPurpleAlpha, dividerPurpleAlpha, whiteAlpha } from "../../../styles/colors";
 
 const TAB_LABELS: { tab: SummaryTab; label: string }[] = [
   { tab: "today", label: "Today" },
@@ -16,11 +17,11 @@ const dateInputSx: React.CSSProperties = {
   width: "100%",
   padding: "10px 14px",
   borderRadius: "12px",
-  border: "1px solid rgba(124, 106, 214, 0.3)",
-  backgroundColor: "rgba(255,255,255,0.8)",
+  border: `1px solid ${dividerPurpleAlpha(0.3)}`,
+  backgroundColor: whiteAlpha(0.8),
   fontFamily: "inherit",
   fontSize: "0.95rem",
-  color: "#1f2340",
+  color: INK.base,
   outline: "none",
   boxSizing: "border-box",
 };
@@ -63,16 +64,16 @@ export default function RangeSelectorTabs({
                 fontSize: "0.875rem",
                 fontWeight: isActive ? 600 : 500,
                 fontFamily: "inherit",
-                bgcolor: isActive ? "primary.main" : "rgba(112, 87, 246, 0.08)",
-                color: isActive ? "#fff" : "text.secondary",
+                bgcolor: isActive ? "primary.main" : brandPurpleAlpha(0.08),
+                color: isActive ? "common.white" : "text.secondary",
                 border: "1px solid",
-                borderColor: isActive ? "primary.main" : "rgba(112, 87, 246, 0.15)",
+                borderColor: isActive ? "primary.main" : brandPurpleAlpha(0.15),
                 transition: "background-color 160ms ease, color 160ms ease, border-color 160ms ease",
                 "&:hover": {
-                  bgcolor: isActive ? "primary.dark" : "rgba(112, 87, 246, 0.14)",
+                  bgcolor: isActive ? "primary.dark" : brandPurpleAlpha(0.14),
                 },
                 "&:focus-visible": {
-                  outline: "2px solid rgba(108,99,255,0.42)",
+                  outline: `2px solid ${brandPurpleAlpha(0.42)}`,
                   outlineOffset: 2,
                 },
               }}

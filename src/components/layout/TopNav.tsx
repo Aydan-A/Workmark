@@ -13,6 +13,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { logout } from "../../firebase/auth";
 import { useAuth } from "../../hooks/useAuth";
 import { getInitials } from "../../utils/formatters";
+import { BRAND_PURPLE, brandPurpleAlpha, whiteAlpha } from "../../styles/colors";
 
 const navButtonSx = {
   textTransform: "none",
@@ -81,11 +82,11 @@ export default function TopNav() {
           gridTemplateColumns: { xs: "auto 1fr auto", md: "auto 1fr auto" },
           alignItems: "center",
           gap: { xs: 1, sm: 1.5 },
-          bgcolor: "rgba(255,255,255,0.7)",
+          bgcolor: whiteAlpha(0.7),
           backdropFilter: "blur(16px)",
-          border: "1px solid rgba(255,255,255,0.9)",
+          border: `1px solid ${whiteAlpha(0.9)}`,
           borderRadius: "999px",
-          boxShadow: "0 4px 24px rgba(108,99,255,0.10)",
+          boxShadow: `0 4px 24px ${brandPurpleAlpha(0.1)}`,
         }}
       >
         <NavLink to="/" style={{ textDecoration: "none", minWidth: 0 }}>
@@ -97,8 +98,8 @@ export default function TopNav() {
                 borderRadius: "999px",
                 display: "grid",
                 placeItems: "center",
-                bgcolor: alpha("#6C63FF", 0.14),
-                color: "#6C63FF",
+                bgcolor: alpha(BRAND_PURPLE, 0.14),
+                color: "primary.main",
               }}
             >
               <WorkOutlineIcon fontSize="small" />
@@ -106,7 +107,7 @@ export default function TopNav() {
             <Typography
               sx={{
                 display: { xs: "none", sm: "block" },
-                color: "#1F2340",
+                color: "ink.base",
                 fontWeight: 700,
                 letterSpacing: "-0.02em",
                 whiteSpace: "nowrap",
@@ -139,10 +140,10 @@ export default function TopNav() {
                   aria-label={item.label}
                   sx={{
                     ...navButtonSx,
-                    color: isActive ? "#FFFFFF" : "#8B8B9E",
-                    bgcolor: isActive ? "#6C63FF" : "transparent",
+                    color: isActive ? "common.white" : "ink.soft",
+                    bgcolor: isActive ? "primary.main" : "transparent",
                     "&:hover": {
-                      bgcolor: isActive ? "#6C63FF" : "transparent",
+                      bgcolor: isActive ? "primary.main" : "transparent",
                     },
                   }}
                 >
@@ -164,11 +165,11 @@ export default function TopNav() {
               sx={{
                 width: 38,
                 height: 38,
-                bgcolor: "#6C63FF",
-                color: "#FFFFFF",
+                bgcolor: "primary.main",
+                color: "common.white",
                 fontWeight: 700,
                 fontSize: "0.9rem",
-                boxShadow: "0 4px 14px rgba(108,99,255,0.18)",
+                boxShadow: `0 4px 14px ${brandPurpleAlpha(0.18)}`,
               }}
             >
               {profileInitials}
@@ -185,11 +186,11 @@ export default function TopNav() {
               px: { xs: 1, sm: 1.35 },
               py: 0.75,
               borderRadius: 999,
-              color: "#8B8B9E",
+              color: "ink.soft",
               bgcolor: "transparent",
               whiteSpace: "nowrap",
               "&:hover": {
-                bgcolor: "rgba(108,99,255,0.08)",
+                bgcolor: brandPurpleAlpha(0.08),
               },
               "& .MuiButton-startIcon": {
                 margin: { xs: 0, sm: "0 8px 0 -4px" },

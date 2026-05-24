@@ -1,27 +1,29 @@
+import { brandPurpleAlpha } from "./colors";
+
 export const dashboardFocusVisibleSx = {
   "&:focus-visible": {
-    outline: "2px solid rgba(108,99,255,0.42)",
+    outline: `2px solid ${brandPurpleAlpha(0.42)}`,
     outlineOffset: 2,
   },
 };
 
 export const dashboardGlassCardSx = {
   borderRadius: "24px",
-  bgcolor: "rgba(255,255,255,0.55)",
+  bgcolor: "glass.panel",
   backdropFilter: "blur(20px)",
-  borderColor: "rgba(255,255,255,0.8)",
-  boxShadow: "0 8px 32px rgba(108,99,255,0.08)",
+  borderColor: "glass.border",
+  boxShadow: `0 8px 32px ${brandPurpleAlpha(0.08)}`,
 };
 
 export const dashboardInteractiveHoverSx = {
-  boxShadow: "0 12px 36px rgba(108,99,255,0.12)",
-  borderColor: "rgba(108,99,255,0.18)",
-  backgroundColor: "rgba(255,255,255,0.62)",
+  boxShadow: `0 12px 36px ${brandPurpleAlpha(0.12)}`,
+  borderColor: brandPurpleAlpha(0.18),
+  backgroundColor: "glass.panelHover",
 };
 
 export const dashboardInteractiveActiveSx = {
   transform: "translateY(1px)",
-  boxShadow: "0 8px 24px rgba(108,99,255,0.1)",
+  boxShadow: `0 8px 24px ${brandPurpleAlpha(0.1)}`,
 };
 
 export const dashboardInteractiveCardSx = {

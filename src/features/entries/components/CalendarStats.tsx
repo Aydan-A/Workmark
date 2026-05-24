@@ -13,7 +13,7 @@ type Props = {
 const statPaperSx = {
   p: 2.25,
   borderRadius: "24px",
-  borderColor: "rgba(255,255,255,0.8)",
+  borderColor: "glass.border",
   flex: 1,
 };
 
@@ -21,18 +21,18 @@ export function CalendarStats({ daysLogged, daysInMonth, totalHours, remoteHours
   return (
     <Stack direction={{ xs: "column", md: "row" }} spacing={2} sx={{ mt: 2 }}>
       <Paper variant="outlined" sx={statPaperSx}>
-        <Typography variant="subtitle2" sx={{ color: "#6b7280" }}>Logged days</Typography>
+        <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>Logged days</Typography>
         <Typography variant="h4" sx={{ mt: 0.25 }}>
           {daysLogged}{" "}
-          <Typography component="span" variant="body2" sx={{ color: "#6b7280" }}>/ {daysInMonth}</Typography>
+          <Typography component="span" variant="body2" sx={{ color: "text.secondary" }}>/ {daysInMonth}</Typography>
         </Typography>
       </Paper>
       <Paper variant="outlined" sx={statPaperSx}>
-        <Typography variant="subtitle2" sx={{ color: "#6b7280" }}>Total hours</Typography>
+        <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>Total hours</Typography>
         <Typography variant="h4" sx={{ mt: 0.25 }}>{formatHoursDecimal(totalHours)}h</Typography>
       </Paper>
       <Paper variant="outlined" sx={statPaperSx}>
-        <Typography variant="subtitle2" sx={{ color: "#6b7280" }}>Remote hours</Typography>
+        <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>Remote hours</Typography>
         <Typography variant="h4" sx={{ mt: 0.25 }}>{formatHoursDecimal(remoteHours)}h</Typography>
       </Paper>
     </Stack>

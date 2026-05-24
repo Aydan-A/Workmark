@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { SHINE_GRADIENT } from "../../styles/colors";
 import "./ShineBorder.css";
 
 // Plain-CSS port of Magic UI's <ShineBorder />. Renders an absolutely-positioned
@@ -12,7 +13,7 @@ export interface ShineBorderProps {
 }
 
 export default function ShineBorder({
-  shineColor = ["#A07CFE", "#FE8FB5", "#FFBE7B"],
+  shineColor = SHINE_GRADIENT,
   duration = 14,
   borderWidth = 1,
   className = "",

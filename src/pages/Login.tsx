@@ -23,21 +23,22 @@ import BoltIcon from "@mui/icons-material/Bolt";
 import { useNavigate } from "react-router-dom";
 import { signIn, signUp, signInWithGoogle, sendPasswordReset, getAuthErrorMessage } from "../firebase/auth";
 import ShineBorder from "../components/reactbits/ShineBorder";
+import { AUTH, SHINE_GRADIENT, brandPurpleAlpha, whiteAlpha } from "../styles/colors";
 import "./Login.css";
 
 // Light palette — same blue accent as the landing, but on a soft surface.
-const BG = "#f7f8fb";
-const CARD = "#ffffff";
-const BLUE = "#3b3fd8";
-const BLUE_HOVER = "#4a4fe8";
-const INK = "#0d0f1a";
-const MUTED = "rgba(13, 15, 26, 0.6)";
-const FAINT = "rgba(13, 15, 26, 0.45)";
-const HAIRLINE = "rgba(13, 15, 26, 0.08)";
-const HAIRLINE_STRONG = "rgba(13, 15, 26, 0.16)";
-const FIELD_BG = "rgba(13, 15, 26, 0.025)";
+const BG = AUTH.bg;
+const CARD = AUTH.card;
+const BLUE = AUTH.blue;
+const BLUE_HOVER = AUTH.blueHover;
+const INK = AUTH.ink;
+const MUTED = AUTH.muted;
+const FAINT = AUTH.faint;
+const HAIRLINE = AUTH.hairline;
+const HAIRLINE_STRONG = AUTH.hairlineStrong;
+const FIELD_BG = AUTH.fieldBg;
 
-const SHINE_COLORS = ["#A07CFE", "#FE8FB5", "#FFBE7B"];
+const SHINE_COLORS = SHINE_GRADIENT;
 
 const fieldSx = {
   "& .MuiOutlinedInput-root": {
@@ -202,13 +203,13 @@ export default function Login() {
 
           {/* Floating "streak" pill */}
           <Box className="auth-float auth-float-streak">
-            <LocalFireDepartmentIcon sx={{ fontSize: 16, color: "#FE8FB5" }} />
+            <LocalFireDepartmentIcon sx={{ fontSize: 16, color: SHINE_GRADIENT[1] }} />
             <span><b>12</b> day streak</span>
           </Box>
 
           {/* Floating "remote" pill */}
           <Box className="auth-float auth-float-remote">
-            <BoltIcon sx={{ fontSize: 16, color: "#A07CFE" }} />
+            <BoltIcon sx={{ fontSize: 16, color: SHINE_GRADIENT[0] }} />
             <span><b>82%</b> remote</span>
           </Box>
 
@@ -253,10 +254,10 @@ export default function Login() {
               bgcolor: BLUE,
               display: "grid",
               placeItems: "center",
-              boxShadow: "0 14px 36px rgba(59, 63, 216, 0.35)",
+              boxShadow: `0 14px 36px ${brandPurpleAlpha(0.35)}`,
             }}
           >
-            <WorkOutlineIcon sx={{ color: "#fff", fontSize: 26 }} />
+            <WorkOutlineIcon sx={{ color: "common.white", fontSize: 26 }} />
           </Box>
         </Box>
 
@@ -279,12 +280,12 @@ export default function Login() {
             borderRadius: "24px",
             border: `1px solid ${HAIRLINE}`,
             bgcolor: CARD,
-            boxShadow: "0 8px 32px rgba(13, 15, 26, 0.06)",
+            boxShadow: `0 8px 32px ${AUTH.fieldBgHover}`,
             color: INK,
             transition: "box-shadow 0.25s ease, border-color 0.25s ease",
             "&:hover": {
               borderColor: HAIRLINE_STRONG,
-              boxShadow: "0 24px 60px rgba(13, 15, 26, 0.10), 0 4px 16px rgba(13, 15, 26, 0.06)",
+              boxShadow: `0 24px 60px ${AUTH.fieldBorderHover}, 0 4px 16px ${AUTH.fieldBgHover}`,
             },
           }}
         >
@@ -297,7 +298,7 @@ export default function Login() {
                 mb: 2,
                 position: "relative",
                 zIndex: 2,
-                bgcolor: "rgba(59, 63, 216, 0.08)",
+                bgcolor: brandPurpleAlpha(0.08),
                 color: INK,
                 border: `1px solid ${HAIRLINE}`,
                 "& .MuiAlert-icon": { color: BLUE },
@@ -441,14 +442,14 @@ export default function Login() {
               sx={{
                 mt: 0.5,
                 bgcolor: BLUE,
-                color: "#fff",
+                color: "common.white",
                 position: "relative",
                 zIndex: 2,
                 "&:hover": {
                   bgcolor: BLUE_HOVER,
-                  boxShadow: "0 14px 36px rgba(59, 63, 216, 0.35)",
+                  boxShadow: `0 14px 36px ${brandPurpleAlpha(0.35)}`,
                 },
-                "&.Mui-disabled": { bgcolor: "rgba(59, 63, 216, 0.45)", color: "rgba(255, 255, 255, 0.85)" },
+                "&.Mui-disabled": { bgcolor: brandPurpleAlpha(0.45), color: whiteAlpha(0.85) },
                 py: 1.2,
                 borderRadius: 999,
                 fontWeight: 600,
@@ -480,12 +481,12 @@ export default function Login() {
                 textTransform: "none",
                 borderColor: HAIRLINE,
                 color: INK,
-                bgcolor: "#fff",
+                bgcolor: "common.white",
                 position: "relative",
                 zIndex: 2,
                 "&:hover": {
                   borderColor: HAIRLINE_STRONG,
-                  bgcolor: "#fafbfc",
+                  bgcolor: AUTH.cardAlt,
                 },
               }}
             >
@@ -528,19 +529,17 @@ export default function Login() {
             sx: {
               borderRadius: "24px",
               minWidth: { xs: 0, sm: 440 },
-              bgcolor: "rgba(255, 255, 255, 0.35)",
-              backgroundImage:
-                "linear-gradient(135deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.2) 100%)",
+              bgcolor: whiteAlpha(0.35),
+              backgroundImage: `linear-gradient(135deg, ${whiteAlpha(0.55)} 0%, ${whiteAlpha(0.2)} 100%)`,
               backdropFilter: "blur(28px) saturate(200%)",
               WebkitBackdropFilter: "blur(28px) saturate(200%)",
-              border: "1px solid rgba(255, 255, 255, 0.55)",
-              boxShadow:
-                "0 16px 48px rgba(80, 70, 180, 0.22), inset 0 1px 0 rgba(255,255,255,0.6)",
+              border: `1px solid ${whiteAlpha(0.55)}`,
+              boxShadow: `0 16px 48px ${AUTH.glowPurple}, inset 0 1px 0 ${whiteAlpha(0.6)}`,
             },
           },
           backdrop: {
             sx: {
-              backgroundColor: "rgba(20, 22, 50, 0.18)",
+              backgroundColor: AUTH.glowDark,
               backdropFilter: "blur(10px)",
               WebkitBackdropFilter: "blur(10px)",
             },

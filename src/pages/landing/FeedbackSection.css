@@ -4,8 +4,8 @@
   --ink-faint: rgba(13, 15, 26, 0.45);
   --line: rgba(13, 15, 26, 0.08);
   --line-strong: rgba(13, 15, 26, 0.14);
-  --blue: #3b3fd8;
-  --blue-soft: rgba(59, 63, 216, 0.08);
+  --blue: #7057f6;
+  --blue-soft: rgba(112, 87, 246, 0.08);
   --bg: #ffffff;
 
   background: var(--bg);

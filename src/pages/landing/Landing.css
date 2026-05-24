@@ -16,7 +16,7 @@
 
 .landing {
   --bg: #0d0f1a;
-  --blue: #3b3fd8;
+  --blue: #7057f6;
   --text: #f0f0f6;
   --muted: rgba(240, 240, 255, 0.5);
   background: var(--bg);
@@ -117,7 +117,7 @@
 
 .l-nav-cta:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 30px rgba(59, 63, 216, 0.45);
+  box-shadow: 0 10px 30px rgba(112, 87, 246, 0.45);
 }
 
 /* --- Hamburger button (hidden by default, shown on mobile) --- */
@@ -337,7 +337,7 @@
 
 .l-btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 14px 36px rgba(59, 63, 216, 0.5);
+  box-shadow: 0 14px 36px rgba(112, 87, 246, 0.5);
 }
 
 .l-btn-ghost {
@@ -404,7 +404,7 @@
   border-radius: 18px;
   padding: 24px;
   box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(59, 63, 216, 0.08) inset;
+    0 0 0 1px rgba(112, 87, 246, 0.08) inset;
 }
 
 .l-mockup-head {
@@ -483,7 +483,7 @@
 
 .l-about-mark img {
   width: min(360px, 80%);
-  filter: drop-shadow(0 30px 80px rgba(59, 63, 216, 0.4));
+  filter: drop-shadow(0 30px 80px rgba(112, 87, 246, 0.4));
 }
 
 /* ---------- FOOTER ---------- */

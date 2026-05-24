@@ -7,6 +7,7 @@ import { useAuth } from "../../../hooks/useAuth";
 import { getEntryLoadErrorMessage, subscribeToMonthEntries } from "../entry.api";
 import { getEntryPrimaryLabel } from "../entry.utils";
 import { formatHoursDecimal } from "../../../utils/formatters";
+import { BRAND_PURPLE, WHITE } from "../../../styles/colors";
 import type { WorkEntry } from "../entry.types";
 
 export function useMonthEntries() {
@@ -58,9 +59,9 @@ export function useMonthEntries() {
         title: `${formatHoursDecimal(summary.totalHours)}h`,
         start: date,
         allDay: true,
-        backgroundColor: "#6366f1",
-        borderColor: "#6366f1",
-        textColor: "#ffffff",
+        backgroundColor: BRAND_PURPLE,
+        borderColor: BRAND_PURPLE,
+        textColor: WHITE,
         extendedProps: {
           label:
             summary.labels.size <= 1

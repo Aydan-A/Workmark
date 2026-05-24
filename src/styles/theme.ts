@@ -2,6 +2,37 @@ import { createTheme } from "@mui/material/styles";
 
 const appFontFamily = ["Plus Jakarta Sans", "Segoe UI", "Helvetica Neue", "Arial", "sans-serif"].join(",");
 
+// RGB channels of the brand purple, for building rgba() at custom alpha.
+const BRAND_PURPLE_RGB = "112, 87, 246";
+const brandAlpha = (a: number) => `rgba(${BRAND_PURPLE_RGB}, ${a})`;
+
+/**
+ * Custom palette tokens layered on top of MUI's defaults. Components should
+ * reference these (e.g. `theme.palette.ink.muted`, `theme.palette.glass.panel`)
+ * instead of hardcoding hex/rgba literals. See COLOR_INVENTORY.md for the raw
+ * values these consolidate.
+ */
+declare module "@mui/material/styles" {
+  interface Palette {
+    ink: {
+      strong: string; base: string; muted: string; faint: string; disabled: string;
+      // Exact one-off text shades preserved verbatim from components.
+      label: string; labelStrong: string; labelMuted: string; labelDark: string; unit: string; subtle: string; soft: string; dark: string;
+    };
+    glass: { panel: string; panelStrong: string; panelOpaque: string; panelHover: string; subtle: string; border: string; tint: string };
+    scrim: { light: string; medium: string; heavy: string };
+    accentPurple: { deep: string; bright: string };
+    brand: { alpha: (a: number) => string };
+  }
+  interface PaletteOptions {
+    ink?: Partial<Palette["ink"]>;
+    glass?: Partial<Palette["glass"]>;
+    scrim?: Partial<Palette["scrim"]>;
+    accentPurple?: Partial<Palette["accentPurple"]>;
+    brand?: Partial<Palette["brand"]>;
+  }
+}
+
 export const theme = createTheme({
   palette: {
     primary: {
@@ -22,6 +53,61 @@ export const theme = createTheme({
       secondary: "#6f768f",
     },
     divider: "rgba(124, 106, 214, 0.16)",
+    // Neutral scale consolidating the ad-hoc greys found across components.
+    grey: {
+      50: "#f5f5f8",
+      100: "#eef0f3",
+      200: "#d1d5db",
+      300: "#b8bcd0",
+      400: "#94a3b8",
+      500: "#8b92ab",
+      600: "#6d7394",
+      700: "#545c88",
+      800: "#2f3360",
+      900: "#111827",
+    },
+    // Semantic text/ink shades for non-default copy. The lower group are exact
+    // one-off values preserved verbatim from components (zero visual change).
+    ink: {
+      strong: "#111827",
+      base: "#1f2340",
+      muted: "#6f768f",
+      faint: "#8b92ab",
+      disabled: "#b8bcd0",
+      label: "#6d7394",
+      labelStrong: "#525a88",
+      labelMuted: "#8f96ad",
+      labelDark: "#545c88",
+      unit: "#8a90ab",
+      subtle: "#77809b",
+      soft: "#8B8B9E",
+      dark: "#1A1A2E",
+    },
+    // Purple accents distinct from the brand primary.
+    accentPurple: {
+      deep: "#584fd1",
+      bright: "#9B8FFF",
+    },
+    // Frosted-glass surface tokens used by cards/panels.
+    glass: {
+      panel: "rgba(255,255,255,0.55)",
+      panelStrong: "rgba(255,255,255,0.8)",
+      panelOpaque: "rgba(255,255,255,0.92)",
+      panelHover: "rgba(255,255,255,0.62)",
+      subtle: "rgba(255,255,255,0.32)",
+      border: "rgba(255,255,255,0.8)",
+      tint: brandAlpha(0.08),
+    },
+    // Dark overlays for legibility over images/media.
+    scrim: {
+      light: "rgba(0,0,0,0.35)",
+      medium: "rgba(0,0,0,0.45)",
+      heavy: "rgba(0,0,0,0.65)",
+    },
+    // Helper for brand purple at arbitrary alpha.
+    brand: {
+      alpha: brandAlpha,
+    },
   },
   typography: {
     fontFamily: appFontFamily,
@@ -98,7 +184,7 @@ export const theme = createTheme({
         root: {
           backgroundColor: "rgba(255,255,255,0.55)",
           backdropFilter: "blur(20px)",
-          boxShadow: "0 8px 32px rgba(108,99,255,0.08)",
+          boxShadow: "0 8px 32px rgba(112, 87, 246, 0.08)",
           borderRadius: 24,
           backgroundImage: "none",
         },

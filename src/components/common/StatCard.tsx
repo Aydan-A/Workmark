@@ -9,6 +9,7 @@ import {
   dashboardFocusVisibleSx,
   dashboardInteractiveCardSx,
 } from "../../styles/dashboard";
+import { GREY, brandPurpleAlpha, whiteAlpha } from "../../styles/colors";
 
 type StatCardProps = {
   title: string;
@@ -34,7 +35,7 @@ export default function StatCard({
   icon,
   iconColor,
   iconTint,
-  valueColor = "#2f3360",
+  valueColor = GREY[800],
   badgeLabel,
   featured = false,
   onClick,
@@ -76,9 +77,9 @@ export default function StatCard({
             minHeight: { xs: 148, md: 158 },
             height: "100%",
             ...dashboardInteractiveCardSx,
-            borderColor: featured ? "rgba(108,99,255,0.2)" : undefined,
-            boxShadow: featured ? "0 12px 34px rgba(108,99,255,0.11)" : undefined,
-            backgroundColor: featured ? "rgba(255,255,255,0.62)" : undefined,
+            borderColor: featured ? brandPurpleAlpha(0.2) : undefined,
+            boxShadow: featured ? `0 12px 34px ${brandPurpleAlpha(0.11)}` : undefined,
+            backgroundColor: featured ? whiteAlpha(0.62) : undefined,
           }}
         >
           <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1.25 }}>
@@ -86,7 +87,7 @@ export default function StatCard({
               <Typography
                 variant="subtitle2"
                 sx={{
-                  color: featured ? "#525a88" : "#6d7394",
+                  color: featured ? "ink.labelStrong" : "ink.label",
                   fontWeight: 600,
                   letterSpacing: "-0.01em",
                   fontFamily: "'Plus Jakarta Sans', sans-serif",
@@ -105,8 +106,8 @@ export default function StatCard({
                     px: 1,
                     py: 0.45,
                     borderRadius: 999,
-                    backgroundColor: featured ? "rgba(108,99,255,0.12)" : "rgba(108,99,255,0.08)",
-                    color: featured ? "#584fd1" : "#6f768f",
+                    backgroundColor: featured ? brandPurpleAlpha(0.12) : brandPurpleAlpha(0.08),
+                    color: featured ? "accentPurple.deep" : "ink.muted",
                     fontSize: "0.72rem",
                     fontWeight: 700,
                     letterSpacing: "-0.01em",
@@ -155,7 +156,7 @@ export default function StatCard({
                 <Typography
                   variant="body2"
                   sx={{
-                    color: "#8a90ab",
+                    color: "ink.unit",
                     fontWeight: 500,
                     letterSpacing: "-0.01em",
                     lineHeight: 1,
@@ -172,7 +173,7 @@ export default function StatCard({
                 variant="body2"
                 sx={{
                   mt: 0.75,
-                  color: "#77809b",
+                  color: "ink.subtle",
                   fontWeight: 500,
                   lineHeight: 1.42,
                   maxWidth: "25ch",
