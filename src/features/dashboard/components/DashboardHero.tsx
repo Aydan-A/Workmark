@@ -34,14 +34,15 @@ export default function DashboardHero({
 }: DashboardHeroProps) {
   const heroRef = useRef<HTMLDivElement | null>(null);
   const heroVantaRef = useRef<VantaInstance | null>(null);
-  const [isVisible, setIsVisible] = useState(false);
+  // Without IntersectionObserver (SSR / very old browsers) treat the hero as
+  // immediately visible; otherwise the observer flips this when it scrolls in.
+  const [isVisible, setIsVisible] = useState(
+    () => typeof IntersectionObserver === "undefined",
+  );
 
   useEffect(() => {
     if (!heroRef.current) return;
-    if (typeof IntersectionObserver === "undefined") {
-      setIsVisible(true);
-      return;
-    }
+    if (typeof IntersectionObserver === "undefined") return;
     const el = heroRef.current;
     const io = new IntersectionObserver(
       (entries) => {

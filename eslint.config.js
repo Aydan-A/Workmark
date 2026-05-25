@@ -19,6 +19,12 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      // Most setState-in-effect sites here are legitimate: resetting/syncing
+      // local state when an external input (user, uid, team, date range) changes,
+      // which is exactly what effects are for. The rule is purely syntactic and
+      // can't distinguish these from accidental render cascades, so keep it as a
+      // visible warning rather than a build-blocking error.
+      'react-hooks/set-state-in-effect': 'warn',
       'react-refresh/only-export-components': [
         'warn',
         { allowConstantExport: true },

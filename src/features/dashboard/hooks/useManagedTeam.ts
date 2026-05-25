@@ -32,13 +32,10 @@ export function useManagedTeam(user: User | null) {
   useEffect(() => {
     const email = user?.email?.trim();
     if (!email) {
-      /* eslint-disable react-hooks/set-state-in-effect --
-         Intentional reset of stale managed-team data when there's no signed-in
-         user. Guarded with functional updaters so an already-empty state is a
-         no-op (no extra render); the disable is just for the syntactic rule. */
+      // Reset stale managed-team data when there's no signed-in user. Functional
+      // updaters keep an already-empty state a no-op (no extra render).
       setManaged((prev) => (prev.length === 0 ? prev : []));
       setEntriesByUid((prev) => (Object.keys(prev).length === 0 ? prev : {}));
-      /* eslint-enable react-hooks/set-state-in-effect */
       return;
     }
 
@@ -51,7 +48,7 @@ export function useManagedTeam(user: User | null) {
 
   useEffect(() => {
     if (managed.length === 0) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- guarded reset of stale entries when there are no managed users (no-op if already empty)
+      // Reset stale entries when there are no managed users (no-op if empty).
       setEntriesByUid((prev) => (Object.keys(prev).length === 0 ? prev : {}));
       return;
     }
