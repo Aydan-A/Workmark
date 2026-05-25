@@ -85,8 +85,11 @@ export function useLogToday() {
     );
   }, [user, selectedDate]);
 
+  // Key on uid so the projects subscription re-runs only when the user id
+  // changes, not on every new user object identity from auth.
+  const uid = user?.uid;
   useEffect(() => {
-    if (!user) {
+    if (!uid) {
       setProjects([]);
       return;
     }
@@ -94,7 +97,7 @@ export function useLogToday() {
       (nextProjects) => setProjects(nextProjects),
       () => {},
     );
-  }, [user?.uid]);
+  }, [uid]);
 
   const totalHours = useMemo(
     () => entries.reduce((sum, e) => sum + e.hours, 0),
