@@ -2,21 +2,14 @@ import { createTheme } from "@mui/material/styles";
 
 const appFontFamily = ["Plus Jakarta Sans", "Segoe UI", "Helvetica Neue", "Arial", "sans-serif"].join(",");
 
-// RGB channels of the brand purple, for building rgba() at custom alpha.
 const BRAND_PURPLE_RGB = "112, 87, 246";
 const brandAlpha = (a: number) => `rgba(${BRAND_PURPLE_RGB}, ${a})`;
 
-/**
- * Custom palette tokens layered on top of MUI's defaults. Components should
- * reference these (e.g. `theme.palette.ink.muted`, `theme.palette.glass.panel`)
- * instead of hardcoding hex/rgba literals. See COLOR_INVENTORY.md for the raw
- * values these consolidate.
- */
+// Custom palette tokens. Reference via sx ("ink.muted", "glass.panel", etc.).
 declare module "@mui/material/styles" {
   interface Palette {
     ink: {
       strong: string; base: string; muted: string; faint: string; disabled: string;
-      // Exact one-off text shades preserved verbatim from components.
       label: string; labelStrong: string; labelMuted: string; labelDark: string; unit: string; subtle: string; soft: string; dark: string;
     };
     glass: { panel: string; panelStrong: string; panelOpaque: string; panelHover: string; subtle: string; border: string; tint: string };
@@ -53,7 +46,7 @@ export const theme = createTheme({
       secondary: "#6f768f",
     },
     divider: "rgba(124, 106, 214, 0.16)",
-    // Neutral scale consolidating the ad-hoc greys found across components.
+    // Neutral scale.
     grey: {
       50: "#f5f5f8",
       100: "#eef0f3",
@@ -66,8 +59,7 @@ export const theme = createTheme({
       800: "#2f3360",
       900: "#111827",
     },
-    // Semantic text/ink shades for non-default copy. The lower group are exact
-    // one-off values preserved verbatim from components (zero visual change).
+    // Text/ink shades (lower group are one-off shades from components).
     ink: {
       strong: "#111827",
       base: "#1f2340",

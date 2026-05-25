@@ -23,9 +23,7 @@ export default function TextType({
   className = "",
   as: Tag = "span",
 }: Props) {
-  // Key on text *content*, not array identity: callers often pass an inline
-  // array literal (new ref each render), so memoizing on content keeps `phrases`
-  // stable and the typing effect re-runs only when the text actually changes.
+  // Key on content (not array identity) so the effect re-runs only when text changes.
   const phrasesKey = Array.isArray(text) ? text.join("\u0000") : text;
   const phrases = useMemo(() => phrasesKey.split("\u0000"), [phrasesKey]);
   const [display, setDisplay] = useState("");

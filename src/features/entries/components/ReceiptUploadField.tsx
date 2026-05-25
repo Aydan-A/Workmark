@@ -33,9 +33,8 @@ export function ReceiptUploadField({ value, entryId, uid, onChange, onUploading,
   const [uploadItems, setUploadItems] = useState<UploadItem[]>([]);
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  // Reactive copy of previewUrlsRef, read during render. The ref remains the
-  // source of truth for object-URL cleanup (it survives across renders and is
-  // accessible from unmount). State mirrors it so thumbnails update reactively.
+  // Read during render (reactive). The ref below stays the source of truth for
+  // object-URL cleanup; this mirror keeps thumbnails updating.
   const [previewUrls, setPreviewUrls] = useState<Map<string, string>>(new Map());
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -52,8 +51,7 @@ export function ReceiptUploadField({ value, entryId, uid, onChange, onUploading,
   }, [uploadItems, onUploading]);
 
   useEffect(() => {
-    // Capture the ref Maps now; their identity is stable for the component's
-    // lifetime, so the cleanup closes over the same live Maps it would at unmount.
+    // Capture now so cleanup closes over the same Maps (identity is stable).
     const tasks = tasksRef.current;
     const previewUrlMap = previewUrlsRef.current;
     return () => {

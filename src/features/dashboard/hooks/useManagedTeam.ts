@@ -23,8 +23,7 @@ export function useManagedTeam(user: User | null) {
   const [managed, setManaged] = useState<ManagedUser[]>([]);
   const [entriesByUid, setEntriesByUid] = useState<Record<string, WorkEntry[]>>({});
 
-  // Derive stable date keys once per render from a single now; downstream memos
-  // and effects key off these strings rather than a live Date identity.
+  // Stable date-key strings so downstream memos/effects don't key on a live Date.
   const todayKey = format(new Date(), "yyyy-MM-dd");
   const weekStartKey = format(startOfWeek(new Date(todayKey), { weekStartsOn: 1 }), "yyyy-MM-dd");
   const weekEndKey = format(endOfWeek(new Date(todayKey), { weekStartsOn: 1 }), "yyyy-MM-dd");
@@ -32,8 +31,7 @@ export function useManagedTeam(user: User | null) {
   useEffect(() => {
     const email = user?.email?.trim();
     if (!email) {
-      // Reset stale managed-team data when there's no signed-in user. Functional
-      // updaters keep an already-empty state a no-op (no extra render).
+      // Clear stale data on sign-out (no-op if already empty).
       setManaged((prev) => (prev.length === 0 ? prev : []));
       setEntriesByUid((prev) => (Object.keys(prev).length === 0 ? prev : {}));
       return;
@@ -48,7 +46,7 @@ export function useManagedTeam(user: User | null) {
 
   useEffect(() => {
     if (managed.length === 0) {
-      // Reset stale entries when there are no managed users (no-op if empty).
+      // Clear stale entries when there are no managed users (no-op if empty).
       setEntriesByUid((prev) => (Object.keys(prev).length === 0 ? prev : {}));
       return;
     }
