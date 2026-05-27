@@ -1,3 +1,7 @@
+/* eslint-disable react-refresh/only-export-components --
+   This is a route-config module: its primary export is the `router` object,
+   and the gate components live here because they're only used by it. Fast
+   Refresh will do a full reload on edits to this file, which is fine. */
 import { lazy, Suspense } from "react";
 import { createBrowserRouter, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";

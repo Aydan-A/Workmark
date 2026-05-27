@@ -14,7 +14,7 @@ import { getBuiltinRange, getCustomHumanLabel } from "../features/dashboard/rang
 
 export default function WeeklyLog() {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
 
   const [activeTab, setActiveTab] = useState<SummaryTab>("this-week");
   const [customStart, setCustomStart] = useState("");
@@ -45,7 +45,7 @@ export default function WeeklyLog() {
     highestPoint,
     weeklyOverview,
     weeklyTotal,
-  } = useWeeklyData({ user, authLoading, start: activeRange.start, end: activeRange.end });
+  } = useWeeklyData({ user, start: activeRange.start, end: activeRange.end });
 
   const handleBarClick = (day: WeeklyPoint) => {
     navigate(`/day/${format(new Date(`${day.dateKey}T00:00:00`), "yyyy-MM-dd")}`);

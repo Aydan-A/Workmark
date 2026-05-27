@@ -28,6 +28,7 @@ import { format, subDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useEntriesQuery } from "../features/entries/useEntriesQuery";
 import type { WorkEntry } from "../features/entries/entry.types";
+import { AUTH, brandPurpleAlpha, whiteAlpha } from "../styles/colors";
 import {
   purgeUserData,
   saveManagerEmail,
@@ -114,7 +115,7 @@ function AccountRow({ label, value, onEdit }: AccountRowProps) {
           minWidth: 0,
           bgcolor: "transparent",
           "&:hover": {
-            bgcolor: "rgba(255,255,255,0.36)",
+            bgcolor: whiteAlpha(0.36),
           },
         }}
       >
@@ -484,7 +485,7 @@ export default function Profile() {
         sx={{
           p: { xs: 2.5, md: 3.5 },
           borderRadius: "24px",
-          borderColor: "rgba(255,255,255,0.8)",
+          borderColor: "glass.border",
         }}
       >
         <Stack
@@ -521,7 +522,7 @@ export default function Profile() {
                   bgcolor: "primary.main",
                   fontSize: "1.4rem",
                   fontWeight: 700,
-                  boxShadow: "0 18px 32px rgba(112, 87, 246, 0.22)",
+                  boxShadow: `0 18px 32px ${brandPurpleAlpha(0.22)}`,
                 }}
               >
                 {getInitials(profileName)}
@@ -535,8 +536,8 @@ export default function Profile() {
                   display: "grid",
                   placeItems: "center",
                   borderRadius: "28px",
-                  bgcolor: "rgba(31,35,64,0.52)",
-                  color: "#fff",
+                  bgcolor: AUTH.profileScrim,
+                  color: "common.white",
                   opacity: 0,
                   transition: "opacity 160ms ease",
                 }}
@@ -633,7 +634,7 @@ export default function Profile() {
           mt: 2.5,
         }}
       >
-        <Paper variant="outlined" sx={{ p: 2.75, borderRadius: "24px", borderColor: "rgba(255,255,255,0.8)" }}>
+        <Paper variant="outlined" sx={{ p: 2.75, borderRadius: "24px", borderColor: "glass.border" }}>
           <Typography variant="subtitle1" sx={{ color: "text.secondary", mb: 1.75 }}>
             Account information
           </Typography>
@@ -654,7 +655,7 @@ export default function Profile() {
           sx={{
             p: 2.75,
             borderRadius: "24px",
-            borderColor: "rgba(255,255,255,0.8)",
+            borderColor: "glass.border",
           }}
         >
           <Typography variant="subtitle1" sx={{ color: "text.secondary", mb: 1.75 }}>
@@ -740,8 +741,8 @@ export default function Profile() {
                         display: "grid",
                         placeItems: "center",
                         borderRadius: "16px",
-                        bgcolor: "rgba(31,35,64,0.52)",
-                        color: "#fff",
+                        bgcolor: AUTH.profileScrim,
+                        color: "common.white",
                         opacity: 0,
                         transition: "opacity 160ms ease",
                       }}
@@ -1025,19 +1026,17 @@ export default function Profile() {
             sx: {
               borderRadius: "24px",
               minWidth: { xs: 0, sm: 440 },
-              bgcolor: "rgba(255, 255, 255, 0.35)",
-              backgroundImage:
-                "linear-gradient(135deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.2) 100%)",
+              bgcolor: whiteAlpha(0.35),
+              backgroundImage: `linear-gradient(135deg, ${whiteAlpha(0.55)} 0%, ${whiteAlpha(0.2)} 100%)`,
               backdropFilter: "blur(28px) saturate(200%)",
               WebkitBackdropFilter: "blur(28px) saturate(200%)",
-              border: "1px solid rgba(255, 255, 255, 0.55)",
-              boxShadow:
-                "0 16px 48px rgba(80, 70, 180, 0.22), inset 0 1px 0 rgba(255,255,255,0.6)",
+              border: `1px solid ${whiteAlpha(0.55)}`,
+              boxShadow: `0 16px 48px ${AUTH.glowPurple}, inset 0 1px 0 ${whiteAlpha(0.6)}`,
             },
           },
           backdrop: {
             sx: {
-              backgroundColor: "rgba(20, 22, 50, 0.18)",
+              backgroundColor: AUTH.glowDark,
               backdropFilter: "blur(10px)",
               WebkitBackdropFilter: "blur(10px)",
             },
@@ -1098,19 +1097,17 @@ export default function Profile() {
             sx: {
               borderRadius: "24px",
               minWidth: { xs: 0, sm: 420 },
-              bgcolor: "rgba(255, 255, 255, 0.35)",
-              backgroundImage:
-                "linear-gradient(135deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.2) 100%)",
+              bgcolor: whiteAlpha(0.35),
+              backgroundImage: `linear-gradient(135deg, ${whiteAlpha(0.55)} 0%, ${whiteAlpha(0.2)} 100%)`,
               backdropFilter: "blur(28px) saturate(200%)",
               WebkitBackdropFilter: "blur(28px) saturate(200%)",
-              border: "1px solid rgba(255, 255, 255, 0.55)",
-              boxShadow:
-                "0 16px 48px rgba(80, 70, 180, 0.22), inset 0 1px 0 rgba(255,255,255,0.6)",
+              border: `1px solid ${whiteAlpha(0.55)}`,
+              boxShadow: `0 16px 48px ${AUTH.glowPurple}, inset 0 1px 0 ${whiteAlpha(0.6)}`,
             },
           },
           backdrop: {
             sx: {
-              backgroundColor: "rgba(20, 22, 50, 0.18)",
+              backgroundColor: AUTH.glowDark,
               backdropFilter: "blur(10px)",
               WebkitBackdropFilter: "blur(10px)",
             },

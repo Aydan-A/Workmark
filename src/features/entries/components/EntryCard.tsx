@@ -11,25 +11,13 @@ import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import type { Receipt, WorkEntry } from "../entry.types";
 import { formatHoursDuration } from "../../../utils/formatters";
 import { getReceiptDownloadUrl } from "../receipt.api";
+import { projectColor } from "../../../styles/colors";
 
 type Props = {
   entry: WorkEntry;
   onEdit: (entry: WorkEntry) => void;
   onDelete: (entry: WorkEntry) => void;
 };
-
-const COLOR_PALETTE = [
-  "#7057f6", "#f59e0b", "#10b981", "#ef4444",
-  "#3b82f6", "#ec4899", "#8b5cf6", "#06b6d4",
-];
-
-function projectColor(projectId: string): string {
-  let h = 0;
-  for (let i = 0; i < projectId.length; i++) {
-    h = (Math.imul(31, h) + projectId.charCodeAt(i)) | 0;
-  }
-  return COLOR_PALETTE[Math.abs(h) % COLOR_PALETTE.length];
-}
 
 export function EntryCard({ entry, onEdit, onDelete }: Props) {
   const color = projectColor(entry.projectId);

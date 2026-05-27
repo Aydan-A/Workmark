@@ -1,6 +1,7 @@
 // Pure SVG sparklines — no extra deps.
+import { BRAND_PURPLE } from "../../../styles/colors";
 
-const PRIMARY = "#6c63ff";
+const PRIMARY = BRAND_PURPLE;
 
 type SparklineLineProps = {
   data: number[];

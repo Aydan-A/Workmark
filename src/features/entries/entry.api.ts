@@ -17,6 +17,7 @@ import {
 } from "firebase/firestore";
 import { deleteEntryReceipts } from "./receipt.api";
 import {
+  addDays,
   differenceInMinutes,
   endOfMonth,
   format,
@@ -132,11 +133,17 @@ export function computeHours(startTime: string, endTime: string): number {
   const normalizedStart = assertValidTime(startTime, "Start time");
   const normalizedEnd = assertValidTime(endTime, "End time");
   const start = parse(normalizedStart, "HH:mm", new Date());
-  const end = parse(normalizedEnd, "HH:mm", new Date());
-  const diffMinutes = differenceInMinutes(end, start);
+  let end = parse(normalizedEnd, "HH:mm", new Date());
 
-  if (diffMinutes <= 0) {
-    throw new Error("End time must be later than start time.");
+  // An end at or before the start is treated as the next day (overnight shift),
+  // e.g. 23:30 → 00:00 spans 30 minutes rather than being rejected.
+  if (differenceInMinutes(end, start) <= 0) {
+    end = addDays(end, 1);
+  }
+
+  const diffMinutes = differenceInMinutes(end, start);
+  if (diffMinutes <= 0 || diffMinutes >= 24 * 60) {
+    throw new Error("Enter a valid time range.");
   }
 
   return Number((diffMinutes / 60).toFixed(2));

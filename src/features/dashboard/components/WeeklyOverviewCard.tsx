@@ -12,6 +12,8 @@ import {
   dashboardSectionCardPaddingSx,
 } from "../../../styles/dashboard";
 import { formatHoursDecimal } from "../../../utils/formatters";
+import { BRAND_PURPLE, GREY, brandPurpleAlpha, whiteAlpha } from "../../../styles/colors";
+import { theme } from "../../../styles/theme";
 
 type SummaryChipButtonProps = {
   label: string;
@@ -28,9 +30,9 @@ function SummaryChipButton({ label, ariaLabel, onClick }: SummaryChipButtonProps
         px: 1.25,
         py: 0.7,
         borderRadius: 999,
-        border: "1px solid rgba(108, 99, 255, 0.12)",
-        backgroundColor: "rgba(255,255,255,0.36)",
-        color: "#6f768f",
+        border: `1px solid ${brandPurpleAlpha(0.12)}`,
+        backgroundColor: whiteAlpha(0.36),
+        color: "ink.muted",
         fontSize: "0.875rem",
         fontWeight: 600,
         fontFamily: "'Plus Jakarta Sans', sans-serif",
@@ -40,8 +42,8 @@ function SummaryChipButton({ label, ariaLabel, onClick }: SummaryChipButtonProps
         transition:
           "background-color 160ms ease, border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease",
         "&:hover": {
-          backgroundColor: "rgba(108,99,255,0.08)",
-          borderColor: "rgba(108,99,255,0.18)",
+          backgroundColor: brandPurpleAlpha(0.08),
+          borderColor: brandPurpleAlpha(0.18),
         },
         "&:active": { transform: "translateY(1px)" },
         ...dashboardFocusVisibleSx,
@@ -203,8 +205,7 @@ export default function WeeklyOverviewCard({
             content: '""',
             position: "absolute",
             inset: { xs: "18px 10px 44px", sm: "18px 12px 46px" },
-            backgroundImage:
-              "linear-gradient(to top, rgba(108, 99, 255, 0.07) 1px, transparent 1px)",
+            backgroundImage: `linear-gradient(to top, ${brandPurpleAlpha(0.07)} 1px, transparent 1px)`,
             backgroundSize: "100% 25%",
             pointerEvents: "none",
           },
@@ -242,7 +243,7 @@ export default function WeeklyOverviewCard({
                   cursor: "pointer",
                   transition: "background-color 160ms ease, transform 160ms ease",
                   "&:hover": {
-                    backgroundColor: "rgba(108,99,255,0.04)",
+                    backgroundColor: brandPurpleAlpha(0.04),
                     "& .bar-fill": {
                       filter: day.hours > 0 ? "brightness(1.1)" : undefined,
                       transform: "scaleX(1.02)",
@@ -258,7 +259,7 @@ export default function WeeklyOverviewCard({
                   sx={{
                     minHeight: 16,
                     fontSize: days.length > 14 ? "0.6rem" : "0.7rem",
-                    color: day.hours > 0 ? "#6f768f" : "#b8bcd0",
+                    color: day.hours > 0 ? "ink.muted" : "ink.disabled",
                     fontWeight: day.hours > 0 ? 600 : 500,
                   }}
                 >
@@ -282,11 +283,11 @@ export default function WeeklyOverviewCard({
                       alignItems: "flex-end",
                       borderRadius: "14px",
                       backgroundColor: isSelected
-                        ? "rgba(108,99,255,0.08)"
-                        : "rgba(108,99,255,0.045)",
+                        ? brandPurpleAlpha(0.08)
+                        : brandPurpleAlpha(0.045),
                       boxShadow: isSelected
-                        ? "inset 0 0 0 1px rgba(108,99,255,0.1)"
-                        : "inset 0 0 0 1px rgba(108,99,255,0.035)",
+                        ? `inset 0 0 0 1px ${brandPurpleAlpha(0.1)}`
+                        : `inset 0 0 0 1px ${brandPurpleAlpha(0.035)}`,
                       overflow: "hidden",
                       transition: "background-color 160ms ease, box-shadow 160ms ease",
                     }}
@@ -299,10 +300,10 @@ export default function WeeklyOverviewCard({
                         borderRadius: "14px 14px 9px 9px",
                         background:
                           day.hours > 0
-                            ? "linear-gradient(180deg, #9B8FFF 0%, #6C63FF 100%)"
+                            ? `linear-gradient(180deg, ${theme.palette.accentPurple.bright} 0%, ${BRAND_PURPLE} 100%)`
                             : "transparent",
                         boxShadow:
-                          day.hours > 0 ? "0 10px 22px rgba(108,99,255,0.16)" : "none",
+                          day.hours > 0 ? `0 10px 22px ${brandPurpleAlpha(0.16)}` : "none",
                         transition: "filter 160ms ease, transform 160ms ease",
                         transformOrigin: "bottom",
                       }}
@@ -316,12 +317,12 @@ export default function WeeklyOverviewCard({
                   sx={{
                     fontSize:
                       days.length > 14 ? "0.6rem" : days.length > 7 ? "0.68rem" : undefined,
-                    color: day.isToday || isSelected ? "#545c88" : "#8f96ad",
+                    color: day.isToday || isSelected ? "ink.labelDark" : "ink.labelMuted",
                     fontWeight: day.isToday || isSelected ? 700 : 600,
                     px: 0.5,
                     py: 0.2,
                     borderRadius: 999,
-                    backgroundColor: isSelected ? "rgba(108,99,255,0.08)" : "transparent",
+                    backgroundColor: isSelected ? brandPurpleAlpha(0.08) : "transparent",
                     transition: "background-color 160ms ease, color 160ms ease",
                     lineHeight: 1.2,
                     textAlign: "center",
@@ -342,8 +343,8 @@ export default function WeeklyOverviewCard({
           mt: 1.85,
           p: { xs: 1.5, sm: 1.85 },
           borderRadius: "20px",
-          backgroundColor: "rgba(255,255,255,0.48)",
-          borderColor: "rgba(255,255,255,0.8)",
+          backgroundColor: whiteAlpha(0.48),
+          borderColor: "glass.border",
         }}
       >
         <Box
@@ -357,7 +358,7 @@ export default function WeeklyOverviewCard({
             sx={{
               pr: { xs: 0, md: 2.25 },
               pb: { xs: 1.5, md: 0 },
-              borderBottom: { xs: "1px solid #EEF0F3", md: "none" },
+              borderBottom: { xs: `1px solid ${GREY[100]}`, md: "none" },
             }}
           >
             <Box
@@ -371,7 +372,7 @@ export default function WeeklyOverviewCard({
             >
               <Typography
                 variant="body2"
-                sx={{ color: "#8B8B9E", fontSize: "0.85rem", fontWeight: 500 }}
+                sx={{ color: "ink.soft", fontSize: "0.85rem", fontWeight: 500 }}
               >
                 {selectedDay.day}, {selectedDay.dateLabel}
               </Typography>
@@ -384,8 +385,8 @@ export default function WeeklyOverviewCard({
                   px: "12px",
                   py: "6px",
                   borderRadius: 999,
-                  bgcolor: "#6C63FF",
-                  color: "#FFFFFF",
+                  bgcolor: "primary.main",
+                  color: "common.white",
                   fontSize: "0.78rem",
                   fontWeight: 700,
                   lineHeight: 1,
@@ -400,7 +401,7 @@ export default function WeeklyOverviewCard({
                 fontSize: { xs: "1.55rem", sm: "1.75rem" },
                 fontWeight: 700,
                 letterSpacing: "-0.03em",
-                color: "#1A1A2E",
+                color: "ink.dark",
               }}
             >
               {hasSelectedDayHours
@@ -409,7 +410,7 @@ export default function WeeklyOverviewCard({
             </Typography>
             <Typography
               variant="body2"
-              sx={{ mt: 0.35, color: "#8B8B9E", fontSize: "0.85rem", fontWeight: 500 }}
+              sx={{ mt: 0.35, color: "ink.soft", fontSize: "0.85rem", fontWeight: 500 }}
             >
               {hasSelectedDayHours
                 ? selectedDaySummaryLabel
@@ -421,13 +422,13 @@ export default function WeeklyOverviewCard({
             sx={{
               pl: { xs: 0, md: 2.25 },
               pt: { xs: 1.5, md: 0 },
-              borderTop: { xs: "1px solid #EEF0F3", md: "none" },
-              borderLeft: { xs: "none", md: "1px solid #EEF0F3" },
+              borderTop: { xs: `1px solid ${GREY[100]}`, md: "none" },
+              borderLeft: { xs: "none", md: `1px solid ${GREY[100]}` },
             }}
           >
             <Typography
               variant="body2"
-              sx={{ color: "#8B8B9E", fontSize: "0.85rem", fontWeight: 500 }}
+              sx={{ color: "ink.soft", fontSize: "0.85rem", fontWeight: 500 }}
             >
               Average per day
             </Typography>
@@ -438,14 +439,14 @@ export default function WeeklyOverviewCard({
                 fontSize: { xs: "1.55rem", sm: "1.75rem" },
                 fontWeight: 700,
                 letterSpacing: "-0.03em",
-                color: "#1A1A2E",
+                color: "ink.dark",
               }}
             >
               {formatHoursDecimal(averagePerDay)} hrs
             </Typography>
             <Typography
               variant="body2"
-              sx={{ mt: 0.35, color: "#8B8B9E", fontSize: "0.85rem", fontWeight: 500 }}
+              sx={{ mt: 0.35, color: "ink.soft", fontSize: "0.85rem", fontWeight: 500 }}
             >
               Based on saved entries.
             </Typography>

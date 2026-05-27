@@ -19,6 +19,7 @@ import {
   dashboardGlassCardSx,
   dashboardSectionCardPaddingSx,
 } from "../../../styles/dashboard";
+import { brandPurpleAlpha, whiteAlpha } from "../../../styles/colors";
 import type { SummaryTab, DateRange } from "../rangeSelector.utils";
 import { getBuiltinRange, getCustomHumanLabel } from "../rangeSelector.utils";
 import RangeSelectorTabs from "./RangeSelectorTabs";
@@ -36,9 +37,9 @@ function StatPill({ label, value }: { label: string; value: string | null }) {
         flex: 1,
         p: { xs: 1.5, md: 2 },
         borderRadius: "16px",
-        bgcolor: "rgba(255,255,255,0.6)",
-        border: "1px solid rgba(255,255,255,0.9)",
-        boxShadow: "0 2px 8px rgba(108,99,255,0.06)",
+        bgcolor: whiteAlpha(0.6),
+        border: `1px solid ${whiteAlpha(0.9)}`,
+        boxShadow: `0 2px 8px ${brandPurpleAlpha(0.06)}`,
         textAlign: "center",
         minWidth: 0,
       }}
@@ -119,7 +120,6 @@ export default function SummaryCard({ historyEntries, isLoading, readOnly = fals
     }, 350);
     return () => clearTimeout(timeout);
     // summaryRevision triggers manual regeneration without changing other deps
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stats.projectBreakdowns, hasCustomDates, summaryRevision]);
 
   const handleRegenerate = () => setSummaryRevision((r) => r + 1);
@@ -208,11 +208,11 @@ export default function SummaryCard({ historyEntries, isLoading, readOnly = fals
 
   const exportBtnSx = {
     borderRadius: "12px",
-    borderColor: "rgba(112, 87, 246, 0.3)",
+    borderColor: brandPurpleAlpha(0.3),
     color: "primary.main",
     "&:hover": {
       borderColor: "primary.main",
-      bgcolor: "rgba(112, 87, 246, 0.05)",
+      bgcolor: brandPurpleAlpha(0.05),
     },
   };
 
@@ -286,7 +286,7 @@ export default function SummaryCard({ historyEntries, isLoading, readOnly = fals
             sx={{
               color: "primary.main",
               opacity: 0.7,
-              "&:hover": { opacity: 1, bgcolor: "rgba(112, 87, 246, 0.08)" },
+              "&:hover": { opacity: 1, bgcolor: brandPurpleAlpha(0.08) },
             }}
           >
             <RefreshIcon sx={{ fontSize: "1rem" }} />
@@ -301,7 +301,7 @@ export default function SummaryCard({ historyEntries, isLoading, readOnly = fals
             sx={{
               p: 2,
               borderRadius: "12px",
-              bgcolor: "rgba(112, 87, 246, 0.04)",
+              bgcolor: brandPurpleAlpha(0.04),
               minHeight: 120,
             }}
           >
@@ -319,7 +319,7 @@ export default function SummaryCard({ historyEntries, isLoading, readOnly = fals
             sx={{
               p: 2,
               borderRadius: "12px",
-              bgcolor: "rgba(112, 87, 246, 0.04)",
+              bgcolor: brandPurpleAlpha(0.04),
               minHeight: 80,
               display: "flex",
               alignItems: "center",
@@ -341,20 +341,20 @@ export default function SummaryCard({ historyEntries, isLoading, readOnly = fals
               padding: "14px 16px",
               borderRadius: "12px",
               border: "1px solid transparent",
-              backgroundColor: "rgba(112, 87, 246, 0.04)",
+              backgroundColor: brandPurpleAlpha(0.04),
               fontFamily:
                 '"Plus Jakarta Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif',
               fontSize: "0.9rem",
               lineHeight: 1.75,
-              color: "#1f2340",
+              color: "ink.base",
               resize: "vertical",
               outline: "none",
               boxSizing: "border-box",
               transition: "border-color 160ms ease, box-shadow 160ms ease",
             }}
             onFocus={(e) => {
-              e.currentTarget.style.borderColor = "rgba(112, 87, 246, 0.25)";
-              e.currentTarget.style.boxShadow = "0 0 0 3px rgba(112, 87, 246, 0.08)";
+              e.currentTarget.style.borderColor = brandPurpleAlpha(0.25);
+              e.currentTarget.style.boxShadow = `0 0 0 3px ${brandPurpleAlpha(0.08)}`;
             }}
             onBlur={(e) => {
               e.currentTarget.style.borderColor = "transparent";

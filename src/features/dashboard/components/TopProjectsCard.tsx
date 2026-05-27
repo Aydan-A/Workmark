@@ -11,17 +11,15 @@ import {
   dashboardGlassCardSx,
   dashboardSectionCardPaddingSx,
 } from "../../../styles/dashboard";
+import { CHART_FALLBACK_PALETTE } from "../../../styles/colors";
 
 type TopProjectsCardProps = {
   topProjects: TopProjectStat[];
   isLoading: boolean;
 };
 
-// Assigned in order when project.color is undefined.
-const FALLBACK_PALETTE = ["#6c63ff", "#43a047", "#fb8c00", "#0288d1"];
-
 function resolveColor(project: TopProjectStat, index: number): string {
-  return project.color ?? FALLBACK_PALETTE[index % FALLBACK_PALETTE.length];
+  return project.color ?? CHART_FALLBACK_PALETTE[index % CHART_FALLBACK_PALETTE.length];
 }
 
 function RowSkeleton() {

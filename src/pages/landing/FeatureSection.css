@@ -6,7 +6,7 @@
   --ink-faint: rgba(13, 15, 26, 0.4);
   --line: rgba(13, 15, 26, 0.08);
   --line-strong: rgba(13, 15, 26, 0.14);
-  --blue: #3b3fd8;
+  --blue: #7057f6;
   --card: #ffffff;
   --bg: #fafbfc;
 
@@ -165,7 +165,7 @@
   border-radius: inherit;
   background: radial-gradient(
     600px circle at var(--mx, 50%) var(--my, 0%),
-    rgba(59, 63, 216, 0.08),
+    rgba(112, 87, 246, 0.08),
     transparent 40%
   );
   opacity: 0;
@@ -279,7 +279,7 @@
 .bento-calendar-cell.is-blank { visibility: hidden; }
 
 .bento-calendar-cell.is-logged {
-  background: rgba(59, 63, 216, 0.12);
+  background: rgba(112, 87, 246, 0.12);
   color: var(--blue);
   font-weight: 600;
 }

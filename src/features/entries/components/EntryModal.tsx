@@ -218,7 +218,7 @@ function EntryForm({
   };
 
   return (
-    <Box sx={{ p: { xs: 2.5, sm: 3 }, bgcolor: "rgba(255,255,255,0.92)" }}>
+    <Box sx={{ p: { xs: 2.5, sm: 3 }, bgcolor: "glass.panelOpaque" }}>
       <Box
         sx={{
           display: "flex",
@@ -470,7 +470,7 @@ export function EntryModal({
                 borderRadius: "20px 20px 0 0",
                 maxHeight: "92vh",
                 overflow: "auto",
-                bgcolor: "rgba(255,255,255,0.92)",
+                bgcolor: "glass.panelOpaque",
               },
             },
           }}
@@ -489,7 +489,7 @@ export function EntryModal({
         onClose={handleClose}
         maxWidth="sm"
         fullWidth
-        slotProps={{ paper: { sx: { bgcolor: "rgba(255,255,255,0.92)" } } }}
+        slotProps={{ paper: { sx: { bgcolor: "glass.panelOpaque" } } }}
       >
         {formContent}
       </Dialog>

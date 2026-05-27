@@ -21,7 +21,7 @@ export default function PreferenceSectionPlaceholder({
       sx={{
         p: { xs: 2.5, md: 3.5 },
         borderRadius: "24px",
-        borderColor: "rgba(255,255,255,0.8)",
+        borderColor: "glass.border",
       }}
     >
       <Stack spacing={2.5}>
@@ -54,8 +54,8 @@ export default function PreferenceSectionPlaceholder({
           sx={{
             p: 2.25,
             borderRadius: "20px",
-            borderColor: "rgba(255,255,255,0.8)",
-            bgcolor: "rgba(255,255,255,0.32)",
+            borderColor: "glass.border",
+            bgcolor: "glass.subtle",
           }}
         >
           <Typography variant="subtitle1" sx={{ mb: 0.6 }}>

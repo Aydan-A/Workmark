@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type Props = {
   text: string | string[];
@@ -23,7 +23,9 @@ export default function TextType({
   className = "",
   as: Tag = "span",
 }: Props) {
-  const phrases = Array.isArray(text) ? text : [text];
+  // Key on content (not array identity) so the effect re-runs only when text changes.
+  const phrasesKey = Array.isArray(text) ? text.join("\u0000") : text;
+  const phrases = useMemo(() => phrasesKey.split("\u0000"), [phrasesKey]);
   const [display, setDisplay] = useState("");
   const indexRef = useRef(0);
   const charRef = useRef(0);
@@ -65,7 +67,7 @@ export default function TextType({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [phrases.join("|"), typingSpeed, deletingSpeed, pauseDuration, loop]);
+  }, [phrases, typingSpeed, deletingSpeed, pauseDuration, loop]);
 
   return (
     <Tag className={className}>

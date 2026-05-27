@@ -33,6 +33,9 @@ export function ReceiptUploadField({ value, entryId, uid, onChange, onUploading,
   const [uploadItems, setUploadItems] = useState<UploadItem[]>([]);
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  // Read during render (reactive). The ref below stays the source of truth for
+  // object-URL cleanup; this mirror keeps thumbnails updating.
+  const [previewUrls, setPreviewUrls] = useState<Map<string, string>>(new Map());
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const tasksRef = useRef<Map<string, UploadTask>>(new Map());
@@ -48,9 +51,12 @@ export function ReceiptUploadField({ value, entryId, uid, onChange, onUploading,
   }, [uploadItems, onUploading]);
 
   useEffect(() => {
+    // Capture now so cleanup closes over the same Maps (identity is stable).
+    const tasks = tasksRef.current;
+    const previewUrlMap = previewUrlsRef.current;
     return () => {
-      tasksRef.current.forEach((task) => task.cancel());
-      previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+      tasks.forEach((task) => task.cancel());
+      previewUrlMap.forEach((url) => URL.revokeObjectURL(url));
     };
   }, []);
 
@@ -120,7 +126,10 @@ export function ReceiptUploadField({ value, entryId, uid, onChange, onUploading,
           ...partialReceipt,
           uploadedAt: new Date().toISOString(),
         };
-        if (previewUrl) previewUrlsRef.current.set(receipt.id, previewUrl);
+        if (previewUrl) {
+          previewUrlsRef.current.set(receipt.id, previewUrl);
+          setPreviewUrls((prev) => new Map(prev).set(receipt.id, previewUrl));
+        }
         setUploadItems((prev) => prev.filter((u) => u.localId !== localId));
         // Update valueRef immediately to prevent stale-closure race when multiple
         // uploads complete in the same tick.
@@ -159,6 +168,11 @@ export function ReceiptUploadField({ value, entryId, uid, onChange, onUploading,
     if (previewUrlsRef.current.has(receipt.id)) {
       URL.revokeObjectURL(previewUrlsRef.current.get(receipt.id)!);
       previewUrlsRef.current.delete(receipt.id);
+      setPreviewUrls((prev) => {
+        const next = new Map(prev);
+        next.delete(receipt.id);
+        return next;
+      });
     }
     const next = valueRef.current.filter((r) => r.id !== receipt.id);
     valueRef.current = next;
@@ -220,7 +234,7 @@ export function ReceiptUploadField({ value, entryId, uid, onChange, onUploading,
             <ReceiptThumb
               key={receipt.id}
               receipt={receipt}
-              previewUrl={previewUrlsRef.current.get(receipt.id) ?? null}
+              previewUrl={previewUrls.get(receipt.id) ?? null}
               onRemove={() => handleRemoveReceipt(receipt)}
               disabled={disabled}
             />
@@ -263,7 +277,7 @@ export function ReceiptUploadField({ value, entryId, uid, onChange, onUploading,
                     bottom: 0,
                     left: 0,
                     right: 0,
-                    bgcolor: "rgba(0,0,0,0.35)",
+                    bgcolor: "scrim.light",
                     px: 0.5,
                     pb: 0.5,
                     pt: 0.25,
@@ -286,9 +300,9 @@ export function ReceiptUploadField({ value, entryId, uid, onChange, onUploading,
                   top: 0,
                   right: 0,
                   p: 0.25,
-                  bgcolor: "rgba(0,0,0,0.45)",
-                  color: "#fff",
-                  "&:hover": { bgcolor: "rgba(0,0,0,0.65)" },
+                  bgcolor: "scrim.medium",
+                  color: "common.white",
+                  "&:hover": { bgcolor: "scrim.heavy" },
                 }}
               >
                 <CloseIcon sx={{ fontSize: 14 }} />
@@ -380,9 +394,9 @@ function ReceiptThumb({
             top: 0,
             right: 0,
             p: 0.25,
-            bgcolor: "rgba(0,0,0,0.45)",
-            color: "#fff",
-            "&:hover": { bgcolor: "rgba(0,0,0,0.65)" },
+            bgcolor: "scrim.medium",
+            color: "common.white",
+            "&:hover": { bgcolor: "scrim.heavy" },
           }}
         >
           <CloseIcon sx={{ fontSize: 14 }} />

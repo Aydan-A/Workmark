@@ -4,7 +4,7 @@
   --ink-faint: rgba(13, 15, 26, 0.45);
   --line: rgba(13, 15, 26, 0.08);
   --line-strong: rgba(13, 15, 26, 0.14);
-  --blue: #3b3fd8;
+  --blue: #7057f6;
   --bg: #fafbfc;
 
   background: var(--bg);
@@ -45,7 +45,7 @@
   position: relative;
   z-index: 1;
   width: min(320px, 80%);
-  filter: drop-shadow(0 30px 60px rgba(59, 63, 216, 0.28));
+  filter: drop-shadow(0 30px 60px rgba(112, 87, 246, 0.28));
   animation: about-float 7s ease-in-out infinite;
 }
 
@@ -54,7 +54,7 @@
   inset: 10%;
   background: radial-gradient(
     circle at center,
-    rgba(59, 63, 216, 0.28),
+    rgba(112, 87, 246, 0.28),
     rgba(140, 110, 255, 0.12) 40%,
     transparent 70%
   );

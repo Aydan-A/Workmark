@@ -10,7 +10,6 @@ import { buildRangeOverview } from "../weekly.utils";
 
 type UseWeeklyDataOptions = {
   user: User | null;
-  authLoading: boolean;
   start: string;
   end: string;
 };
@@ -23,7 +22,7 @@ const EMPTY_POINT: WeeklyPoint = {
   isToday: false,
 };
 
-export function useWeeklyData({ user, authLoading: _authLoading, start, end }: UseWeeklyDataOptions) {
+export function useWeeklyData({ user, start, end }: UseWeeklyDataOptions) {
   const [entries, setEntries] = useState<WorkEntry[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);

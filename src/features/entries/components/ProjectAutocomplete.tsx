@@ -7,6 +7,7 @@ import Typography from "@mui/material/Typography";
 import { createFilterOptions } from "@mui/material/Autocomplete";
 import { createProject } from "../project.api";
 import type { Project } from "../entry.types";
+import { projectColor } from "../../../styles/colors";
 
 type ProjectValue = { id: string; name: string; color?: string };
 type ProjectOption = ProjectValue & { isCreate?: true };
@@ -17,19 +18,6 @@ type Props = {
   onChange: (value: ProjectValue | null) => void;
   error?: string;
 };
-
-const COLOR_PALETTE = [
-  "#7057f6", "#f59e0b", "#10b981", "#ef4444",
-  "#3b82f6", "#ec4899", "#8b5cf6", "#06b6d4",
-];
-
-function projectColor(projectId: string): string {
-  let h = 0;
-  for (let i = 0; i < projectId.length; i++) {
-    h = (Math.imul(31, h) + projectId.charCodeAt(i)) | 0;
-  }
-  return COLOR_PALETTE[Math.abs(h) % COLOR_PALETTE.length];
-}
 
 const filter = createFilterOptions<ProjectOption>();
 

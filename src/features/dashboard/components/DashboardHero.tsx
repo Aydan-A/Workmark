@@ -9,6 +9,7 @@ import Typography from "@mui/material/Typography";
 import { Link as RouterLink } from "react-router-dom";
 import { dashboardGlassCardSx } from "../../../styles/dashboard";
 import { formatHoursDecimal } from "../../../utils/formatters";
+import { HERO, brandPurpleAlpha } from "../../../styles/colors";
 
 type VantaInstance = {
   destroy: () => void;
@@ -33,14 +34,14 @@ export default function DashboardHero({
 }: DashboardHeroProps) {
   const heroRef = useRef<HTMLDivElement | null>(null);
   const heroVantaRef = useRef<VantaInstance | null>(null);
-  const [isVisible, setIsVisible] = useState(false);
+  // No IntersectionObserver (SSR) -> visible immediately; else observer flips it.
+  const [isVisible, setIsVisible] = useState(
+    () => typeof IntersectionObserver === "undefined",
+  );
 
   useEffect(() => {
     if (!heroRef.current) return;
-    if (typeof IntersectionObserver === "undefined") {
-      setIsVisible(true);
-      return;
-    }
+    if (typeof IntersectionObserver === "undefined") return;
     const el = heroRef.current;
     const io = new IntersectionObserver(
       (entries) => {
@@ -105,8 +106,7 @@ export default function DashboardHero({
           bottom: -52,
           height: 124,
           borderRadius: "999px",
-          background:
-            "radial-gradient(circle, rgba(112, 87, 246, 0.22) 0%, rgba(112, 87, 246, 0.12) 42%, rgba(112, 87, 246, 0) 80%)",
+          background: `radial-gradient(circle, ${brandPurpleAlpha(0.22)} 0%, ${brandPurpleAlpha(0.12)} 42%, ${brandPurpleAlpha(0)} 80%)`,
           filter: "blur(30px)",
           pointerEvents: "none",
           zIndex: 0,
@@ -148,9 +148,9 @@ export default function DashboardHero({
                 size="small"
                 sx={{
                   mb: 1.25,
-                  bgcolor: "rgba(140, 123, 255, 0.18)",
-                  color: "#d8d0ff",
-                  border: "1px solid rgba(170, 157, 255, 0.24)",
+                  bgcolor: HERO.chipBg,
+                  color: HERO.chipText,
+                  border: `1px solid ${HERO.chipBorder}`,
                 }}
               />
               <Typography
@@ -158,13 +158,13 @@ export default function DashboardHero({
                 sx={{
                   fontSize: { xs: "2rem", md: "2.5rem" },
                   letterSpacing: "-0.04em",
-                  color: "#f7f5ff",
-                  textShadow: "0 10px 30px rgba(0, 0, 0, 0.28)",
+                  color: HERO.title,
+                  textShadow: `0 10px 30px ${HERO.titleShadow}`,
                 }}
               >
                 Welcome back, {firstName}
               </Typography>
-              <Typography variant="subtitle1" sx={{ mt: 1, color: "rgba(234, 230, 255, 0.84)" }}>
+              <Typography variant="subtitle1" sx={{ mt: 1, color: HERO.subtitle }}>
                 {todayLabel}
               </Typography>
 
@@ -181,9 +181,9 @@ export default function DashboardHero({
                   size="small"
                   variant="outlined"
                   sx={{
-                    color: "#f3efff",
-                    borderColor: "rgba(220, 212, 255, 0.42)",
-                    bgcolor: "rgba(20, 24, 42, 0.18)",
+                    color: HERO.statText,
+                    borderColor: HERO.statBorder,
+                    bgcolor: HERO.statBg,
                   }}
                 />
                 <Chip
@@ -191,9 +191,9 @@ export default function DashboardHero({
                   size="small"
                   variant="outlined"
                   sx={{
-                    color: "#f3efff",
-                    borderColor: "rgba(220, 212, 255, 0.42)",
-                    bgcolor: "rgba(20, 24, 42, 0.18)",
+                    color: HERO.statText,
+                    borderColor: HERO.statBorder,
+                    bgcolor: HERO.statBg,
                   }}
                 />
                 <Chip
@@ -201,9 +201,9 @@ export default function DashboardHero({
                   size="small"
                   variant="outlined"
                   sx={{
-                    color: "#f3efff",
-                    borderColor: "rgba(220, 212, 255, 0.42)",
-                    bgcolor: "rgba(20, 24, 42, 0.18)",
+                    color: HERO.statText,
+                    borderColor: HERO.statBorder,
+                    bgcolor: HERO.statBg,
                   }}
                 />
               </Stack>

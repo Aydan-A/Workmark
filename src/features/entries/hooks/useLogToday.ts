@@ -85,8 +85,10 @@ export function useLogToday() {
     );
   }, [user, selectedDate]);
 
+  // Key on uid so the subscription re-runs only when the user id changes.
+  const uid = user?.uid;
   useEffect(() => {
-    if (!user) {
+    if (!uid) {
       setProjects([]);
       return;
     }
@@ -94,7 +96,7 @@ export function useLogToday() {
       (nextProjects) => setProjects(nextProjects),
       () => {},
     );
-  }, [user?.uid]);
+  }, [uid]);
 
   const totalHours = useMemo(
     () => entries.reduce((sum, e) => sum + e.hours, 0),
@@ -110,8 +112,13 @@ export function useLogToday() {
 
   const { defaultStartTime, defaultIsRemote } = useMemo(() => {
     const last = entries[entries.length - 1];
+    const now = new Date();
+    const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(
+      now.getMinutes(),
+    ).padStart(2, "0")}`;
     return {
-      defaultStartTime: last?.endTime ?? "09:00",
+      // Continue from the last entry's end; otherwise start at the current time.
+      defaultStartTime: last?.endTime ?? currentTime,
       defaultIsRemote: last?.isRemote ?? false,
     };
   }, [entries]);

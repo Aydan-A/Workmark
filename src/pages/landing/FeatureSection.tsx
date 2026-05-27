@@ -4,6 +4,7 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import InsightsIcon from "@mui/icons-material/Insights";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import { BRAND_PURPLE, brandPurpleAlpha } from "../../styles/colors";
 import "./FeatureSection.css";
 
 // Bento layout adapted from Magic UI's bento-grid pattern, ported to plain CSS
@@ -174,12 +175,12 @@ function Sparkline() {
       <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
         <defs>
           <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="rgba(59, 63, 216, 0.35)" />
-            <stop offset="100%" stopColor="rgba(59, 63, 216, 0)" />
+            <stop offset="0%" stopColor={brandPurpleAlpha(0.35)} />
+            <stop offset="100%" stopColor={brandPurpleAlpha(0)} />
           </linearGradient>
         </defs>
         <path d={`${path} L ${w} ${h} L 0 ${h} Z`} fill="url(#sparkFill)" />
-        <path d={path} fill="none" stroke="#3b3fd8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d={path} fill="none" stroke={BRAND_PURPLE} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     </div>
   );
