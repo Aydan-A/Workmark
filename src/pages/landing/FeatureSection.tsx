@@ -191,8 +191,8 @@ function Sparkline() {
 const FEATURES: CardProps[] = [
   {
     Icon: AccessTimeIcon,
-    name: "Capture what you did",
-    description: "Drop in time-stamped entries the moment they matter.",
+    name: "Log daily work",
+    description: "Drop in time-stamped work entries the moment they matter.",
     href: "/login",
     cta: "Start logging",
     className: "bento-span-2",
@@ -200,8 +200,8 @@ const FEATURES: CardProps[] = [
   },
   {
     Icon: CalendarMonthIcon,
-    name: "Track your month",
-    description: "See logged days at a glance and drill in with one click.",
+    name: "Track project hours",
+    description: "See logged days, remote hours, and project work at a glance.",
     href: "/login",
     cta: "See the calendar",
     className: "bento-span-1",
@@ -209,7 +209,7 @@ const FEATURES: CardProps[] = [
   },
   {
     Icon: ReceiptLongIcon,
-    name: "Pin your receipts",
+    name: "Attach receipts",
     description: "Attach receipts and files directly to any entry.",
     href: "/login",
     cta: "Try attachments",
@@ -218,7 +218,7 @@ const FEATURES: CardProps[] = [
   },
   {
     Icon: InsightsIcon,
-    name: "See the bigger picture",
+    name: "Review weekly summaries",
     description: "Weekly hours, streak, remote percentage, and top projects.",
     href: "/login",
     cta: "Open the dashboard",
@@ -234,9 +234,10 @@ export default function FeatureSection() {
     <section ref={ref} id="features" className="bento-section">
       <div className="bento-head">
         <div className="bento-eyebrow">Features</div>
-        <h2 className="bento-title">Everything Workmark actually does.</h2>
+        <h2 className="bento-title">Daily work log features for remote teams.</h2>
         <p className="bento-sub">
-          No bloat, no roadmap promises — just the pieces already inside the app.
+          Track hours, capture project work, attach receipts, and export clear
+          weekly reports without a heavy time tracking workflow.
         </p>
       </div>
 
@@ -250,4 +251,3 @@ export default function FeatureSection() {
     </section>
   );
 }
-

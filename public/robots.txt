@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /today
+Disallow: /day/
+Disallow: /weekly
+Disallow: /calendar
+Disallow: /profile
+Disallow: /preferences/
