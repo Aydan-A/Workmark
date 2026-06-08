@@ -113,20 +113,23 @@ export default function Hero() {
       <div className="l-hero-content">
         <span className="l-hero-eyebrow">For remote teams</span>
         <h1>
-          <TextType
-            text={[
-              "A simple record of your remote work.",
-              "Log it. Done.",
-              "Built for remote teams.",
-            ]}
-            typingSpeed={55}
-            deletingSpeed={28}
-            pauseDuration={2000}
-          />
+          Daily work logs for remote teams.
+          <span className="l-hero-type-line">
+            <TextType
+              text={[
+                "Track hours without the ceremony.",
+                "Turn each day into a weekly summary.",
+                "Keep project work client-ready.",
+              ]}
+              typingSpeed={55}
+              deletingSpeed={28}
+              pauseDuration={2000}
+            />
+          </span>
         </h1>
         <p className="l-hero-sub">
-          Workmark is the calmest way to capture what you did today —
-          attachments, summaries, and PDF exports without the ceremony.
+          Workmark is a calm work log app for daily entries, project hours,
+          receipt attachments, weekly summaries, and PDF or CSV exports.
         </p>
         <div className="l-hero-ctas">
           <a href="/login" className="l-btn l-btn-primary">Get started →</a>

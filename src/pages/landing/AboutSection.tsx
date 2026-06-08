@@ -8,11 +8,11 @@ const STEPS = [
     body: "Sign up with email or Google in seconds — no setup, no credit card, no team admin to chase.",
   },
   {
-    title: "Log hours daily",
+    title: "Log daily work",
     body: "Drop in time-stamped entries as the day unfolds. Attach receipts and notes alongside the work.",
   },
   {
-    title: "Get summary",
+    title: "Export summaries",
     body: "Weekly hours, streak, top projects, remote percentage — exportable as PDF or CSV when you need it.",
   },
 ];
@@ -35,7 +35,7 @@ export default function AboutSection() {
         <div className="about-copy">
           <div className="about-eyebrow">About</div>
           <h2 className="about-title">
-            Built for the way remote work actually feels.
+            A remote work log that stays out of the way.
           </h2>
           <p className="about-sub">
             We started Workmark because the tools we used to log remote work

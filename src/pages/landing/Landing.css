@@ -356,7 +356,16 @@
   letter-spacing: -0.03em;
   margin: 0 0 22px;
   padding-bottom: 0.1em;
-  min-height: 1.3em;
+  min-height: 2em;
+}
+
+.l-hero-type-line {
+  display: block;
+  margin-top: 10px;
+  color: rgba(240, 240, 255, 0.72);
+  font-size: clamp(28px, 4vw, 48px);
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .l-hero-sub {
