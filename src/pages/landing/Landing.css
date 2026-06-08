@@ -831,9 +831,152 @@
 
 /* ---------- FOOTER ---------- */
 .l-footer {
-  padding: 40px 6vw;
-  text-align: center;
+  padding: 54px 6vw 30px;
+  background:
+    linear-gradient(180deg, rgba(13, 15, 26, 0), rgba(5, 6, 12, 0.74) 38%),
+    #05060c;
   color: var(--muted);
-  font-size: 13px;
   border-top: 1px solid rgba(240, 240, 255, 0.06);
+}
+
+.l-footer-inner {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 1fr);
+  gap: 42px;
+  align-items: center;
+}
+
+.l-footer-brand {
+  display: grid;
+  gap: 10px;
+}
+
+.l-footer-logo {
+  color: var(--text);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.l-footer-brand p {
+  max-width: 280px;
+  margin: 0;
+  color: rgba(240, 240, 255, 0.54);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.l-footer-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+}
+
+.l-footer-links a,
+.l-footer-action a {
+  color: rgba(240, 240, 255, 0.58);
+  text-decoration: none;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+}
+
+.l-footer-links a {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.l-footer-links a:hover,
+.l-footer-action a:hover {
+  color: var(--text);
+}
+
+.l-footer-action {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+}
+
+.l-footer-action span {
+  color: rgba(240, 240, 255, 0.48);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.l-footer-cta {
+  min-height: 44px;
+  padding: 11px 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(112, 87, 246, 0.28);
+  border-radius: 999px;
+  background: rgba(112, 87, 246, 0.12);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.l-footer-cta:hover {
+  transform: translateY(-1px);
+  border-color: rgba(112, 87, 246, 0.46);
+  background: rgba(112, 87, 246, 0.18);
+}
+
+.l-footer-links a:focus-visible,
+.l-footer-cta:focus-visible {
+  outline: 2px solid rgba(240, 240, 255, 0.9);
+  outline-offset: 4px;
+}
+
+.l-footer-bottom {
+  width: min(1180px, 100%);
+  margin: 34px auto 0;
+  padding-top: 22px;
+  border-top: 1px solid rgba(240, 240, 255, 0.055);
+  color: rgba(240, 240, 255, 0.38);
+  font-size: 13px;
+}
+
+@media (max-width: 900px) {
+  .l-footer-inner {
+    grid-template-columns: 1fr;
+    gap: 26px;
+    text-align: center;
+  }
+
+  .l-footer-brand p {
+    margin: 0 auto;
+  }
+
+  .l-footer-action {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 560px) {
+  .l-footer {
+    padding: 44px 5vw 26px;
+  }
+
+  .l-footer-links {
+    flex-wrap: wrap;
+    gap: 16px 22px;
+  }
+
+  .l-footer-action {
+    display: grid;
+    justify-items: center;
+  }
+
+  .l-footer-cta {
+    width: min(100%, 220px);
+  }
+
+  .l-footer-bottom {
+    text-align: center;
+  }
 }
