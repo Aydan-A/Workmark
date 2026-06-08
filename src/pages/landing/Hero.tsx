@@ -1,9 +1,15 @@
-import { useEffect, useState } from "react";
+import { type CSSProperties, useEffect, useRef, useState } from "react";
 import TextType from "../../components/reactbits/TextType";
 // import logo from "../../assets/logo.svg";
 
+type VantaInstance = {
+  destroy: () => void;
+};
+
 export default function Hero() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const backgroundRef = useRef<HTMLDivElement | null>(null);
+  const vantaRef = useRef<VantaInstance | null>(null);
   const closeMenu = () => setMenuOpen(false);
 
   useEffect(() => {
@@ -13,9 +19,49 @@ export default function Hero() {
     return () => { document.body.style.overflow = prev; };
   }, [menuOpen]);
 
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReducedMotion) return;
+
+    let cancelled = false;
+
+    async function initializeBackground() {
+      if (!backgroundRef.current || vantaRef.current) return;
+
+      const p5Module = await import("p5");
+      (window as Window & { p5?: unknown }).p5 = p5Module.default;
+
+      const vantaModule = await import("vanta/dist/vanta.trunk.min");
+      const createTrunkEffect = vantaModule.default as (options: Record<string, unknown>) => VantaInstance;
+
+      if (cancelled || !backgroundRef.current) return;
+
+      vantaRef.current = createTrunkEffect({
+        el: backgroundRef.current,
+        mouseControls: true,
+        touchControls: true,
+        gyroControls: false,
+        minHeight: 200,
+        minWidth: 200,
+        scale: 1,
+        scaleMobile: 1,
+        color: 0x4e4598,
+        backgroundColor: 0x05060f,
+      });
+    }
+
+    void initializeBackground();
+
+    return () => {
+      cancelled = true;
+      vantaRef.current?.destroy();
+      vantaRef.current = null;
+    };
+  }, []);
+
   return (
     <header className="l-hero">
-      <div className="l-hero-bg" aria-hidden />
+      <div ref={backgroundRef} className="l-hero-bg" aria-hidden />
       <div className="l-hero-overlay" />
 
       <nav className={`l-nav ${menuOpen ? "is-open" : ""}`.trim()}>
@@ -84,7 +130,54 @@ export default function Hero() {
         </p>
         <div className="l-hero-ctas">
           <a href="/login" className="l-btn l-btn-primary">Get started →</a>
-          <a href="#log-today" className="l-btn l-btn-ghost">See how it works</a>
+        </div>
+
+        <div className="l-hero-dashboard" aria-label="Workmark daily work flow preview">
+          <div className="l-hero-dashboard-glow" aria-hidden />
+          <div className="l-hero-dashboard-top">
+            <span>Today</span>
+            <span>Weekly summary</span>
+            <span>Client ready</span>
+          </div>
+          <div className="l-hero-dashboard-grid">
+            <div className="l-hero-log-card">
+              <div className="l-hero-card-label">Log today</div>
+              <div className="l-hero-input-row">
+                <span className="l-hero-input-dot" />
+                <span className="l-hero-input-text">Created Shopify product updates</span>
+                <span className="l-hero-input-time">2h</span>
+              </div>
+              <div className="l-hero-entry-row delay-1">
+                <span>Workmark app UI polish</span>
+                <strong>1h</strong>
+              </div>
+              <div className="l-hero-entry-row delay-2">
+                <span>Theme fixes and review</span>
+                <strong>1h</strong>
+              </div>
+            </div>
+
+            <div className="l-hero-summary-card">
+              <div className="l-hero-card-label">This week</div>
+              <div className="l-hero-metrics">
+                <span><strong>8h</strong>Total hours</span>
+                <span><strong>3</strong>Projects</span>
+                <span><strong>1h 9m</strong>Avg / day</span>
+              </div>
+              <div className="l-hero-bars" aria-hidden>
+                <span style={{ "--bar-width": "94%" } as CSSProperties} />
+                <span style={{ "--bar-width": "46%" } as CSSProperties} />
+                <span style={{ "--bar-width": "42%" } as CSSProperties} />
+              </div>
+            </div>
+
+            <div className="l-hero-export-card">
+              <div className="l-hero-card-label">Send proof</div>
+              <button type="button">Copy text</button>
+              <button type="button">Email client</button>
+              <button type="button">Send PDF</button>
+            </div>
+          </div>
         </div>
       </div>
     </header>
